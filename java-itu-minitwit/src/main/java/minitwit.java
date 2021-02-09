@@ -5,24 +5,17 @@ import com.google.common.base.Charsets;
 import com.google.common.collect.Maps;
 import com.google.common.io.Resources;
 import com.hubspot.jinjava.Jinjava;
-import com.hubspot.jinjava.JinjavaConfig;
-import com.hubspot.jinjava.lib.fn.ELFunctionDefinition;
-import com.hubspot.jinjava.loader.ClasspathResourceLocator;
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.ibatis.jdbc.ScriptRunner;
 import spark.Request;
-import spark.Response;
-import spark.Spark;
 
-import javax.swing.plaf.nimbus.State;
 import java.io.FileReader;
 import java.sql.*;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 import static spark.Spark.*;
 
@@ -39,7 +32,7 @@ public class minitwit {
         try {
             before((request, response) -> before_request(request));
 
-            after((request, response) ->  after_request(response));
+            after((request, response) ->  after_request());
 
             notFound((req, res) -> {
                 res.type("application/json");
@@ -60,17 +53,31 @@ public class minitwit {
     }
 
     private static void registerEndpoints() {
-        get("/",                    (req, res)-> timeline());
+        get("/",                    (req, res)-> timeline(null, null));
         get("/public",              (req, res)-> public_timeline());
         get("/:username",           (req, res)-> user_timeline());
-        get("/:username/follow",    (req, res)-> follow_user());
-        get("/:username/unfollow",  (req, res)-> unfollow_user());
-        post("/add_message",        (req, res)-> add_message());
-        post("/login",              (req, res)-> login("POST", req.params("username")));
-        get("/login",               (req, res)-> login("GET", req.params("username")));
+        get("/:username/follow",    (req, res)-> follow_user(null));
+        get("/:username/unfollow",  (req, res)-> unfollow_user(null));
+        post("/add_message",        (req, res)-> add_message(null));
+        post("/login",              (req, res)-> login("POST", req.params("username"), null, null));
+        get("/login",               (req, res)-> login("GET", req.params("username"), null, null));
         get("/register",            (req, res)-> register(null, null, null, null, null));
         post("/register",           (req, res)-> register(null, null, null, null, null));
         get("/logout",              (req, res)-> logout());
+    }
+
+    private static Object render_template(String template, HashMap<String, Object> context) {
+        try {
+            Jinjava jinjava = new Jinjava();
+            return jinjava.render(Resources.toString(Resources.getResource(template), Charsets.UTF_8), context);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new Failure<>(e);
+        }
+    }
+
+    private static Object render_template(String template) {
+        return render_template(template, new HashMap<>());
     }
 
     /*
@@ -111,25 +118,18 @@ public class minitwit {
     /*
     Queries the database and returns a list of dictionaries.
      */
-    static Result<List<Map<Integer, Object>>> query_db(String query, String... args) {
+    static Result<ResultSet> query_db(String query, String... args) {
         try (Connection c = connect_db().get()) {
             PreparedStatement  stmt = c.prepareStatement(query);
 
+            //PreparedStatement indices starts at 1
             for (int i = 1; i < args.length; i++) {
                 stmt.setString(i, args[i]);
             }
 
             ResultSet rs = stmt.executeQuery();
 
-            List<Map<Integer, Object>> queryResult = new ArrayList<>();
-            int idx = 0;
-            while (rs.next()) {
-                HashMap<Integer, Object> hm = new HashMap<>();
-                hm.put(idx, rs.getObject(idx));
-                queryResult.add(hm);
-            }
-
-            return new Success<>(queryResult);
+            return new Success<>(rs);
         } catch (Exception e) {
             e.printStackTrace();
             return new Failure<>(e);
@@ -141,12 +141,12 @@ public class minitwit {
      */
     static Result<Integer> get_user_id(String username) {
         try (Connection c = connect_db().get()) {
-            Statement stmt = c.createStatement();
+            PreparedStatement stmt = c.prepareStatement("select user_id from user where username = ?");
+            stmt.setString(1, username);
 
-            //vulnerable to SQL injection? fix?
-            var rs = stmt.executeQuery("select user_id from user where username = " + username);
+            var rs = stmt.executeQuery();
 
-            return new Success<>(rs.getInt(0));
+            return new Success<>(rs.getInt("user_id"));
         } catch (Exception e) {
             e.printStackTrace();
             return new Failure<>(e);
@@ -187,14 +187,24 @@ public class minitwit {
     up the current user so that we know he's there.
      */
     static void before_request(Request request) {
-        var user = query_db("select * from user where user_id = ?", "user_id").get();
-        session = new Session(connect_db(), new User(0));
+        var user = query_db("select * from user where user_id = ?", request.params("user_id")).get();
+
+        try {
+            int user_id = user.getInt("user_id");
+            String username = user.getString("username");
+            String email = user.getString("email");
+            String pw_hash = user.getString("pw_hash");
+
+            session = new Session(connect_db(), new User(username));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     /*
     Closes the database again at the end of the request.
      */
-    static void after_request(Response response) {
+    static void after_request() {
         try {
             session.connection.get().close();
         } catch (Exception e) {
@@ -207,52 +217,156 @@ public class minitwit {
     redirect to the public timeline.  This timeline shows the user's
     messages as well as all the messages of followed users.
      */
-    static Object timeline() {
-        return null;
+    static Object timeline(String remote_addr, String user_id) {
+        System.out.println("We got a visitor from: " + remote_addr);
+
+        if (session.user == null) {
+            return public_timeline();
+        }
+
+        try {
+            var rs = query_db("""
+                    select message.*, user.* from message, user
+                    where message.flagged = 0 and message.author_id = user.user_id and (
+                      user.user_id = ? or
+                      user.user_id in (select whom_id from follower
+                           where who_id = ?))
+                           order by message.pub_date desc limit ?""", user_id, user_id, PER_PAGE + "");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return render_template("timeline.html");
     }
 
     /*
     Displays the latest messages of all users.
      */
     static Object public_timeline() {
-        return null;
+
+        var rs = query_db("""
+                select message.*, user.* from message, user
+                        where message.flagged = 0 and message.author_id = user.user_id
+                        order by message.pub_date desc limit ?""", PER_PAGE + "");
+
+        return render_template("timeline.html");
     }
 
     /*
     Display's a users tweets.
      */
     static Object user_timeline() {
-        return null;
+        var profile_user = query_db("select * from user where username = ?"); //[username]
+
+        if (profile_user == null) {
+            return "404 not found";
+        }
+
+        boolean followed = false;
+        if (session.user != null) {
+            followed = query_db("select 1 from follower where\n" +
+                    "            follower.who_id = ? and follower.whom_id = ?") != null; //[session['user_id'], profile_user['user_id']]
+        }
+
+        var messages = query_db("select message.*, user.* from message, user where\n" +
+                "            user.user_id = message.author_id and user.user_id = ?\n" +
+                "            order by message.pub_date desc limit ?"); //[profile_user['user_id'], PER_PAGE]), followed=followed, profile_user=profile_user)
+        return render_template("timeline.html");
     }
 
     /*
     Adds the current user as follower of the given user.
      */
-    static Object follow_user() {
+    static Object follow_user(String username) {
 
+        if (session.user == null) {
+            return "404";
+        }
+
+        var whom_id = get_user_id(username);
+
+        if (whom_id == null) {
+            return "404";
+        }
+        try {
+            var stmt = session.connection.get().createStatement();
+
+            stmt.executeQuery("insert into follower (who_id, whom_id) values (?, ?)"); //[session['user_id'], whom_id])
+
+            //flash('You are now following "%s"' % username)
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        //return redirect(url_for('user_timeline', username=username))
         return null;
     }
 
     /*
     Removes the current user as follower of the given user.
      */
-    static Object unfollow_user() {
+    static Object unfollow_user(String username) {
+        if (session.user == null) {
+            return "404";
+        }
+
+        var whom_id = get_user_id(username);
+
+        if (whom_id == null) {
+            return "404";
+        }
+
+        try {
+            var stmt = session.connection.get().createStatement();
+
+            stmt.executeQuery("delete from follower where who_id=? and whom_id=?"); //[session['user_id'], whom_id])
+
+            //flash('You are no longer following "%s"' % username)
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        //return redirect(url_for('user_timeline', username=username))
         return null;
     }
 
     /*
     Registers a new message for the user.
      */
-    static Object add_message() {
-        return null;
+    static Object add_message(String message) {
+
+        if (session.user == null) {
+            return "404";
+        }
+
+        if (!message.equals("")) {
+            try {
+                var stmt = session.connection.get().createStatement();
+
+                stmt.executeQuery("insert into message (author_id, text, pub_date, flagged) values (?, ?, ?, 0)"); //(session['user_id'], request.form['text'], int(time.time())))
+
+                //flash('You are no longer following "%s"' % username)
+
+                //return redirect(url_for('user_timeline', username=username))
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            //flash('Your message was recorded')
+        }
+
+        return timeline(null, null);
     }
 
     /*
     Logs the user in.
      */
-    static Object login(String HTTPVerb, String username) {
+    static Object login(String HTTPVerb, String username, String password1, String password2) {
         if (session.user != null) {
-            return timeline();
+            return timeline(null, null);
         }
 
         String error = "";
@@ -261,18 +375,20 @@ public class minitwit {
 
             if (!user.isSuccess()) {
                 error = "Invalid username";
-            } else if (false) /* todo: CHECK PASSWORD HASH */{
+            } else if (Hashing.check_password_hash(password1, password2)) {
                 error = "Invalid password";
             } else {
                 //flash('You were logged in')
-                session.user = new User(0);
-                //return redirect(url_for('timeline'))
+                session.user = new User("");
+                return timeline(null, null);
             }
         }
         if(error.length()>0) System.out.println(error);
 
-        //return render_template('login.html', error=error)
-        return null;
+        String finalError = error; //must be effectively final
+        return render_template("login.html", new HashMap<>() {{
+            put("error", finalError);
+        }});
     }
 
     /*
@@ -280,7 +396,7 @@ public class minitwit {
      */
     static Object register(String HTTPVerb, String username, String email, String password, String password2) {
         if (session.user != null) {
-            return timeline();
+            return timeline(null, null);
         }
 
         String error = "";
@@ -297,23 +413,28 @@ public class minitwit {
                 error = "The username is already taken";
             } else {
                 try {
-                    Statement stmt = session.connection.get().createStatement();
+                    PreparedStatement stmt = session.connection.get().prepareStatement("insert into user (username, email, pw_hash) values (?, ?, ?)");
+                    stmt.setString(1, username);
+                    stmt.setString(2, email);
+                    stmt.setString(3, Hashing.generate_password_hash(password));
 
-                    var rs = stmt.executeQuery("insert into user (username, email, pw_hash) values (?, ?, ?)");
-                    //[request.form['username'], request.form['email'],generate_password_hash(request.form['password'])]
+                    stmt.executeUpdate();
 
                     //flash('You were successfully registered and can login now')
-                    return login(null, null);
+                    return login(null, null, null, null);
 
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
         }
-        if(error.length()>0) System.out.println(error);
 
-        //return render_template('register.html', error=error)
-        return null;
+        if(error.length() > 0) System.out.println(error);
+
+        String finalError = error; //must be effectively final
+        return render_template("register.html", new HashMap<>() {{
+            put("error", finalError);
+        }});
     }
 
     /*
