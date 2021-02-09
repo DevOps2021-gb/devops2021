@@ -7,7 +7,7 @@ public class Session {
     User user;
 
     public Session(Result<Connection> c, User u) {
-        connection = c;
-        user = u;
+        connection  = c;
+        user        = u;
     }
 }

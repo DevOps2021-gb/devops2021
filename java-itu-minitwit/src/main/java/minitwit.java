@@ -29,21 +29,17 @@ import static spark.Spark.*;
 public class minitwit {
 
     //configuration
-    static String DATABASE = "minitwit.db";
-    static int PER_PAGE = 30;
-    static Boolean DEBUG = true;
-    static String SECRET_KEY = "development key";
+    static String DATABASE      = "minitwit.db";
+    static int PER_PAGE         = 30;
+    static Boolean DEBUG        = true;
+    static String SECRET_KEY    = "development key";
     static Session session; //TODO handle multiple sessions?
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) {
         try {
-            before((request, response) -> {
-                before_request(request);
-            });
+            before((request, response) -> before_request(request));
 
-            after((request, response) -> {
-                after_request(response);
-            });
+            after((request, response) ->  after_request(response));
 
             notFound((req, res) -> {
                 res.type("application/json");
@@ -64,17 +60,17 @@ public class minitwit {
     }
 
     private static void registerEndpoints() {
-        get("/", (req, res)-> timeline());
-        get("/public", (req, res)-> public_timeline());
-        get("/:username", (req, res)-> user_timeline());
-        get("/:username/follow", (req, res)-> follow_user());
-        get("/:username/unfollow", (req, res)-> unfollow_user());
-        post("/add_message", (req, res)-> add_message());
-        post("/login", (req, res)-> login("POST", req.params("username")));
-        get("/login", (req, res)-> login("GET", req.params("username")));
-        get("/register", (req, res)-> register(null, null, null, null, null));
-        post("/register", (req, res)-> register(null, null, null, null, null));
-        get("/logout", (req, res)-> logout());
+        get("/",                    (req, res)-> timeline());
+        get("/public",              (req, res)-> public_timeline());
+        get("/:username",           (req, res)-> user_timeline());
+        get("/:username/follow",    (req, res)-> follow_user());
+        get("/:username/unfollow",  (req, res)-> unfollow_user());
+        post("/add_message",        (req, res)-> add_message());
+        post("/login",              (req, res)-> login("POST", req.params("username")));
+        get("/login",               (req, res)-> login("GET", req.params("username")));
+        get("/register",            (req, res)-> register(null, null, null, null, null));
+        post("/register",           (req, res)-> register(null, null, null, null, null));
+        get("/logout",              (req, res)-> logout());
     }
 
     /*
@@ -265,7 +261,7 @@ public class minitwit {
 
             if (!user.isSuccess()) {
                 error = "Invalid username";
-            } else if (false) /* CHECK PASSWORD HASH */{
+            } else if (false) /* todo: CHECK PASSWORD HASH */{
                 error = "Invalid password";
             } else {
                 //flash('You were logged in')
@@ -273,6 +269,7 @@ public class minitwit {
                 //return redirect(url_for('timeline'))
             }
         }
+        if(error.length()>0) System.out.println(error);
 
         //return render_template('login.html', error=error)
         return null;
@@ -313,6 +310,7 @@ public class minitwit {
                 }
             }
         }
+        if(error.length()>0) System.out.println(error);
 
         //return render_template('register.html', error=error)
         return null;
