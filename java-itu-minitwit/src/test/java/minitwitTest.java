@@ -9,8 +9,8 @@ class minitwitTest {
     void setUp() {
         try {
             databaseFile = File.createTempFile("testDB-", ".db");
-            minitwit.setDATABASE(databaseFile.getName());
-            minitwit.init_db();
+            Queries.setDATABASE(databaseFile.getName());
+            Queries.init_db();
         } catch (IOException e) {
             e.printStackTrace();
         }
