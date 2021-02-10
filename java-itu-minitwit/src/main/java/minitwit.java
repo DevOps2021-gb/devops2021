@@ -9,7 +9,9 @@ import org.apache.commons.lang3.NotImplementedException;
 import org.apache.ibatis.jdbc.ScriptRunner;
 import spark.Request;
 
+import java.io.File;
 import java.io.FileReader;
+import java.io.IOException;
 import java.sql.*;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -51,7 +53,6 @@ public class minitwit {
             e.printStackTrace();
         }
     }
-
     private static void registerEndpoints() {
         get("/",                    (req, res)-> timeline(null, null));
         get("/public",              (req, res)-> public_timeline());
@@ -104,6 +105,7 @@ public class minitwit {
     Creates the database tables.
      */
     public static void init_db()  {
+        System.out.println(DATABASE);
         try (Connection c = connect_db().get()) {
 
             ScriptRunner sr = new ScriptRunner(c);
@@ -445,4 +447,9 @@ public class minitwit {
         session.user = null;
         return public_timeline();
     }
+
+    public static void setDATABASE(String database){
+        minitwit.DATABASE = database;
+    }
+
 }
