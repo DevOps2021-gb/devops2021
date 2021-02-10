@@ -8,8 +8,9 @@ import com.hubspot.jinjava.Jinjava;
 import org.apache.ibatis.jdbc.ScriptRunner;
 import spark.Request;
 import spark.Service;
-
 import java.io.FileReader;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.sql.*;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -105,6 +106,7 @@ public class minitwit {
     Creates the database tables.
      */
     public static void init_db()  {
+        System.out.println(DATABASE);
         try (Connection c = connect_db().get()) {
 
             ScriptRunner sr = new ScriptRunner(c);
@@ -172,15 +174,17 @@ public class minitwit {
     /*
     Return the gravatar image for the given email address.
      */
-    void gravatar_url(String email, int size) {
-        //hashing boogaloo
-        //return 'http://www.gravatar.com/avatar/%s?d=identicon&s=%d' % \ (md5(email.strip().lower().encode('utf-8')).hexdigest(), size)
+    String gravatar_url(String email, int size) {
+        String encodedEmail = new String(email.trim().toLowerCase().getBytes(StandardCharsets.UTF_8), StandardCharsets.UTF_8);
+        String hashHex = Hashing.generate_hash_hex(encodedEmail);
+        return String.format("http://www.gravatar.com/avatar/%s?d=identicon&s=%d", hashHex, size);
     }
+
     /*
     Java does not support default arguments
      */
-    void gravatar_url(String email) {
-        gravatar_url(email, 80);
+    String gravatar_url(String email) {
+        return gravatar_url(email, 80);
     }
 
     /*
@@ -237,7 +241,7 @@ public class minitwit {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return render_template("src/main/resources/timeline.html");
+        return render_template("timeline.html");
     }
 
     /*
@@ -250,7 +254,7 @@ public class minitwit {
                         where message.flagged = 0 and message.author_id = user.user_id
                         order by message.pub_date desc limit ?""", PER_PAGE + "");
 
-        return render_template("src/main/resources/timeline.html");
+        return render_template("timeline.html");
     }
 
     /*
@@ -272,7 +276,7 @@ public class minitwit {
         var messages = query_db("select message.*, user.* from message, user where\n" +
                 "            user.user_id = message.author_id and user.user_id = ?\n" +
                 "            order by message.pub_date desc limit ?"); //[profile_user['user_id'], PER_PAGE]), followed=followed, profile_user=profile_user)
-        return render_template("src/main/resources/timeline.html");
+        return render_template("timeline.html");
     }
 
     /*
@@ -387,7 +391,7 @@ public class minitwit {
         if(error.length()>0) System.out.println(error);
 
         String finalError = error; //must be effectively final
-        return render_template("src/main/resources/login.html", new HashMap<>() {{
+        return render_template("login.html", new HashMap<>() {{
             put("error", finalError);
         }});
     }
@@ -435,7 +439,7 @@ public class minitwit {
         if(error.length() > 0) System.out.println(error);
 
         String finalError = error; //must be effectively final
-        return render_template("src/main/resources/register.html", new HashMap<>() {{
+        return render_template("register.html", new HashMap<>() {{
             put("error", finalError);
         }});
     }
@@ -448,4 +452,9 @@ public class minitwit {
         session.user = null;
         return public_timeline();
     }
+
+    public static void setDATABASE(String database){
+        minitwit.DATABASE = database;
+    }
+
 }
