@@ -1,7 +1,11 @@
+import org.junit.jupiter.api.Test;
+
 import java.io.File;
 import java.io.IOException;
+import java.sql.SQLException;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static spark.Spark.awaitInitialization;
+import static spark.Spark.stop;
 
 class minitwitTest {
     File databaseFile;
@@ -11,6 +15,8 @@ class minitwitTest {
             databaseFile = File.createTempFile("testDB-", ".db");
             Queries.setDATABASE(databaseFile.getName());
             Queries.init_db();
+            Queries.session = new Session(Queries.connect_db(), new User("testUsername"));
+            //awaitInitialization();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -19,5 +25,58 @@ class minitwitTest {
     @org.junit.jupiter.api.AfterEach
     void tearDown() {
         databaseFile.delete();
+        stop();
+    }
+
+    //helperfunctions
+    //Helper function to register a user
+    String register(String username, String password, String password2, String email){
+        if (password2==null) password2 = password;
+        if (email==null)     email = username + "@example.com";
+        return Queries.register("POST", username, email, password, password2);
+    }
+    //login
+    //logout
+    //Records a message
+    void add_message(String text) throws SQLException {
+        var rs = Queries.add_message(text);
+        if(rs == null) assert (false);
+        else assert (rs>0);
+    }
+
+    //tests:
+    @Test
+    void test_register(){
+        String error = register("user1", "q123", null, null);
+        assert (error=="");
+        error = register("user1", "q123", null, null);
+        assert (error=="The username is already taken");
+        error = register("", "q123", null, null);
+        assert (error=="You have to enter a username");
+        error = register("user2", "", null, null);
+        assert (error=="You have to enter a password");
+        error = register("user2", "1", "2", null);
+        assert (error=="The two passwords do not match");
+        error = register("user2", "1", null, "bad email");
+        assert (error=="You have to enter a valid email address");
+    }
+    @Test
+    void test_message_recording() throws SQLException {
+        //String error = register("foo", "default", null, null);       //todo uncomment to change test
+        add_message("test message 1");
+        add_message("<test message 2>");
+        var rs = Queries.public_timeline();
+        assert (rs.isSuccess());
+        rs.get().next();        //todo find out why first result and second is text1
+        var text1 = rs.get().getString("text");
+        rs.get().next();
+        var text2 = rs.get().getString("text");
+        assert text1.equals("test message 1");
+        assert text2.equals("<test message 2>"); //todo store as: "&lt;test message 2&gt;"
+    }
+
+    @Test
+    void test_timelines(){
+
     }
 }

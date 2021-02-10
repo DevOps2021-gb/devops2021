@@ -6,7 +6,6 @@ import spark.Request;
 
 import java.io.FileReader;
 import java.sql.*;
-import java.util.HashMap;
 
 public class Queries {
 
@@ -17,7 +16,7 @@ public class Queries {
     /*
     Returns a new connection to the database.
      */
-    private static Result<Connection> connect_db() {
+    public static Result<Connection> connect_db() {
         try{
             Connection conn = DriverManager.getConnection("jdbc:sqlite:" + DATABASE);
             if (conn != null) {
@@ -39,8 +38,8 @@ public class Queries {
      */
     public static void init_db()  {
         System.out.println(DATABASE);
-        try (Connection c = connect_db().get()) {
-
+        try {
+            Connection c = connect_db().get();
             ScriptRunner sr = new ScriptRunner(c);
 
             sr.runScript(new FileReader("schema.sql"));
@@ -54,11 +53,10 @@ public class Queries {
     /*
     Queries the database and returns a list of dictionaries.
      */
-    static Result<ResultSet> query_db(String query, String... args) {
+    static Result<ResultSet> query_db_select(String query, String... args) {
         try{
             Connection c = connect_db().get();
             PreparedStatement  stmt = c.prepareStatement(query);
-
             //PreparedStatement indices starts at 1
             for (int i = 0; i < args.length; i++) {
                 stmt.setString(i+1, args[i]);
@@ -71,14 +69,29 @@ public class Queries {
             return new Failure<>(e);
         }
     }
-
+    static Integer query_db_update(String query, String... args) {
+        try{
+            Connection c = connect_db().get();
+            PreparedStatement  stmt = c.prepareStatement(query);
+            //PreparedStatement indices starts at 1
+            for (int i = 0; i < args.length; i++) {
+                stmt.setString(i+1, args[i]);
+            }
+            int res = stmt.executeUpdate();
+            return res;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
 
     /*
     Make sure we are connected to the database each request and look
     up the current user so that we know he's there.
      */
+
     public static void before_request(Request request) {
-        var user = query_db("select * from user where user_id = ?", request.params("user_id")).get();
+        var user = query_db_select("select * from user where user_id = ?", request.params("user_id")).get();
 
         try {
             int user_id = user.getInt("user_id");
@@ -104,27 +117,23 @@ public class Queries {
     }
 
     public static ResultSet get_user(String username) throws SQLException {
-        Connection c = connect_db().get();
-        PreparedStatement stmt = c.prepareStatement("select user_id from user where username = ?");
-        stmt.setString(1, username);
-
-        var rs = stmt.executeQuery();
-        return rs;
-
+        var rs = query_db_select("select user_id from user where username = ?", username);
+        return rs.get();
     }
+
     public static Boolean user_logged_in(){
         return session != null && session.user != null;
     }
 
     public static Result<ResultSet> following(ResultSet profile_user) throws SQLException {     //todo fix
-        return query_db("""
+        return query_db_select("""
                                     select 1 from follower where
                                     follower.who_id = ? and follower.whom_id = ?""");//, [[session["user_id"]; profile_user["user_id"]]]);
 
     }
 
     public static Result<ResultSet> messages(ResultSet profile_user) throws SQLException {     //todo fix
-        return query_db("""
+        return query_db_select("""
                 select message.*, user.* from message, user where
                     user.user_id = message.author_id and user.user_id = ?
                     order by message.pub_date desc limit ?"""); //[profile_user['user_id'], PER_PAGE]), followed=followed, profile_user=profile_user)
@@ -136,6 +145,7 @@ public class Queries {
     public static Result<Integer> get_user_id(String username) {
         try{
             var rs = get_user(username);
+            if(rs.isClosed()) return new Failure<>(new Exception("User doesn't exist"));
             return new Success<>(rs.getInt("user_id"));
         } catch (Exception e) {
             e.printStackTrace();
@@ -188,7 +198,7 @@ public class Queries {
      Displays the latest messages of all users.
     */
     public static Result<ResultSet> public_timeline() {
-        var rs = query_db("""
+        var rs = query_db_select("""
             select message.*, user.* from message, user
                 where message.flagged = 0 and message.author_id = user.user_id
                 order by message.pub_date desc limit ?""", PER_PAGE + "");
@@ -198,7 +208,7 @@ public class Queries {
 
     public static Result<ResultSet> timeline(String user_id) {
         try {
-            var rs = Queries.query_db("""
+            var rs = Queries.query_db_select("""
                     select message.*, user.* from message, user
                     where message.flagged = 0 and message.author_id = user.user_id and (
                       user.user_id = ? or
@@ -215,13 +225,14 @@ public class Queries {
     /*
         Registers a new message for the user.
     */
-    public static ResultSet add_message(String message) {
+    public static Integer add_message(String message) {
         if (!user_logged_in()) { return null;}
 
         if (!message.equals("")) {
             try {
-                var stmt = session.connection.get().createStatement();
-                return stmt.executeQuery("insert into message (author_id, text, pub_date, flagged) values (?, ?, ?, 0)"); //todo: (session['user_id'], request.form['text'], int(time.time())))
+                var rs = query_db_update("insert into message (author_id, text, pub_date, flagged) values (?, ?, ?, 0)",
+                        "0", message, "0");//todo: (session['user_id'], request.form['text'], int(time.time())))
+                return rs;
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -232,11 +243,11 @@ public class Queries {
     static String login(String HTTPVerb, String username, String password1, String password2) {
         String error = "";
         if (HTTPVerb.equals("POST")) {
-            var user = query_db("select * from user where username = ?", username);
+            var user = query_db_select("select * from user where username = ?", username);
 
             if (!user.isSuccess()) {
                 error = "Invalid username";
-            } else if (Hashing.check_password_hash(password1, password2)) {
+            } else if (!Hashing.check_password_hash(password1, password2)) {
                 error = "Invalid password";
             } else {
                 //flash('You were logged in')
@@ -249,11 +260,11 @@ public class Queries {
     static String register(String HTTPVerb, String username, String email, String password1, String password2) {
         String error = "";
         if (HTTPVerb.equals("POST")) {
-            if (username == null) {
+            if (username == null || username == "") {
                 error = "You have to enter a username";
             } else if (email == null || !email.contains("@")) {
                 error = "You have to enter a valid email address";
-            } else if (password1 == null) {
+            } else if (password1 == null || password1 == "") {
                 error = "You have to enter a password";
             } else if (!password1.equals(password2)) {
                 error = "The two passwords do not match";
@@ -269,7 +280,7 @@ public class Queries {
                     stmt.executeUpdate();
 
                     //flash('You were successfully registered and can login now')
-                    return login(null, null, null, null);
+                    return login(HTTPVerb, username, password1, password2);
 
                 } catch (Exception e) {
                     e.printStackTrace();
