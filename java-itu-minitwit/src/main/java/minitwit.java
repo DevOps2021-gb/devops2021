@@ -12,6 +12,7 @@ import spark.Request;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.sql.*;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -173,15 +174,17 @@ public class minitwit {
     /*
     Return the gravatar image for the given email address.
      */
-    void gravatar_url(String email, int size) {
-        //hashing boogaloo
-        //return 'http://www.gravatar.com/avatar/%s?d=identicon&s=%d' % \ (md5(email.strip().lower().encode('utf-8')).hexdigest(), size)
+    String gravatar_url(String email, int size) {
+        String encodedEmail = new String(email.trim().toLowerCase().getBytes(StandardCharsets.UTF_8), StandardCharsets.UTF_8);
+        String hashHex = Hashing.generate_hash_hex(encodedEmail);
+        return String.format("http://www.gravatar.com/avatar/%s?d=identicon&s=%d", hashHex, size);
     }
+
     /*
     Java does not support default arguments
      */
-    void gravatar_url(String email) {
-        gravatar_url(email, 80);
+    String gravatar_url(String email) {
+        return gravatar_url(email, 80);
     }
 
     /*
