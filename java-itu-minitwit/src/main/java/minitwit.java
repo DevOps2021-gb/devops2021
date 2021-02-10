@@ -49,6 +49,9 @@ public class minitwit {
             registerEndpoints();
 
             init_db();
+            System.out.println("test if done");
+            System.out.println(get_user_id("bob").get());
+            System.out.println(timeline(null, "bob"));
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -121,14 +124,14 @@ public class minitwit {
     Queries the database and returns a list of dictionaries.
      */
     static Result<ResultSet> query_db(String query, String... args) {
-        try (Connection c = connect_db().get()) {
+        try{
+            Connection c = connect_db().get();
             PreparedStatement  stmt = c.prepareStatement(query);
 
             //PreparedStatement indices starts at 1
-            for (int i = 1; i < args.length; i++) {
-                stmt.setString(i, args[i]);
+            for (int i = 0; i < args.length; i++) {
+                stmt.setString(i+1, args[i]);
             }
-
             ResultSet rs = stmt.executeQuery();
 
             return new Success<>(rs);
@@ -142,7 +145,8 @@ public class minitwit {
     Convenience method to look up the id for a username.
      */
     static Result<Integer> get_user_id(String username) {
-        try (Connection c = connect_db().get()) {
+        try{
+            Connection c = connect_db().get();
             PreparedStatement stmt = c.prepareStatement("select user_id from user where username = ?");
             stmt.setString(1, username);
 
@@ -221,8 +225,12 @@ public class minitwit {
      */
     static Object timeline(String remote_addr, String user_id) {
         System.out.println("We got a visitor from: " + remote_addr);
+        if(session == null){
 
-        if (session.user == null) {
+            //before_request(new Request());      
+        }
+
+        if (session == null || session.user == null) {
             return public_timeline();
         }
 
@@ -234,6 +242,7 @@ public class minitwit {
                       user.user_id in (select whom_id from follower
                            where who_id = ?))
                            order by message.pub_date desc limit ?""", user_id, user_id, PER_PAGE + "");
+            return rs;
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -244,14 +253,13 @@ public class minitwit {
     /*
     Displays the latest messages of all users.
      */
-    static Object public_timeline() {
-
+    static Result<ResultSet> public_timeline() {
         var rs = query_db("""
-                select message.*, user.* from message, user
-                        where message.flagged = 0 and message.author_id = user.user_id
-                        order by message.pub_date desc limit ?""", PER_PAGE + "");
-
-        return render_template("timeline.html");
+            select message.*, user.* from message, user
+                where message.flagged = 0 and message.author_id = user.user_id
+                order by message.pub_date desc limit ?""", PER_PAGE + "");
+        return rs;
+        //return render_template("timeline.html");
     }
 
     /*
