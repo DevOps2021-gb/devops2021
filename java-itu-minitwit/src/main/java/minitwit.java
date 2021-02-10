@@ -13,6 +13,7 @@ import java.util.Date;
 import java.util.HashMap;
 
 import static spark.Spark.*;
+import static spark.Spark.post;
 
 public class minitwit {
 
@@ -23,7 +24,6 @@ public class minitwit {
     public static void main(String[] args) {
         try {
             staticFiles.location("/static");
-
 
             before((request, response) -> Queries.before_request(request));
 
@@ -41,11 +41,7 @@ public class minitwit {
 
             registerEndpoints();
 
-
-            Queries.init_db();
-            System.out.println("test if done");
-            System.out.println(Queries.get_user_id("bob").get());
-            System.out.println(timeline(null, -1));
+            //Queries.init_db();
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -54,16 +50,24 @@ public class minitwit {
     private static void registerEndpoints() {
 
         get("/",                    (req, res)-> timeline(null, -1));
+        get("/test",                (req, res)-> render_template("register.html"));
         get("/public",              (req, res)-> Queries.public_timeline());
-        get("/:username",           (req, res)-> user_timeline(req.params("username")));
-        get("/:username/follow",    (req, res)-> follow_user(null));
-        get("/:username/unfollow",  (req, res)-> unfollow_user(null));
         post("/add_message",        (req, res)-> add_message(null));
         post("/login",              (req, res)-> login("POST", req.params("username"), null, null));
         get("/login",               (req, res)-> login("GET", req.params("username"), null, null));
-        get("/register",            (req, res)-> register(null, null, null, null, null));
-        post("/register",           (req, res)-> register(null, null, null, null, null));
+        get("/register",            (req, res)-> {
+            System.out.println("register get");
+            return render_template("register.html");
+        });
+
+        post("/register",           (req, res)-> register("POST", req.queryParams("username"), req.queryParams("email"), req.queryParams("password"), req.queryParams("password2")));
         get("/logout",              (req, res)-> logout());
+        get("/:username",           (req, res)-> {
+            System.out.println("username: get");
+            return user_timeline(req.params("username"));
+        });
+        get("/:username/follow",    (req, res)-> follow_user(null));
+        get("/:username/unfollow",  (req, res)-> unfollow_user(null));
     }
 
     private static Object render_template(String template, HashMap<String, Object> context) {
@@ -148,7 +152,7 @@ public class minitwit {
             if (Queries.session != null && Queries.session.user != null) {
                 followed = Queries.following(profile_user) != null;
             }
-            var messages = Queries.messages(profile_user);
+            //var messages = Queries.messages(profile_user);
 
         } catch (SQLException throwables) {
             return "404 not found";
@@ -199,7 +203,7 @@ public class minitwit {
      */
     static Object login(String HTTPVerb, String username, String password1, String password2) {
         if (Queries.user_logged_in()) {
-            return timeline(null, -1);
+            return render_template("timeline.html");
         }
 
         String error = Queries.login(HTTPVerb, username, password1, password2);
@@ -216,16 +220,14 @@ public class minitwit {
      */
     static Object register(String HTTPVerb, String username, String email, String password1, String password2) {
         if (Queries.user_logged_in()) {
-            return timeline(null, -1);
+            return render_template("timeline.html");
         }
 
         String error = Queries.register(HTTPVerb, username, email, password1, password2);
         if(error.length() > 0) System.out.println(error);
 
         String finalError = error; //must be effectively final
-        return render_template("register.html", new HashMap<>() {{
-            put("error", finalError);
-        }});
+        return render_template("register.html", new HashMap<>() {{put("error", finalError); }});
     }
 
     /*

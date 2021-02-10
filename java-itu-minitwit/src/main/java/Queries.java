@@ -81,12 +81,12 @@ public class Queries {
         var user = query_db("select * from user where user_id = ?", request.params("user_id")).get();
 
         try {
-            int user_id = user.getInt("user_id");
+/*            int user_id = user.getInt("user_id");
             String username = user.getString("username");
             String email = user.getString("email");
-            String pw_hash = user.getString("pw_hash");
+            String pw_hash = user.getString("pw_hash");*/
 
-            session = new Session(connect_db(), new User(username));
+            session = new Session(connect_db(), new User("bob"));
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -239,7 +239,7 @@ public class Queries {
             } else if (Hashing.check_password_hash(password1, password2)) {
                 error = "Invalid password";
             } else {
-                //flash('You were logged in')
+                System.out.println("You were logged in");
                 session.user = new User("");
             }
         }
@@ -268,7 +268,7 @@ public class Queries {
 
                     stmt.executeUpdate();
 
-                    //flash('You were successfully registered and can login now')
+                    System.out.println("You were successfully registered and can login now");
                     return login(null, null, null, null);
 
                 } catch (Exception e) {
