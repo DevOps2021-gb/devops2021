@@ -8,6 +8,8 @@ import java.io.FileReader;
 import java.sql.*;
 import java.util.HashMap;
 
+import static spark.Spark.halt;
+
 public class Queries {
 
     static String DATABASE      = "minitwit.db";
@@ -78,6 +80,12 @@ public class Queries {
     up the current user so that we know he's there.
      */
     public static void before_request(Request request) {
+        boolean authenticated = true;
+        // ... check if authenticated
+        if (!authenticated) {
+            halt(401, "You are not welcome here");
+        }
+
         var user = query_db("select * from user where user_id = ?", request.params("user_id")).get();
 
         try {
@@ -85,7 +93,7 @@ public class Queries {
             String username = user.getString("username");
             String email = user.getString("email");
             String pw_hash = user.getString("pw_hash");*/
-
+            request.session(true);
             session = new Session(connect_db(), new User("bob"));
         } catch (Exception e) {
             e.printStackTrace();
@@ -109,6 +117,7 @@ public class Queries {
         stmt.setString(1, username);
 
         var rs = stmt.executeQuery();
+
         return rs;
 
     }

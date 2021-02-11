@@ -9,6 +9,8 @@ import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 
@@ -23,7 +25,7 @@ public class minitwit {
 
     public static void main(String[] args) {
         try {
-            staticFiles.location("/static");
+            staticFiles.location("/");
 
             before((request, response) -> Queries.before_request(request));
 

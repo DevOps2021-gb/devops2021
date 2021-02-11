@@ -25,4 +25,9 @@ public class Failure<T> extends Result<T> {
     public Exception getException() {
         return exception;
     }
+
+    @Override
+    public String toString() {
+        return exception.toString();
+    }
 }
