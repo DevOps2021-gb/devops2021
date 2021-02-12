@@ -6,15 +6,12 @@ import spark.Request;
 
 import java.io.FileReader;
 import java.sql.*;
-import java.util.HashMap;
-
-import static spark.Spark.halt;
+import java.util.ArrayList;
 
 public class Queries {
 
     static String DATABASE      = "minitwit.db";
     static int PER_PAGE         = 30;
-    static Session session; //TODO handle multiple sessions?
 
     /*
     Returns a new connection to the database.
@@ -89,28 +86,56 @@ public class Queries {
         }
     }
 
+    static Result<User> querySingleUser(String query, String ... args) {
+        Connection conn = null;
+        try{
+            conn = connect_db().get();
+            PreparedStatement  stmt = conn.prepareStatement(query);
+
+            //PreparedStatement indices starts at 1
+            for (int i = 0; i < args.length; i++) {
+                stmt.setString(i+1, args[i]);
+            }
+
+            ResultSet rs = stmt.executeQuery();
+
+            if(!rs.next()) return new Failure<>("No user found");
+
+            int user_id = rs.getInt("user_id");
+            String username = rs.getString("username");
+            String email = rs.getString("email");
+            String pw_hash = rs.getString("pw_hash");
+
+            return new Success<>(new User(user_id,username,email,pw_hash));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new Failure<>(e);
+        } finally {
+            closeConnection(conn);
+        }
+    }
+
     /*
     Make sure we are connected to the database each request and look
     up the current user so that we know he's there.
      */
     public static void before_request(Request request) {
-        var user = query_db_select("select * from user where user_id = ?", request.params("user_id")).get();
-        boolean authenticated = true;
-        // ... check if authenticated
-        if (!authenticated) {
-            halt(401, "You are not welcome here");
+        String user_id = request.session().attribute("user_id");
+
+        if (user_id == null) {
+            return;
         }
 
-        try {
-            int user_id = user.getInt("user_id");
-            String username = user.getString("username");
-            String email = user.getString("email");
-            String pw_hash = user.getString("pw_hash");
+        System.out.println("User_id: " + user_id);
 
-            session = new Session(connect_db(), new User(username));
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        var user = querySingleUser("select * from user where user_id = ?", user_id);
+
+        boolean authenticated = user.isSuccess();
+        //if (!authenticated) {
+        //    halt(401, "401");
+        //}
+        if (user.isSuccess())
+            request.session().attribute("user_id", user.get().user_id() + "");
     }
 
     /*
@@ -118,7 +143,7 @@ public class Queries {
      */
     public static void after_request() {
         try {
-            session.connection.get().close();
+            //TODO stop spark
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -287,6 +312,7 @@ public class Queries {
                     stmt.setString(3, Hashing.generate_password_hash(password1));
 
                     stmt.executeUpdate();
+                    closeConnection(conn.get());
 
                     System.out.println("You were successfully registered and can login now");
                     return login(HTTPVerb, username, password1, password2);
@@ -299,10 +325,17 @@ public class Queries {
         return error;
     }
 
-
-
     public static void setDATABASE(String database){
         DATABASE = database;
     }
 
+    private static void closeConnection(Connection conn) {
+        if (conn != null) {
+            try {
+                conn.close();
+            } catch (SQLException throwables) {
+                throwables.printStackTrace();
+            }
+        }
+    }
 }

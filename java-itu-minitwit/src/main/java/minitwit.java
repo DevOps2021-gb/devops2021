@@ -4,9 +4,9 @@ import RoP.Success;
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 import com.hubspot.jinjava.Jinjava;
+import spark.Request;
 
 import java.nio.charset.StandardCharsets;
-import java.sql.SQLException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -15,7 +15,6 @@ import java.util.Date;
 import java.util.HashMap;
 
 import static spark.Spark.*;
-import static spark.Spark.post;
 
 public class minitwit {
 
@@ -146,20 +145,21 @@ public class minitwit {
     /*
     Display's a users tweets.
      */
-    static Object user_timeline(String username) {
+    static Object user_timeline(Request request) {
+        String username = request.queryParams("username");
+        String user_id = request.queryParams("user_id");
 
-        try {
-            var profile_user =Queries.get_user(username);
-            boolean followed = false;
-            if (Queries.session != null && Queries.session.user != null) {
-                followed = Queries.following(profile_user) != null;
-            }
-            //var messages = Queries.messages(profile_user);
+        var profile_user = Queries.getUser(username);
+        boolean followed = false;
 
-        } catch (SQLException throwables) {
-            return "404 not found";
-        }
-        return render_template("timeline.html");
+        return render_template("timeline.html", new HashMap<>() {{
+            put("endpoint", "user_timeline");
+            put("username", username);
+            put("title", "My Timeline");
+            put("user_id", user_id);
+            put("profile_user_id", "0");
+            put("followed", followed);
+        }});
     }
 
     /*
@@ -208,13 +208,25 @@ public class minitwit {
             return render_template("timeline.html");
         }
 
-        String error = Queries.login(HTTPVerb, username, password1, password2);
-        if(error.length()>0) System.out.println(error);
+        var loginResult = Queries.queryLogin(username, password);
 
-        String finalError = error; //must be effectively final
-        return render_template("login.html", new HashMap<>() {{
-            put("error", finalError);
-        }});
+        if (loginResult.isSuccess()) {
+            request.session().attribute("user_id", Queries.getUserId(username).get());
+            //TODO redirect to /
+            return render_template("timeline.html", new HashMap<>() {{
+                put("username", username);
+                put("user", username);
+                put("endpoint","My Timeline");
+                put("title","My Timeline");
+            }});
+        } else {
+            System.out.println(loginResult);
+
+            return render_template("login.html", new HashMap<>() {{
+                put("error", loginResult);
+            }});
+        }
+
     }
 
     /*
@@ -235,10 +247,10 @@ public class minitwit {
     /*
     Logs the user out
      */
-    static Object logout() {
-        //flash('You were logged out')
-        Queries.session.user = null;
-        return public_timeline();
+    static Object logout(Request request) {
+        System.out.println("You were logged out");
+        request.session().removeAttribute("user_id");
+        return render_template("timeline.html");
     }
 
 }
