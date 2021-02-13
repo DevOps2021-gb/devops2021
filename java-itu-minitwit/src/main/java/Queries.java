@@ -250,7 +250,7 @@ public class Queries {
             while (rs.next()) {
                 String username = rs.getString("username");
                 String email = rs.getString("email");
-                int pubDate = rs.getInt("pub_date");
+                int pubDate = rs.getInt("pubDate");
                 String formattedDate = formatDatetime(String.valueOf(pubDate)).get();
                 String text = rs.getString("text");
 
@@ -312,7 +312,7 @@ public class Queries {
                         user.userId = ? or
                         user.userId in (select whomId from follower
                                                 where whoId = ?))
-                    order by message.pub_date desc limit ?""");
+                    order by message.pubDate desc limit ?""");
 
             stmt.setInt(1, userId);
             stmt.setInt(2, userId);

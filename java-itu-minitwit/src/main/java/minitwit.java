@@ -189,7 +189,7 @@ public class minitwit {
             var loggedInUser = Queries.getUserById(userId);
 
             return renderTemplate("timeline.html", new HashMap<>() {{
-                put("endpoint", "user_timeline");
+                put("endpoint", "userTimeline");
                 put("username", loggedInUser.get().username());
                 put("title", profileUser.get().username() + "'s Timeline");
                 put("user", loggedInUser.get().userId());
