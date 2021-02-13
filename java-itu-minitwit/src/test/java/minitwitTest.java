@@ -113,6 +113,6 @@ class minitwitTest {
         logout();
         register_and_login("bar","default");
         add_message("the message by bar");
-
+        // TODO finish
     }
 }
