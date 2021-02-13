@@ -176,3 +176,13 @@ div.error {
     padding: 4px;
     font-size: 13px;
 }
+
+div.flash {
+    margin: 5px 0;
+    background: #B9F3ED;
+    border: 1px solid #81CEC6;
+    -moz-border-radius: 2px;
+    -webkit-border-radius: 2px;
+    padding: 4px;
+    font-size: 13px;
+}
