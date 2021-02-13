@@ -1,13 +1,16 @@
+import Records.Tweet;
+import Records.User;
 import RoP.Failure;
 import RoP.Result;
 import RoP.Success;
-import com.hubspot.jinjava.lib.filter.DatetimeFilter;
 import org.apache.ibatis.jdbc.ScriptRunner;
-import spark.Request;
 
 import java.io.FileReader;
+import java.nio.charset.StandardCharsets;
 import java.sql.*;
-import java.util.ArrayList;
+import java.text.SimpleDateFormat;
+import java.util.*;
+import java.util.Date;
 
 public class Queries {
 
@@ -22,7 +25,7 @@ public class Queries {
             Connection conn = DriverManager.getConnection("jdbc:sqlite:" + DATABASE);
             if (conn != null) {
                 DatabaseMetaData meta = conn.getMetaData();
-                System.out.println("Connected to " + meta.getDriverName());
+                //System.out.println("Connected to " + meta.getDriverName());
                 return new Success<>(conn);
             }
 
@@ -39,51 +42,36 @@ public class Queries {
      */
     public static void init_db()  {
         System.out.println(DATABASE);
+        Connection c = null;
         try {
-            Connection c = connect_db().get();
+            c = connect_db().get();
             ScriptRunner sr = new ScriptRunner(c);
 
             sr.runScript(new FileReader("schema.sql"));
 
         } catch (Exception e) {
             e.printStackTrace();
+        } finally {
+            closeConnection(c);
         }
     }
 
-
     /*
-    Queries the database and returns a list of dictionaries.
-     */
-    static Result<ResultSet> query_db_select(String query, String... args) {
-        try{
-            Connection c = connect_db().get();
-            PreparedStatement  stmt = c.prepareStatement(query);
+    Format a timestamp for display.
+    */
+    static Result<String> format_datetime(String timestamp) {
+        try {
+            //System.out.println("TIMESTAMP " + timestamp);
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
+            sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+            Date date = sdf.parse(timestamp);
 
-            //PreparedStatement indices starts at 1
-            for (int i = 0; i < args.length; i++) {
-                stmt.setString(i+1, args[i]);
-            }
-            ResultSet rs = stmt.executeQuery();
+            //System.out.println("FORMATTED " + date.toString());
 
-            return new Success<>(rs);
+            return new Success<>(date.toString());
         } catch (Exception e) {
             e.printStackTrace();
             return new Failure<>(e);
-        }
-    }
-    static Integer query_db_update(String query, String... args) {
-        try{
-            Connection c = connect_db().get();
-            PreparedStatement  stmt = c.prepareStatement(query);
-            //PreparedStatement indices starts at 1
-            for (int i = 0; i < args.length; i++) {
-                stmt.setString(i+1, args[i]);
-            }
-            int res = stmt.executeUpdate();
-            return res;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
         }
     }
 
@@ -100,7 +88,7 @@ public class Queries {
 
             ResultSet rs = stmt.executeQuery();
 
-            if(!rs.next()) return new Failure<>("No user found");
+            if(!rs.next()) return new Failure<>("No user found for " + query + " args " + Arrays.asList(args));
 
             int user_id = rs.getInt("user_id");
             String username = rs.getString("username");
@@ -116,129 +104,166 @@ public class Queries {
         }
     }
 
-    /*
-    Make sure we are connected to the database each request and look
-    up the current user so that we know he's there.
-     */
-    public static void before_request(Request request) {
-        String user_id = request.session().attribute("user_id");
-
-        if (user_id == null) {
-            return;
-        }
-
-        System.out.println("User_id: " + user_id);
-
-        var user = querySingleUser("select * from user where user_id = ?", user_id);
-
-        boolean authenticated = user.isSuccess();
-        //if (!authenticated) {
-        //    halt(401, "401");
-        //}
-        if (user.isSuccess())
-            request.session().attribute("user_id", user.get().user_id() + "");
-    }
-
-    /*
-    Closes the database again at the end of the request.
-     */
-    public static void after_request() {
+    public static Result<Boolean> following(int who_id, int whom_id) {
+        Connection conn = null;
         try {
-            //TODO stop spark
+            conn = connect_db().get();
+            var stmt = conn.prepareStatement("select 1 from follower where follower.who_id = ? and follower.whom_id = ?");
+
+            stmt.setInt(1, who_id);
+            stmt.setInt(2, whom_id);
+
+            var rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                return new Success<>(true);
+            } else {
+                return new Success<>(false);
+            }
         } catch (Exception e) {
             e.printStackTrace();
+            return new Failure<>(e);
+        } finally {
+            closeConnection(conn);
         }
-    }
-
-    public static ResultSet get_user(String username) throws SQLException {
-        var rs = query_db_select("select user_id from user where username = ?", username);
-        return rs.get();
-    }
-
-
-    public static Boolean user_logged_in(){
-        return session != null && session.user != null;
-    }
-
-    public static Result<ResultSet> following(ResultSet profile_user) throws SQLException {     //todo fix
-        return query_db_select("""
-                                    select 1 from follower where
-                                    follower.who_id = ? and follower.whom_id = ?""");//, [[session["user_id"]; profile_user["user_id"]]]);
-
-    }
-
-    public static Result<ResultSet> messages(ResultSet profile_user) throws SQLException {     //todo fix
-        return query_db_select("""
-                select message.*, user.* from message, user where
-                    user.user_id = message.author_id and user.user_id = ?
-                    order by message.pub_date desc limit ?"""); //[profile_user['user_id'], PER_PAGE]), followed=followed, profile_user=profile_user)
     }
 
     /*
     Convenience method to look up the id for a username.
      */
-    public static Result<Integer> get_user_id(String username) {
-        try{
-            var rs = get_user(username);
-            if(rs.isClosed()) return new Failure<>(new Exception("User doesn't exist"));
-            return new Success<>(rs.getInt("user_id"));
-        } catch (Exception e) {
-            e.printStackTrace();
-            return new Failure<>(e);
-        }
+    public static Result<Integer> getUserId(String username) {
+        var user = getUser(username);
+
+        if (!user.isSuccess()) return new Failure<>(user.toString());
+
+        return new Success<>(user.get().user_id());
+    }
+
+    public static Result<User> getUser(String username) {
+        var user = querySingleUser("select * from user where username = ?", username);
+
+        if (!user.isSuccess()) return new Failure<>(user.toString());
+
+        return new Success<>(user.get());
+    }
+
+    public static Result<User> getUserById(int user_id) {
+        var user = querySingleUser("select * from user where user_id = ?", user_id + "");
+
+        if (!user.isSuccess()) return new Failure<>(user.toString());
+
+        return new Success<>(user.get());
+    }
+
+
+    /*
+    Return the gravatar image for the given email address.
+    */
+    static String gravatar_url(String email) {
+        String encodedEmail = new String(email.trim().toLowerCase().getBytes(StandardCharsets.UTF_8), StandardCharsets.UTF_8);
+        String hashHex = Hashing.generate_hash_hex(encodedEmail);
+        return String.format("http://www.gravatar.com/avatar/%s?d=identicon&s=%d", hashHex, 50);
     }
 
     /*
     Current user follow username
     */
-    static Object follow_user(String username) {
+    static Result<String> follow_user(int who_id, String whom_username) {
+        Result<User> who_user = getUserById(who_id);
+        Result<Integer> whom_id = getUserId(whom_username);
 
-        if (!user_logged_in()) {  return null; }
+        if (!who_user.isSuccess()) {
+            return new Failure<>(who_user.toString());
+        } else if (!whom_id.isSuccess()) {
+            return new Failure<>(whom_id.toString());
+        } else {
+            Connection conn = null;
+            try {
+                conn = connect_db().get();
+                var stmt = conn.prepareStatement("insert into follower (who_id, whom_id) values (?, ?)");
 
-        var whom_id = get_user_id(username);
-        if (whom_id == null) { return null; }
+                stmt.setInt(1, who_user.get().user_id());
+                stmt.setInt(2, whom_id.get());
 
-        try {
-            var stmt = session.connection.get().createStatement();
+                stmt.execute();
 
-            return stmt.executeQuery("insert into follower (who_id, whom_id) values (?, ?)"); //todo: [session['user_id'], whom_id]
-        } catch (Exception e) {
-            e.printStackTrace();
+                return new Success<>("OK");
+            } catch (Exception e) {
+                e.printStackTrace();
+                return new Failure<>(e);
+            } finally {
+                closeConnection(conn);
+            }
         }
-
-        return null;
     }
 
     /*
     Current user unfollow user
     */
-    static Object unfollow_user(String username) {
+    static Result<String> unfollow_user(int who_id, String whom_username) {
+        Result<User> who_user = getUserById(who_id);
+        Result<Integer> whom_id = getUserId(whom_username);
 
-        if(!user_logged_in()){ return null; }
+        if (!who_user.isSuccess()) {
+            return new Failure<>(who_user.toString());
+        } else if (!whom_id.isSuccess()) {
+            return new Failure<>(whom_id.toString());
+        } else {
+            Connection conn = null;
+            try {
+                conn = connect_db().get();
+                var stmt = conn.prepareStatement("delete from follower where who_id=? and whom_id=?");
 
-        var whom_id = get_user_id(username);
-        if(whom_id == null){ return null; }
+                stmt.setInt(1, who_user.get().user_id());
+                stmt.setInt(2, whom_id.get());
 
-        try{
-            var stmt = session.connection.get().createStatement();
+                stmt.execute();
 
-            return stmt.executeQuery("delete from follower where (who_id, whom_id) values (?, ?) limit 1"); // todo: [session['user_id'], whom_id]
-        } catch (Exception e) {
-            e.printStackTrace();
+                return new Success<>("OK");
+            } catch (Exception e) {
+                e.printStackTrace();
+                return new Failure<>(e);
+            } finally {
+                closeConnection(conn);
+            }
         }
-        return null;
     }
 
     /*
-     Displays the latest messages of all users.
+    Displays the latest messages of all users.
     */
-    public static Result<ResultSet> public_timeline() {
-        var rs = query_db_select("""
+    public static Result<ArrayList<Tweet>> public_timeline() {
+        Connection conn = null;
+        try{
+            conn = connect_db().get();
+            PreparedStatement  stmt = conn.prepareStatement("""
             select message.*, user.* from message, user
                 where message.flagged = 0 and message.author_id = user.user_id
-                order by message.pub_date desc limit ?""", PER_PAGE + "");
-        return rs;
-        //return render_template("timeline.html");
+                order by message.pub_date desc limit ?""");
+
+            stmt.setInt(1, PER_PAGE);
+
+            ResultSet rs = stmt.executeQuery();
+
+            ArrayList<Tweet> tweets = new ArrayList<>();
+
+            while (rs.next()) {
+                String username = rs.getString("username");
+                String email = rs.getString("email");
+                int pub_date = rs.getInt("pub_date");
+                String formatted_date = format_datetime(String.valueOf(pub_date)).get();
+                String text = rs.getString("text");
+
+                tweets.add(new Tweet(email, username, text, formatted_date, gravatar_url(email)));
+            }
+
+            return new Success<>(tweets);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new Failure<>(e);
+        } finally {
+            closeConnection(conn);
+        }
     }
 
     public static Result<ArrayList<Tweet>> getTweetsByUsername(String username) {
@@ -280,7 +305,6 @@ public class Queries {
     public static Result<ArrayList<Tweet>> getPersonalTweetsById(int user_id) {
         Connection conn = null;
         try{
-
             conn = connect_db().get();
             PreparedStatement  stmt = conn.prepareStatement("""
              select message.*, user.* from message, user
@@ -319,55 +343,69 @@ public class Queries {
     /*
         Registers a new message for the user.
     */
-    public static Integer add_message(String message) {
-        if (!user_logged_in()) { return null;}
+    public static Result<Integer> add_message(String text, int loggedInUserId) {
+        if (!text.equals("")) {
+            Connection conn = null;
+            try{
+                conn = connect_db().get();
+                PreparedStatement  stmt = conn.prepareStatement("insert into message (author_id, text, pub_date, flagged) values (?, ?, ?, 0)");
+                long timestamp = (int) new Date().getTime();
 
-        if (!message.equals("")) {
-            try {
-                long timestamp =  new Date().getTime();
-                var rs = query_db_update("insert into message (author_id, text, pub_date, flagged) values (?, ?, ?, 0)",
-                        "0", message, "0");//todo: (session['user_id'], request.form['text'], int(time.time())))
-                return rs;
+                stmt.setInt(1, loggedInUserId);
+                stmt.setString(2, text);
+                stmt.setString(3, timestamp + "");
+
+                int res = stmt.executeUpdate();
+                return new Success<>(res);
             } catch (Exception e) {
                 e.printStackTrace();
+                return new Failure<>(e);
+            } finally {
+                closeConnection(conn);
             }
         }
-        return null;
+        return new Failure<>("You need to add text to the message");
     }
 
-    static String login(String HTTPVerb, String username, String password1, String password2) {
-        String error = "";
-        if (HTTPVerb.equals("POST")) {
-            var user = query_db_select("select * from user where username = ?", username);
+    static Result<String> queryLogin(String username, String password) {
+        String error;
+        var user = querySingleUser("select * from user where username = ?", username);
 
-            if (!user.isSuccess()) {
-                error = "Invalid username";
-            } else if (!Hashing.check_password_hash(password1, password2)) {
-                error = "Invalid password";
-            } else {
-                System.out.println("You were logged in");
-                session.user = new User("");
-            }
+        if (!user.isSuccess()) {
+            return new Failure<>(user.toString());
         }
-        return error;
+
+        var passwordHash = user.get().pw_hash();
+
+        if (!user.isSuccess()) {
+            error = "Invalid username";
+        } else if (!Hashing.check_password_hash(passwordHash, password)) {
+            error = "Invalid password";
+        } else {
+            System.out.println("You were logged in");
+            return new Success<>("login successful");
+        }
+
+        return new Failure<>(error);
     }
 
-    static String register(String HTTPVerb, String username, String email, String password1, String password2) {
+    static Result<String> register(String username, String email, String password1, String password2) {
         String error = "";
-        if (HTTPVerb.equals("POST")) {
-            if (username == null || username == "") {
-                error = "You have to enter a username";
-            } else if (email == null || !email.contains("@")) {
-                error = "You have to enter a valid email address";
-            } else if (password1 == null || password1 == "") {
-                error = "You have to enter a password";
-            } else if (!password1.equals(password2)) {
-                error = "The two passwords do not match";
-            } else if (get_user_id(username).isSuccess()) {
-                error = "The username is already taken";
-            } else {
-                try {
-                    PreparedStatement stmt = session.connection.get().prepareStatement("insert into user (username, email, pw_hash) values (?, ?, ?)");
+        if (username == null || username.equals("")) {
+            error = "You have to enter a username";
+        } else if (email == null || !email.contains("@")) {
+            error = "You have to enter a valid email address";
+        } else if (password1 == null || password1.equals("")) {
+            error = "You have to enter a password";
+        } else if (!password1.equals(password2)) {
+            error = "The two passwords do not match";
+        } else if (getUserId(username).isSuccess()) {
+            error = "The username is already taken";
+        } else {
+            try {
+                var conn = connect_db();
+                if(conn.isSuccess()) {
+                    PreparedStatement stmt = conn.get().prepareStatement("insert into user (username, email, pw_hash) values (?, ?, ?)");
                     stmt.setString(1, username);
                     stmt.setString(2, email);
                     stmt.setString(3, Hashing.generate_password_hash(password1));
@@ -376,14 +414,15 @@ public class Queries {
                     closeConnection(conn.get());
 
                     System.out.println("You were successfully registered and can login now");
-                    return login(HTTPVerb, username, password1, password2);
-
-                } catch (Exception e) {
-                    e.printStackTrace();
+                    return new Success<>("OK");
                 }
+
+            } catch (Exception e) {
+                e.printStackTrace();
+                return new Failure<>(e);
             }
         }
-        return error;
+        return new Failure<>(error);
     }
 
     private static void closeConnection(Connection conn) {

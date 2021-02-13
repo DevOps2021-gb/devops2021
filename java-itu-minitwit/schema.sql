@@ -20,6 +20,3 @@ create table message (
   pub_date integer,
   flagged integer
 );
-insert into user (user_id, username, email, pw_hash) values (0,"bob", "bob@itu.dk", "test");
-insert into message (message_id, author_id, text, pub_date, flagged) values (0,"bob", "message string", 0, 0);
-insert into follower (who_id, whom_id) values (0, 0);

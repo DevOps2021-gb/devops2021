@@ -14,7 +14,7 @@ public class Failure<T> extends Result<T> {
 
     @Override
     public T get() {
-        throw new IllegalStateException("evaluation was a failure");
+        throw new IllegalStateException(exception.getMessage());
     }
 
     @Override
