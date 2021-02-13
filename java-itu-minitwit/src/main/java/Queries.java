@@ -285,8 +285,8 @@ public class Queries {
             ArrayList<Tweet> tweets = new ArrayList<>();
 
             while (rs.next()) {
-                int pub_date = rs.getInt("pubDate");
-                String formattedDate = formatDatetime(String.valueOf(pub_date)).get();
+                int pubDate = rs.getInt("pubDate");
+                String formattedDate = formatDatetime(String.valueOf(pubDate)).get();
                 String text = rs.getString("text");
                 String email = user.get().email();
 

@@ -148,14 +148,14 @@ public class minitwit {
                 put("messages", Queries.publicTimeline().get());
                 put("username", user.get().username());
                 put("user", user.get().username());
-                put("endpoint", "public_timeline");
+                put("endpoint", "publicTimeline");
                 put("title", "Public Timeline");
             }});
         } else {
             return renderTemplate("timeline.html", new HashMap<>() {
                 {
                     put("messages", Queries.publicTimeline().get());
-                    put("endpoint", "public_timeline");
+                    put("endpoint", "publicTimeline");
                     put("title", "Public Timeline");
                 }});
         }
@@ -174,11 +174,11 @@ public class minitwit {
             var profileUser = Queries.getUser(profileUsername);
 
             return renderTemplate("timeline.html", new HashMap<>() {{
-                put("endpoint", "user_timeline");
+                put("endpoint", "userTimeline");
                 put("username", profileUsername);
                 put("title", profileUser.get().username() + "'s Timeline");
-                put("profile_user_id", profileUser.get().userId());
-                put("profile_user_username", profileUser.get().username());
+                put("profileUserId", profileUser.get().userId());
+                put("profileUserUsername", profileUser.get().username());
                 put("messages", Queries.getTweetsByUsername(profileUsername).get());
             }});
         } else {
@@ -193,9 +193,9 @@ public class minitwit {
                 put("username", loggedInUser.get().username());
                 put("title", profileUser.get().username() + "'s Timeline");
                 put("user", loggedInUser.get().userId());
-                put("user_id", userId);
-                put("profile_user_id", profileUser.get().userId());
-                put("profile_user_username", profileUser.get().username());
+                put("userId", userId);
+                put("profileUserId", profileUser.get().userId());
+                put("profileUserUsername", profileUser.get().username());
                 put("followed", Queries.following(loggedInUser.get().userId(), profileUser.get().userId()).get());
                 put("messages", Queries.getTweetsByUsername(profileUsername).get());
             }});
@@ -227,7 +227,7 @@ public class minitwit {
     }
 
     private static Integer getSessionUserId(Request request) {
-        return request.session().attribute("user_id");
+        return request.session().attribute("userId");
     }
 
     /*
@@ -287,7 +287,7 @@ public class minitwit {
         var loginResult = Queries.queryLogin(username, password);
 
         if (loginResult.isSuccess()) {
-            request.session().attribute("user_id", Queries.getUserId(username).get());
+            request.session().attribute("userId", Queries.getUserId(username).get());
 
             response.redirect("/");
             return null;
@@ -335,7 +335,7 @@ public class minitwit {
      */
     static Object logout(Request request, Response response) {
         System.out.println("You were logged out");
-        request.session().removeAttribute("user_id");
+        request.session().removeAttribute("userId");
         response.redirect("/login");
         return null;
     }

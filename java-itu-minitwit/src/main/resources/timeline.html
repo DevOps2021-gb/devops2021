@@ -1,8 +1,8 @@
 {% extends "layout.html" %}
 {% block title %}
-  {% if endpoint == 'public_timeline' %}
+  {% if endpoint == 'publicTimeline' %}
     Public Timeline
-  {% elif endpoint == 'user_timeline' %}
+  {% elif endpoint == 'userTimeline' %}
     {{ username }}'s Timeline
   {% else %}
     My Timeline
@@ -11,16 +11,16 @@
 {% block body %}
   <h2>{{ title }}</h2>
   {% if user %}
-    {% if endpoint == 'user_timeline' %}
+    {% if endpoint == 'userTimeline' %}
       <div class=followstatus>
-      {% if user_id == profile_user_id %}
+      {% if userId == profileUserId %}
         This is you!
       {% elif followed %}
         You are currently following this user.
-        <a class=unfollow href="/{{ profile_user_username }}/unfollow">Unfollow user</a>.
+        <a class=unfollow href="/{{ profileUserUsername }}/unfollow">Unfollow user</a>.
       {% else %}
         You are not yet following this user.
-        <a class=follow href="/{{ profile_user_username }}/follow">Follow user</a>.
+        <a class=follow href="/{{ profileUserUsername }}/follow">Follow user</a>.
       {% endif %}
       </div>
     {% elif endpoint == 'timeline' %}
