@@ -1,6 +1,7 @@
 import RoP.Failure;
 import RoP.Result;
 import RoP.Success;
+import com.hubspot.jinjava.lib.filter.DatetimeFilter;
 import org.apache.ibatis.jdbc.ScriptRunner;
 import spark.Request;
 
@@ -240,6 +241,83 @@ public class Queries {
         //return render_template("timeline.html");
     }
 
+    public static Result<ArrayList<Tweet>> getTweetsByUsername(String username) {
+        Connection conn = null;
+        try{
+            var user = getUser(username);
+            conn = connect_db().get();
+            PreparedStatement  stmt = conn.prepareStatement("""
+            select message.*, user.* from message, user
+                where message.flagged = 0 and message.author_id = user.user_id
+                and user.user_id = ?
+                order by message.pub_date desc limit ?""");
+
+            stmt.setInt(1, user.get().user_id());
+            stmt.setInt(2, PER_PAGE);
+
+            ResultSet rs = stmt.executeQuery();
+
+            ArrayList<Tweet> tweets = new ArrayList<>();
+
+            while (rs.next()) {
+                int tweet_user_id = rs.getInt("user_id");
+                String pw_hash = rs.getString("pw_hash");
+                int pub_date = rs.getInt("pub_date");
+                String formatted_date = format_datetime(String.valueOf(pub_date)).get();
+                String text = rs.getString("text");
+                String email = user.get().email();
+
+                tweets.add(new Tweet(email, user.get().username(), text, formatted_date, gravatar_url(email)));
+            }
+
+            return new Success<>(tweets);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new Failure<>(e);
+        } finally {
+            closeConnection(conn);
+        }
+    }
+
+    public static Result<ArrayList<Tweet>> getPersonalTweetsById(int user_id) {
+        Connection conn = null;
+        try{
+
+            conn = connect_db().get();
+            PreparedStatement  stmt = conn.prepareStatement("""
+             select message.*, user.* from message, user
+                    where message.flagged = 0 and message.author_id = user.user_id and (
+                        user.user_id = ? or
+                        user.user_id in (select whom_id from follower
+                                                where who_id = ?))
+                    order by message.pub_date desc limit ?""");
+
+            stmt.setInt(1, user_id);
+            stmt.setInt(2, user_id);
+            stmt.setInt(3, PER_PAGE);
+
+            ResultSet rs = stmt.executeQuery();
+
+            ArrayList<Tweet> tweets = new ArrayList<>();
+
+            while (rs.next()) {
+                int pub_date = rs.getInt("pub_date");
+                String formatted_date = format_datetime(String.valueOf(pub_date)).get();
+                String text = rs.getString("text");
+                String email = rs.getString("email");
+                String username = rs.getString("username");
+
+                tweets.add(new Tweet(email, username, text, formatted_date, gravatar_url(email)));
+            }
+            return new Success<>(tweets);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new Failure<>(e);
+        } finally {
+            closeConnection(conn);
+        }
+    }
+
     public static Result<ResultSet> timeline(String user_id) {
         try {
             var rs = Queries.query_db_select("""
@@ -264,6 +342,7 @@ public class Queries {
 
         if (!message.equals("")) {
             try {
+                long timestamp =  new Date().getTime();
                 var rs = query_db_update("insert into message (author_id, text, pub_date, flagged) values (?, ?, ?, 0)",
                         "0", message, "0");//todo: (session['user_id'], request.form['text'], int(time.time())))
                 return rs;

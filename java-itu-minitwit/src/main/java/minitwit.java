@@ -5,6 +5,7 @@ import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 import com.hubspot.jinjava.Jinjava;
 import spark.Request;
+import spark.Response;
 
 import java.nio.charset.StandardCharsets;
 import java.text.DateFormat;
@@ -145,9 +146,22 @@ public class minitwit {
     /*
     Display's a users tweets.
      */
-    static Object user_timeline(Request request) {
-        String username = request.queryParams("username");
-        String user_id = request.queryParams("user_id");
+    static Object user_timeline(Request request,String profile_username) {
+
+        if (!Queries.user_logged_in(request)) {
+
+            var profile_user = Queries.getUser(profile_username);
+
+            return render_template("timeline.html", new HashMap<>() {{
+                put("endpoint", "user_timeline");
+                put("username", profile_username);
+                put("title", profile_user.get().username() + "'s Timeline");
+                put("profile_user_id", profile_user.get().user_id());
+                put("profile_user_username", profile_user.get().username());
+                put("messages", Queries.getTweetsByUsername(profile_username).get());
+            }});
+        } else {
+            String user_id = request.session().attribute("user_id");
 
         var profile_user = Queries.getUser(username);
         boolean followed = false;
