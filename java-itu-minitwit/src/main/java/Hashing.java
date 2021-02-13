@@ -21,7 +21,7 @@ public class Hashing {
         return generateHashString(password);
     }
 
-    public static boolean check_password_hash(String passwordHash, String password) {
+    public static boolean checkPasswordHash(String passwordHash, String password) {
         return generatePasswordHash(password).equals(passwordHash);
     }
 

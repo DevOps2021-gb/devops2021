@@ -22,7 +22,7 @@ public class minitwit {
 
             registerEndpoints();
 
-            //Queries.init_db();
+            //Queries.initDb();
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -43,7 +43,7 @@ public class minitwit {
                 return;
             }
 
-            var user = Queries.querySingleUser("select * from user where user_id = ?", userId.toString());
+            var user = Queries.querySingleUser("select * from user where userId = ?", userId.toString());
             if (user.isSuccess()) {
                 request.session().attribute("userId", user.get().userId());
             }
@@ -177,7 +177,7 @@ public class minitwit {
                 put("endpoint", "user_timeline");
                 put("username", profileUsername);
                 put("title", profileUser.get().username() + "'s Timeline");
-                put("profile_user_id", profileUser.get().user_id());
+                put("profile_user_id", profileUser.get().userId());
                 put("profile_user_username", profileUser.get().username());
                 put("messages", Queries.getTweetsByUsername(profileUsername).get());
             }});

@@ -172,8 +172,8 @@ public class Queries {
         Result<User> whoUser = getUserById(whoId);
         Result<Integer> whomId = getUserId(whomUsername);
 
-        if (!whoId.isSuccess()) {
-            return new Failure<>(whoId.toString());
+        if (!whoUser.isSuccess()) {
+            return new Failure<>(whoUser.toString());
         } else if (!whomId.isSuccess()) {
             return new Failure<>(whomId.toString());
         } else {
@@ -182,7 +182,7 @@ public class Queries {
                 conn = connectDb().get();
                 var stmt = conn.prepareStatement("insert into follower (whoId, whomId) values (?, ?)");
 
-                stmt.setInt(1, whoId.get().userId());
+                stmt.setInt(1, whoUser.get().userId());
                 stmt.setInt(2, whomId.get());
 
                 stmt.execute();
