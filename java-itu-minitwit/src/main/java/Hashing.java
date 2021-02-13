@@ -5,7 +5,7 @@ import java.util.*;
 
 public class Hashing {
 
-    private static String generate_hash_string(String input) {
+    private static String generateHashString(String input) {
         String hashString = null;
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
@@ -17,16 +17,16 @@ public class Hashing {
         return hashString;
     }
 
-    public static String generate_password_hash(String password) {
-        return generate_hash_string(password);
+    public static String generatePasswordHash(String password) {
+        return generateHashString(password);
     }
 
     public static boolean check_password_hash(String passwordHash, String password) {
-        return generate_password_hash(password).equals(passwordHash);
+        return generatePasswordHash(password).equals(passwordHash);
     }
 
-    public static String generate_hash_hex(String input) {
-        String hashString = generate_hash_string(input);
+    public static String generateHashHex(String input) {
+        String hashString = generateHashString(input);
 
         StringBuilder sb = new StringBuilder();
         char[] hashChars = hashString.toCharArray();
