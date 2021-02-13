@@ -372,14 +372,12 @@ public class Queries {
         var user = querySingleUser("select * from user where username = ?", username);
 
         if (!user.isSuccess()) {
-            return new Failure<>(user.toString());
+            return new Failure<>("Invalid username");
         }
 
         var passwordHash = user.get().pwHash();
 
-        if (!user.isSuccess()) {
-            error = "Invalid username";
-        } else if (!Hashing.checkPasswordHash(passwordHash, password)) {
+        if (!Hashing.checkPasswordHash(passwordHash, password)) {
             error = "Invalid password";
         } else {
             System.out.println("You were logged in");
