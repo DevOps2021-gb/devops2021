@@ -267,10 +267,8 @@ public class minitwit {
         if (rs.isSuccess()){
             System.out.println("Your message was recorded");
             //flash('Your message was recorded')
-            response.redirect("/" + request.params("username"));
-        } else {
-            response.redirect("/");
         }
+        response.redirect("/");
         return null;
     }
 
