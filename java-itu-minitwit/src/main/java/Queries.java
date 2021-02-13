@@ -172,8 +172,8 @@ public class Queries {
         Result<User> whoUser = getUserById(whoId);
         Result<Integer> whomId = getUserId(whomUsername);
 
-        if (!whoId.isSuccess()) {
-            return new Failure<>(whoId.toString());
+        if (!whoUser.isSuccess()) {
+            return new Failure<>(whoUser.toString());
         } else if (!whomId.isSuccess()) {
             return new Failure<>(whomId.toString());
         } else {
@@ -182,7 +182,7 @@ public class Queries {
                 conn = connectDb().get();
                 var stmt = conn.prepareStatement("insert into follower (whoId, whomId) values (?, ?)");
 
-                stmt.setInt(1, whoId.get().userId());
+                stmt.setInt(1, whoUser.get().userId());
                 stmt.setInt(2, whomId.get());
 
                 stmt.execute();
@@ -250,7 +250,7 @@ public class Queries {
             while (rs.next()) {
                 String username = rs.getString("username");
                 String email = rs.getString("email");
-                int pubDate = rs.getInt("pub_date");
+                int pubDate = rs.getInt("pubDate");
                 String formattedDate = formatDatetime(String.valueOf(pubDate)).get();
                 String text = rs.getString("text");
 
@@ -285,8 +285,8 @@ public class Queries {
             ArrayList<Tweet> tweets = new ArrayList<>();
 
             while (rs.next()) {
-                int pub_date = rs.getInt("pubDate");
-                String formattedDate = formatDatetime(String.valueOf(pub_date)).get();
+                int pubDate = rs.getInt("pubDate");
+                String formattedDate = formatDatetime(String.valueOf(pubDate)).get();
                 String text = rs.getString("text");
                 String email = user.get().email();
 
@@ -312,7 +312,7 @@ public class Queries {
                         user.userId = ? or
                         user.userId in (select whomId from follower
                                                 where whoId = ?))
-                    order by message.pub_date desc limit ?""");
+                    order by message.pubDate desc limit ?""");
 
             stmt.setInt(1, userId);
             stmt.setInt(2, userId);

@@ -13,7 +13,7 @@ class minitwitTest {
         try {
             databaseFile = File.createTempFile("testDB-", ".db");
             Queries.setDATABASE(databaseFile.getName());
-            Queries.init_db();
+            Queries.initDb();
             //awaitInitialization();
         } catch (IOException e) {
             e.printStackTrace();
