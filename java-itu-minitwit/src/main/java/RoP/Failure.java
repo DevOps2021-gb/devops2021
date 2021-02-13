@@ -2,7 +2,7 @@ package RoP;
 
 public class Failure<T> extends Result<T> {
 
-    Exception exception;
+    final Exception exception;
 
     public Failure(Exception e) {
         exception = e;
@@ -24,5 +24,10 @@ public class Failure<T> extends Result<T> {
 
     public Exception getException() {
         return exception;
+    }
+
+    @Override
+    public String toString() {
+        return exception.toString();
     }
 }
