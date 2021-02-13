@@ -141,9 +141,9 @@ public class minitwit {
      Displays the latest messages of all users.
     */
     public static Object publicTimeline(Request request, Response response) {
-        var userId = getSessionUserId(request);
-        if(userId != null) {
-            var user = Queries.getUserById(userId);
+        var loggedInUser = getSessionUserId(request);
+        if(loggedInUser != null) {
+            var user = Queries.getUserById(loggedInUser);
             return renderTemplate("timeline.html", new HashMap<>() {{
                 put("messages", Queries.publicTimeline().get());
                 put("username", user.get().username());
