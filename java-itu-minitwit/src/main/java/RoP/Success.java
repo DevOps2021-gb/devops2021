@@ -1,7 +1,7 @@
 package RoP;
 
 public class Success<T> extends Result<T> {
-    private T value;
+    private final T value;
 
     public Success(T val) {
         value = val;

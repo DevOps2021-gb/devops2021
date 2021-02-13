@@ -1,18 +1,10 @@
 import RoP.Failure;
-import RoP.Result;
-import RoP.Success;
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 import com.hubspot.jinjava.Jinjava;
 import spark.Request;
 import spark.Response;
 
-import java.nio.charset.StandardCharsets;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
 import java.util.HashMap;
 
 import static spark.Spark.*;
@@ -21,7 +13,6 @@ public class minitwit {
 
     //configuration
     static Boolean DEBUG        = true;
-    static String SECRET_KEY    = "development key";
 
     public static void main(String[] args) {
         try {
@@ -161,10 +152,11 @@ public class minitwit {
                 put("messages", Queries.getTweetsByUsername(profile_username).get());
             }});
         } else {
-            String user_id = request.session().attribute("user_id");
 
-        var profile_user = Queries.getUser(username);
-        boolean followed = false;
+            var user_id = getSessionUserId(request);
+
+            var profile_user = Queries.getUser(profile_username);
+            var logged_in_user = Queries.getUserById(user_id);
 
         return render_template("timeline.html", new HashMap<>() {{
             put("endpoint", "user_timeline");
@@ -186,6 +178,10 @@ public class minitwit {
         }
         else {return "404";}
         return null;
+    }
+
+    private static Integer getSessionUserId(Request request) {
+        return request.session().attribute("user_id");
     }
 
     /*

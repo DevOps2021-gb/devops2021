@@ -12,7 +12,7 @@ import java.util.ArrayList;
 public class Queries {
 
     static String DATABASE      = "minitwit.db";
-    static int PER_PAGE         = 30;
+    static final int PER_PAGE         = 30;
 
     /*
     Returns a new connection to the database.
@@ -260,8 +260,6 @@ public class Queries {
             ArrayList<Tweet> tweets = new ArrayList<>();
 
             while (rs.next()) {
-                int tweet_user_id = rs.getInt("user_id");
-                String pw_hash = rs.getString("pw_hash");
                 int pub_date = rs.getInt("pub_date");
                 String formatted_date = format_datetime(String.valueOf(pub_date)).get();
                 String text = rs.getString("text");
@@ -318,22 +316,6 @@ public class Queries {
         }
     }
 
-    public static Result<ResultSet> timeline(String user_id) {
-        try {
-            var rs = Queries.query_db_select("""
-                    select message.*, user.* from message, user
-                    where message.flagged = 0 and message.author_id = user.user_id and (
-                      user.user_id = ? or
-                      user.user_id in (select whom_id from follower
-                           where who_id = ?))
-                           order by message.pub_date desc limit ?""", user_id, user_id, PER_PAGE + "");
-            return rs;
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
     /*
         Registers a new message for the user.
     */
@@ -404,10 +386,6 @@ public class Queries {
         return error;
     }
 
-    public static void setDATABASE(String database){
-        DATABASE = database;
-    }
-
     private static void closeConnection(Connection conn) {
         if (conn != null) {
             try {
@@ -416,5 +394,9 @@ public class Queries {
                 throwables.printStackTrace();
             }
         }
+    }
+
+    public static void setDATABASE(String dbName) {
+        DATABASE = dbName;
     }
 }

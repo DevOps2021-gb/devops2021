@@ -2,7 +2,7 @@ package RoP;
 
 public class Failure<T> extends Result<T> {
 
-    Exception exception;
+    final Exception exception;
 
     public Failure(Exception e) {
         exception = e;

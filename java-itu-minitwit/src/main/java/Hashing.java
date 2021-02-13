@@ -28,10 +28,10 @@ public class Hashing {
     public static String generate_hash_hex(String input) {
         String hashString = generate_hash_string(input);
 
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         char[] hashChars = hashString.toCharArray();
-        for(int i = 0; i < hashChars.length; i++) {
-            String hexString = Integer.toHexString(hashChars[i]);
+        for (char hashChar : hashChars) {
+            String hexString = Integer.toHexString(hashChar);
             sb.append(hexString);
         }
         return sb.toString();
