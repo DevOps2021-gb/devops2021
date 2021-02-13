@@ -303,10 +303,11 @@ public class minitwit {
             response.redirect("/");
             return null;
         } else {
+            Failure<String> error = (Failure<String>) loginResult;
             System.out.println(loginResult);
 
             return renderTemplate("login.html", new HashMap<>() {{
-                put("error", loginResult);
+                put("error", error.getException().getMessage());
             }});
         }
     }
