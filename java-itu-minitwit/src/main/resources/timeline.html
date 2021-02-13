@@ -9,6 +9,7 @@
   {% endif %}
 {% endblock %}
 {% block body %}
+  {% if flash %}<div class=flash>{{ flash }}</div>{% endif %}
   <h2>{{ title }}</h2>
   {% if user %}
     {% if endpoint == 'userTimeline' %}

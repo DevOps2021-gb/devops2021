@@ -83,7 +83,7 @@ public class minitwit {
         get("/public",              minitwit::publicTimeline);
         post("/add_message",        minitwit::addMessage);
         post("/login",              minitwit::login);
-        get("/login",               (req, res)-> renderTemplate("login.html"));
+        get("/login",               (req, res)-> renderTemplate("login.html", new HashMap<>() {{ put("flash", getSessionFlash(req)); }}));
         get("/register",            (req, res)-> renderTemplate("register.html"));
         post("/register",           minitwit::register);
         get("/logout",              minitwit::logout);
@@ -134,6 +134,7 @@ public class minitwit {
                 put("endpoint","timeline");
                 put("messages", Queries.getPersonalTweetsById(user.userId()).get());
                 put("title", "My Timeline");
+                put("flash", getSessionFlash(request));
             }});
         }
     }
@@ -157,6 +158,7 @@ public class minitwit {
                     put("messages", Queries.publicTimeline().get());
                     put("endpoint", "publicTimeline");
                     put("title", "Public Timeline");
+                    put("flash", getSessionFlash(request));
                 }});
         }
     }
@@ -188,6 +190,7 @@ public class minitwit {
             var profileUser = Queries.getUser(profileUsername);
             var loggedInUser = Queries.getUserById(userId);
 
+
             return renderTemplate("timeline.html", new HashMap<>() {{
                 put("endpoint", "userTimeline");
                 put("username", loggedInUser.get().username());
@@ -198,6 +201,7 @@ public class minitwit {
                 put("profileUserUsername", profileUser.get().username());
                 put("followed", Queries.following(loggedInUser.get().userId(), profileUser.get().userId()).get());
                 put("messages", Queries.getTweetsByUsername(profileUsername).get());
+                put("flash", getSessionFlash(request));
             }});
         }
     }
@@ -215,19 +219,26 @@ public class minitwit {
 
         var rs = Queries.followUser(getSessionUserId(request),profileUsername);
         if (rs.isSuccess()) {
-            //flash
+            request.session().attribute("flash", "You are now following " + profileUsername);
             System.out.println("You are now following " + profileUsername);
         }
         else {
             System.out.println(rs.toString());
             halt(404, rs.toString());
         }
+
         response.redirect("/" + profileUsername);
         return null;
     }
 
     private static Integer getSessionUserId(Request request) {
         return request.session().attribute("userId");
+    }
+
+    private static Object getSessionFlash(Request request) {
+        var msg = request.session().attribute("flash");
+        request.session().removeAttribute("flash");
+        return msg;
     }
 
     /*
@@ -243,7 +254,7 @@ public class minitwit {
 
         var rs = Queries.unfollowUser(getSessionUserId(request), profileUsername);
         if (rs.isSuccess()) {
-            //flash
+            request.session().attribute("flash", "You are no longer following " + profileUsername);
             System.out.println("You are no longer following " + profileUsername);
         }
         else {
@@ -266,7 +277,7 @@ public class minitwit {
         var rs = Queries.addMessage(request.queryParams("text"), getSessionUserId(request));
         if (rs.isSuccess()){
             System.out.println("Your message was recorded");
-            //flash('Your message was recorded')
+            request.session().attribute("flash", "Your message was recorded");
         }
         response.redirect("/");
         return null;
@@ -288,7 +299,7 @@ public class minitwit {
 
         if (loginResult.isSuccess()) {
             request.session().attribute("userId", Queries.getUserId(username).get());
-
+            request.session().attribute("flash", "You were logged in");
             response.redirect("/");
             return null;
         } else {
@@ -316,6 +327,7 @@ public class minitwit {
         var result = Queries.register(username, email, password1, password2);
 
         if (result.isSuccess()) {
+            request.session().attribute("flash", "You were successfully registered and can login now");
             response.redirect("/login");
             return null;
         } else {
@@ -336,7 +348,8 @@ public class minitwit {
     static Object logout(Request request, Response response) {
         System.out.println("You were logged out");
         request.session().removeAttribute("userId");
-        response.redirect("/login");
+        request.session().attribute("flash", "You were logged out");
+        response.redirect("/public");
         return null;
     }
 
