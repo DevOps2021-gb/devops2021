@@ -127,14 +127,12 @@ class minitwitTest {
         var id2 = register_login_getID("bar","default", null, null);
         add_message("the message by bar", id2.get());
 
-
         var rs = Queries.getPersonalTweetsById(id1.get());
         assert (rs.isSuccess());
         var tweet1 = rs.get().get(0);
         assert (tweet1.email().equals("foo@example.com"));
         assert (tweet1.username().equals("foo"));
         assert (tweet1.text().equals("the message by foo"));
-
 
         rs = Queries.getPersonalTweetsById(id2.get());
         assert (rs.isSuccess());
@@ -161,8 +159,44 @@ class minitwitTest {
                 user1_1.get().username().equals(user1_2.get().username()) &&
                 user1_1.get().pwHash().equals(user1_2.get().pwHash()) &&
                 user1_1.get().email().equals(user1_2.get().email()));
-
     }
 
+
+    @Test
+    void test_following() throws SQLException {
+        var id1 = register_login_getID("foo", "default", null, null);
+        add_message("the message by foo", id1.get());
+        var id2 = register_login_getID("bar","1234", null, null);
+        add_message("the message by bar", id2.get());
+        var id3 = register_login_getID("brian","q123", null, null);
+        add_message("the message by bar", id2.get());
+
+        var rs1 = Queries.following(id1.get(), id2.get());
+        assert (rs1.isSuccess());
+        var rs2 = Queries.followUser(id1.get(), "brian");
+        assert (rs2.isSuccess());
+        //todo test when following does anything
+    }
+
+    @Test
+    void test_unfollowUser() throws SQLException {
+        var id1 = register_login_getID("foo", "default", null, null);
+        add_message("the message by foo", id1.get());
+        var id2 = register_login_getID("bar","1234", null, null);
+        add_message("the message by bar", id2.get());
+        var id3 = register_login_getID("brian","q123", null, null);
+        add_message("the message by bar", id2.get());
+
+        var rs1 = Queries.followUser(id1.get(), "bar");
+        assert (rs1.isSuccess());
+        var rs2 = Queries.followUser(id1.get(), "brian");
+        assert (rs2.isSuccess());
+
+        var rsUnfollow1 = Queries.unfollowUser(id1.get(), "bar");
+        assert (rsUnfollow1.isSuccess());
+        var rsUnfollow2 = Queries.unfollowUser(id1.get(), "brian");
+        assert (rsUnfollow2.isSuccess());
+        //todo test when following does anything
+    }
 
 }
