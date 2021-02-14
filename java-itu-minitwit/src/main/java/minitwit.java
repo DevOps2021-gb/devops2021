@@ -332,10 +332,8 @@ public class minitwit {
             response.redirect("/login");
             return null;
         } else {
-            Failure<String> error = (Failure<String>) result;
-
             return renderTemplate("register.html", new HashMap<>() {{
-                put("error", error.getException().getMessage());
+                put("error", result.getFailureMessage());
                 //TODO handle each case individually
                 put("username", username);
                 put("email", email);

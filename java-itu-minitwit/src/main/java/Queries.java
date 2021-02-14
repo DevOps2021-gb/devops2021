@@ -237,6 +237,7 @@ public class Queries {
                 where message.flagged = 0 and message.authorId = user.userId
                 order by message.pubDate desc limit ?""");
 
+
             stmt.setInt(1, PER_PAGE);
 
             ResultSet rs = stmt.executeQuery();
@@ -249,7 +250,6 @@ public class Queries {
                 long pubDate = rs.getLong("pubDate");
                 String formattedDate = formatDatetime(String.valueOf(pubDate)).get();
                 String text = rs.getString("text");
-
                 tweets.add(new Tweet(email, username, text, formattedDate, gravatarUrl(email)));
             }
 
@@ -366,14 +366,9 @@ public class Queries {
     static Result<String> queryLogin(String username, String password) {
         String error;
         var user = querySingleUser("select * from user where username = ?", username);
-
         if (!user.isSuccess()) {
-            return new Failure<>("Invalid username");
-        }
-
-        var passwordHash = user.get().pwHash();
-
-        if (!Hashing.checkPasswordHash(passwordHash, password)) {
+            error = "Invalid username";
+        } else if (!Hashing.checkPasswordHash(user.get().pwHash(), password)) {
             error = "Invalid password";
         } else {
             System.out.println("You were logged in");
