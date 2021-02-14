@@ -47,7 +47,14 @@ class minitwitTest {
         register(username, password, null, null);
         return login(username, password);
     }
-
+    //Helper function to register, login and get the id
+    Result<Integer> register_login_getID(String username, String password, String password2, String email) {
+        register(username, password, password2, email);
+        login(username, password);
+        var id = Queries.getUserId(username);
+        assert (id.isSuccess());
+        return id;
+    }
     //Helper function to logout
     Result<String> logout() {
         //todo logout helper function
@@ -94,9 +101,7 @@ class minitwitTest {
 
     @Test
     void test_publicTimeline() throws SQLException {
-        register("foo", "default", null, null);
-        var id1 = Queries.getUserId("foo");
-        assert (id1.isSuccess());
+        var id1 = register_login_getID("foo", "default", null, null);
 
         String text1 = "test message 1", text2 = "<test message 2>";
         add_message(text1, id1.get());
@@ -116,14 +121,10 @@ class minitwitTest {
 
     @Test
     void test_getPersonalTweetsById() throws SQLException {
-        register_and_login("foo", "default");
-        var id1 = Queries.getUserId("foo");
-        assert (id1.isSuccess());
+        var id1 = register_login_getID("foo", "default", null, null);
         add_message("the message by foo", id1.get());
         logout();
-        register_and_login("bar","default");
-        var id2 = Queries.getUserId("bar");
-        assert (id2.isSuccess());
+        var id2 = register_login_getID("bar","default", null, null);
         add_message("the message by bar", id2.get());
 
 
@@ -142,4 +143,26 @@ class minitwitTest {
         assert (tweet2.username().equals("bar"));
         assert (tweet2.text().equals("the message by bar"));
     }
+
+    @Test
+    void test_queryGetUser() throws SQLException {
+        var id1 = register_login_getID("foo", "default", null, "myEmail@itu.dk");
+        var user1_1 = Queries.getUser("foo");
+        var id1_rs = Queries.getUserId("foo");
+        var user1_2 = Queries.getUserById(id1.get());
+
+        assert (id1.get() == id1_rs.get());
+        assert (user1_1.get().userId() == id1.get());
+        assert (user1_1.get().username().equals("foo"));
+        assert (user1_1.get().pwHash().equals(Hashing.generatePasswordHash("default")));
+        assert (user1_1.get().email().equals("myEmail@itu.dk"));
+        assert (
+                user1_1.get().userId() == user1_2.get().userId() &&
+                user1_1.get().username().equals(user1_2.get().username()) &&
+                user1_1.get().pwHash().equals(user1_2.get().pwHash()) &&
+                user1_1.get().email().equals(user1_2.get().email()));
+
+    }
+
+
 }
