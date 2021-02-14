@@ -55,8 +55,8 @@ class minitwitTest {
     }
 
     //Records a message
-    void add_message(String text) throws SQLException {
-        var rs = Queries.addMessage(text, 1);
+    void add_message(String text, int loggedInUserId) throws SQLException {
+        var rs = Queries.addMessage(text, loggedInUserId);
         if(rs == null) assert (false);
         else assert (rs.get() > 0);
     }
@@ -93,11 +93,14 @@ class minitwitTest {
     }
 
     @Test
-    void test_message_recording() throws SQLException {
+    void test_publicTimeline() throws SQLException {
         register("foo", "default", null, null);
+        var id1 = Queries.getUserId("foo");
+        assert (id1.isSuccess());
+
         String text1 = "test message 1", text2 = "<test message 2>";
-        add_message(text1);
-        add_message(text2);
+        add_message(text1, id1.get());
+        add_message(text2, id1.get());
         var rs = Queries.publicTimeline();
         assert (rs.isSuccess());
         var tweet1 = rs.get().get(1);
@@ -112,12 +115,31 @@ class minitwitTest {
     }
 
     @Test
-    void test_timelines() throws SQLException {
+    void test_getPersonalTweetsById() throws SQLException {
         register_and_login("foo", "default");
-        add_message("the message by foo");
+        var id1 = Queries.getUserId("foo");
+        assert (id1.isSuccess());
+        add_message("the message by foo", id1.get());
         logout();
         register_and_login("bar","default");
-        add_message("the message by bar");
-        // TODO finish
+        var id2 = Queries.getUserId("bar");
+        assert (id2.isSuccess());
+        add_message("the message by bar", id2.get());
+
+
+        var rs = Queries.getPersonalTweetsById(id1.get());
+        assert (rs.isSuccess());
+        var tweet1 = rs.get().get(0);
+        assert (tweet1.email().equals("foo@example.com"));
+        assert (tweet1.username().equals("foo"));
+        assert (tweet1.text().equals("the message by foo"));
+
+
+        rs = Queries.getPersonalTweetsById(id2.get());
+        assert (rs.isSuccess());
+        var tweet2 = rs.get().get(0);
+        assert (tweet2.email().equals("bar@example.com"));
+        assert (tweet2.username().equals("bar"));
+        assert (tweet2.text().equals("the message by bar"));
     }
 }
