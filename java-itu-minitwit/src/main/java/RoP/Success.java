@@ -13,6 +13,11 @@ public class Success<T> extends Result<T> {
     }
 
     @Override
+    public String getFailureMessage() {
+        throw new IllegalStateException("Type is success with "+value+" not an error");
+    }
+
+    @Override
     public boolean isSuccess() {
         return true;
     }

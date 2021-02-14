@@ -8,13 +8,18 @@ public class Failure<T> extends Result<T> {
         exception = e;
     }
 
-    public Failure(String error) {
-        exception = new Exception(error);
+    public Failure(String errorMsg) {
+        exception = new Exception(errorMsg);
     }
 
     @Override
     public T get() {
         throw new IllegalStateException(exception.getMessage());
+    }
+
+    @Override
+    public String getFailureMessage() {
+        return exception.getMessage();
     }
 
     @Override

@@ -237,7 +237,7 @@ public class Queries {
         try{
             conn = connect_db().get();
             PreparedStatement  stmt = conn.prepareStatement("""
-            select message.*, user.* from message, user
+                select message.*, user.* from message, user
                 where message.flagged = 0 and message.author_id = user.user_id
                 order by message.pub_date desc limit ?""");
 
@@ -248,11 +248,11 @@ public class Queries {
             ArrayList<Tweet> tweets = new ArrayList<>();
 
             while (rs.next()) {
-                String username = rs.getString("username");
-                String email = rs.getString("email");
-                int pub_date = rs.getInt("pub_date");
-                String formatted_date = format_datetime(String.valueOf(pub_date)).get();
-                String text = rs.getString("text");
+                String username         = rs.getString("username");
+                String email            = rs.getString("email");
+                int pub_date            = rs.getInt("pub_date");
+                String formatted_date   = format_datetime(String.valueOf(pub_date)).get();
+                String text             = rs.getString("text");
 
                 tweets.add(new Tweet(email, username, text, formatted_date, gravatar_url(email)));
             }
@@ -370,16 +370,9 @@ public class Queries {
     static Result<String> queryLogin(String username, String password) {
         String error;
         var user = querySingleUser("select * from user where username = ?", username);
-
-        if (!user.isSuccess()) {
-            return new Failure<>(user.toString());
-        }
-
-        var passwordHash = user.get().pw_hash();
-
         if (!user.isSuccess()) {
             error = "Invalid username";
-        } else if (!Hashing.check_password_hash(passwordHash, password)) {
+        } else if (!Hashing.check_password_hash(user.get().pw_hash(), password)) {
             error = "Invalid password";
         } else {
             System.out.println("You were logged in");
