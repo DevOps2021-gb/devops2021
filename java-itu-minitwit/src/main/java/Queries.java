@@ -61,14 +61,10 @@ public class Queries {
     */
     static Result<String> formatDatetime(String timestamp) {
         try {
-            //System.out.println("TIMESTAMP " + timestamp);
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
-            sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
-            Date date = sdf.parse(timestamp);
-
-            //System.out.println("FORMATTED " + date.toString());
-
-            return new Success<>(date.toString());
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd '@' HH:mm");
+            Date resultDate = new Date(Long.parseLong(timestamp));
+            String date = sdf.format(resultDate);
+            return new Success<>(date);
         } catch (Exception e) {
             e.printStackTrace();
             return new Failure<>(e);
@@ -250,7 +246,7 @@ public class Queries {
             while (rs.next()) {
                 String username = rs.getString("username");
                 String email = rs.getString("email");
-                int pubDate = rs.getInt("pubDate");
+                long pubDate = rs.getLong("pubDate");
                 String formattedDate = formatDatetime(String.valueOf(pubDate)).get();
                 String text = rs.getString("text");
 
@@ -285,7 +281,7 @@ public class Queries {
             ArrayList<Tweet> tweets = new ArrayList<>();
 
             while (rs.next()) {
-                int pubDate = rs.getInt("pubDate");
+                long pubDate = rs.getLong("pubDate");
                 String formattedDate = formatDatetime(String.valueOf(pubDate)).get();
                 String text = rs.getString("text");
                 String email = user.get().email();
@@ -323,7 +319,7 @@ public class Queries {
             ArrayList<Tweet> tweets = new ArrayList<>();
 
             while (rs.next()) {
-                int pubDate = rs.getInt("pubDate");
+                long pubDate = rs.getLong("pubDate");
                 String formattedDate = formatDatetime(String.valueOf(pubDate)).get();
                 String text = rs.getString("text");
                 String email = rs.getString("email");
@@ -349,7 +345,7 @@ public class Queries {
             try{
                 conn = connectDb().get();
                 PreparedStatement  stmt = conn.prepareStatement("insert into message (authorId, text, pubDate, flagged) values (?, ?, ?, 0)");
-                long timestamp = (int) new Date().getTime();
+                long timestamp = new Date().getTime();
 
                 stmt.setInt(1, loggedInUserId);
                 stmt.setString(2, text);
