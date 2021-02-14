@@ -8,7 +8,7 @@ import java.sql.SQLException;
 
 import static spark.Spark.stop;
 
-class minitwitTest {
+class queriesTest {
     File databaseFile;
     @org.junit.jupiter.api.BeforeEach
     void setUp() {
@@ -143,6 +143,29 @@ class minitwitTest {
     }
 
     @Test
+    void test_getTweetsByUsername() throws SQLException {
+        var id1 = register_login_getID("foo", "default", null, null);
+        add_message("the message by foo", id1.get());
+        logout();
+        var id2 = register_login_getID("bar","default", null, null);
+        add_message("the message by bar", id2.get());
+
+        var rs = Queries.getTweetsByUsername("foo");
+        assert (rs.isSuccess());
+        var tweet1 = rs.get().get(0);
+        assert (tweet1.email().equals("foo@example.com"));
+        assert (tweet1.username().equals("foo"));
+        assert (tweet1.text().equals("the message by foo"));
+
+        rs = Queries.getTweetsByUsername("bar");
+        assert (rs.isSuccess());
+        var tweet2 = rs.get().get(0);
+        assert (tweet2.email().equals("bar@example.com"));
+        assert (tweet2.username().equals("bar"));
+        assert (tweet2.text().equals("the message by bar"));
+    }
+
+    @Test
     void test_queryGetUser() throws SQLException {
         var id1 = register_login_getID("foo", "default", null, "myEmail@itu.dk");
         var user1_1 = Queries.getUser("foo");
@@ -198,5 +221,8 @@ class minitwitTest {
         assert (rsUnfollow2.isSuccess());
         //todo test when following does anything
     }
+
+    //todo: queryLogin
+    //todo: gravatarUrl
 
 }
