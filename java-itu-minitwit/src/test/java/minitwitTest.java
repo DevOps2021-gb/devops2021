@@ -15,8 +15,7 @@ class minitwitTest {
         try {
             databaseFile = File.createTempFile("testDB-", ".db");
             Queries.setDATABASE(databaseFile.getName());
-            Queries.init_db();
-            //Queries.session = new Session(Queries.connect_db(), new User("testUsername"));
+            Queries.initDb();
             //awaitInitialization();
         } catch (IOException e) {
             e.printStackTrace();
@@ -25,7 +24,7 @@ class minitwitTest {
 
     @org.junit.jupiter.api.AfterEach
     void tearDown() {
-        databaseFile.delete();
+        databaseFile.delete();      //todo: findout why it doesn't delete the file
         stop();
     }
 
@@ -57,7 +56,7 @@ class minitwitTest {
 
     //Records a message
     void add_message(String text) throws SQLException {
-        var rs = Queries.add_message(text, 1);
+        var rs = Queries.addMessage(text, 1);
         if(rs == null) assert (false);
         else assert (rs.get() > 0);
     }
@@ -99,7 +98,7 @@ class minitwitTest {
         String text1 = "test message 1", text2 = "<test message 2>";
         add_message(text1);
         add_message(text2);
-        var rs = Queries.public_timeline();
+        var rs = Queries.publicTimeline();
         assert (rs.isSuccess());
         var tweet1 = rs.get().get(1);
         var tweet2 = rs.get().get(0);
