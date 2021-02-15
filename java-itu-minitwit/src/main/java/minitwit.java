@@ -1,11 +1,14 @@
 import RoP.Failure;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 import com.hubspot.jinjava.Jinjava;
 import spark.Request;
 import spark.Response;
 
+import java.io.IOException;
 import java.util.HashMap;
+import java.util.Map;
 
 import static spark.Spark.*;
 
@@ -22,7 +25,7 @@ public class minitwit {
 
             registerEndpoints();
 
-            //Queries.initDb();
+            Queries.initDb();
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -87,9 +90,20 @@ public class minitwit {
         get("/register",            (req, res)-> renderTemplate("register.html"));
         post("/register",           minitwit::register);
         get("/logout",              minitwit::logout);
+
+        get("/latest",              (req, res)-> renderTemplate("register.html")); //TODO figure out
+        get("/msgs/:username",      minitwit::userTimeline);//minitwit::userTimeline); //TODO
+        post("/msgs/:username",     minitwit::addMessage);//minitwit::userTimeline); //TODO
+        get("/fllws/:username",     minitwit::followUser); //TODO
+        post("/fllws/:username",    minitwit::followUser); //TODO
+
+
         get("/:username/follow",    minitwit::followUser);
         get("/:username/unfollow",  minitwit::unfollowUser);
         get("/:username",           minitwit::userTimeline);
+
+
+
     }
 
     private static Boolean userLoggedIn(Request request) {
@@ -167,14 +181,14 @@ public class minitwit {
     Display's a users tweets.
      */
     static Object userTimeline(Request request, Response response) {
-        var profileUsername = request.params(":username");
+        var params = getParamsFromRequest(request);
+        var profileUsername = params.get(":username");
 
         //TODO figure out how to avoid this hack
         if (profileUsername.equals("favicon.ico")) return "";
 
         if (!userLoggedIn(request)) {
             var profileUser = Queries.getUser(profileUsername);
-
             return renderTemplate("timeline.html", new HashMap<>() {{
                 put("endpoint", "userTimeline");
                 put("username", profileUsername);
@@ -206,11 +220,37 @@ public class minitwit {
         }
     }
 
+
+    public static Map<String,String> getParamsFromRequest(Request request){
+        Map<String,String>  map = new HashMap<>();
+        map.putAll(request.params());
+        if (!request.body().isEmpty()) {
+            if(request.body().startsWith("{")) {
+                ObjectMapper mapper = new ObjectMapper();
+                try {
+                    Map<String, String> temp = mapper.readValue(request.body(), Map.class);
+                    map.putAll(temp);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            else {
+                for(String keyValue : request.body().split(" *& *")) {
+                    String[] pairs = keyValue.split(" *= *", 2);
+                    map.put(pairs[0], pairs.length == 1 ? "" : pairs[1]);
+                }
+            }
+        }
+        return map;
+    }
+
+
     /*
     Adds the current user as follower of the given user.
      */
     static Object followUser(Request request, Response response) {
-        String profileUsername = request.params("username");
+        var params = getParamsFromRequest(request);
+        String profileUsername = params.get("username");
 
         if (!userLoggedIn(request)) {
             halt(401, "You need to sign in to follow a user");
@@ -245,7 +285,8 @@ public class minitwit {
     Removes the current user as follower of the given user.
      */
     static Object unfollowUser(Request request, Response response) {
-        String profileUsername = request.params("username");
+        var params = getParamsFromRequest(request);
+        String profileUsername = params.get("username");
 
         if (!userLoggedIn(request)) {
             halt(401, "You need to sign in to unfollow a user");
@@ -269,12 +310,22 @@ public class minitwit {
     Registers a new message for the user.
      */
     static Object addMessage(Request request, Response response) {
-        if (!userLoggedIn(request)) {
-            halt(401, "You need to sign in to post a message");
-            return null;
+        var params = getParamsFromRequest(request);
+        String username = params.get(":username");
+        String content  = params.get("content");
+        Integer userId = null;
+        if(username == null){
+            if (!userLoggedIn(request)) {
+                halt(401, "You need to sign in to post a message");
+                return null;
+            }
+            userId = getSessionUserId(request);
+        }
+        else {
+            userId = Queries.getUserId(username).get();
         }
 
-        var rs = Queries.addMessage(request.queryParams("text"), getSessionUserId(request));
+        var rs = Queries.addMessage(content, userId);
         if (rs.isSuccess()){
             System.out.println("Your message was recorded");
             request.session().attribute("flash", "Your message was recorded");
@@ -287,8 +338,9 @@ public class minitwit {
     Logs the user in.
      */
     static Object login(Request request, Response response) {
-        String username = request.queryParams("username");
-        String password = request.queryParams("password");
+        var params = getParamsFromRequest(request);
+        String username = params.get("username");
+        String password = params.get("password");   //todo
 
         if (userLoggedIn(request)) {
             response.redirect("/");
@@ -316,10 +368,17 @@ public class minitwit {
     Registers the user.
      */
     static Object register(Request request, Response response) {
-        String username = request.queryParams("username");
-        String email = request.queryParams("email");
-        String password1 = request.queryParams("password");
-        String password2 = request.queryParams("password2");
+        System.out.println("Start register:");
+        var params = getParamsFromRequest(request);
+        String username     = params.get("username");
+        String email        = params.get("email").replaceAll("%40", "@") ;
+        String password1    = params.get("password");
+        String password2    = params.get("password2");
+        if(password1 == null && password2 == null){
+            password1 = params.get("pwd");
+            password2 = password1;
+        }
+        System.out.println(params);
 
         if (userLoggedIn(request)) {
             return renderTemplate("timeline.html");
