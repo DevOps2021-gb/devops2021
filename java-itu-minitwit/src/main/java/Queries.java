@@ -1,21 +1,18 @@
-import Records.Follower;
-import Records.Message;
-import Records.Tweet;
-import Records.User;
+import Model.Follower;
+import Model.Message;
+import Model.Tweet;
+import Model.User;
 import RoP.Failure;
 import RoP.Result;
 import RoP.Success;
 
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 public class Queries {
 
-    static String DATABASE      = "minitwit.db";
-    static final int PER_PAGE         = 30;
+    static final int PER_PAGE = 30;
 
     /*
     Creates the database tables.
@@ -53,16 +50,14 @@ public class Queries {
 
             //var stmt = conn.prepareStatement("select 1 from follower where follower.whoId = ? and follower.whomId = ?");
 
-            if (rs.next()) {
-                return new Success<>(true);
+            if (result.isEmpty()) {
+                return new Success<>(false);
             } else {
                 return new Success<>(true);
             }
         } catch (Exception e) {
             e.printStackTrace();
             return new Failure<>(e);
-        } finally {
-            closeConnection(conn);
         }
     }
 
@@ -74,25 +69,25 @@ public class Queries {
 
         if (!user.isSuccess()) return new Failure<>(user.toString());
 
-        return new Success<>(user.get().userId());
+        return new Success<>(user.get().userId);
     }
 
     public static Result<User> getUser(String username) {
         var db = DB.connectDb().get();
-        var result = db.where("username=?", username).first(User.class);
+        var result = db.table("user").where("username=?", username).first(User.class);
 
-        if (!user.isSuccess()) return new Failure<>(user.toString());
+        if (result == null) return new Failure<>("No user found for " + username);
 
-        return new Success<>(user.get());
+        return new Success<>(result);
     }
 
     public static Result<User> getUserById(int userId) {
         var db = DB.connectDb().get();
         var result = db.where("userId=?", userId).first(User.class);
 
-        if (!user.isSuccess()) return new Failure<>(user.toString());
+        if (result == null) return new Failure<>("No user found for id " + userId);
 
-        return new Success<>(user.get());
+        return new Success<>(result);
     }
 
 
@@ -118,20 +113,13 @@ public class Queries {
             return new Failure<>(whomId.toString());
         } else {
             try {
-                conn = connectDb().get();
-                var stmt = conn.prepareStatement("insert into follower (whoId, whomId) values (?, ?)");
-
-                stmt.setInt(1, whoUser.get().userId());
-                stmt.setInt(2, whomId.get());
-
-                stmt.execute();
+                var db = DB.connectDb().get();
+                db.insert(new Follower(whoId, whomId.get()));
 
                 return new Success<>("OK");
             } catch (Exception e) {
                 e.printStackTrace();
                 return new Failure<>(e);
-            } finally {
-                closeConnection(conn);
             }
         }
     }
@@ -148,22 +136,14 @@ public class Queries {
         } else if (!whomId.isSuccess()) {
             return new Failure<>(whomId.toString());
         } else {
-            Connection conn = null;
             try {
-                conn = connectDb().get();
-                var stmt = conn.prepareStatement("delete from follower where whoId=? and whomId=?");
-
-                stmt.setInt(1, whoUser.get().userId());
-                stmt.setInt(2, whomId.get());
-
-                stmt.execute();
+                var db = DB.connectDb().get();
+                db.table("follower").where("whoId=?", whoId).where("whomId=?", whomId.get()).delete();
 
                 return new Success<>("OK");
             } catch (Exception e) {
                 e.printStackTrace();
                 return new Failure<>(e);
-            } finally {
-                closeConnection(conn);
             }
         }
     }
@@ -172,158 +152,119 @@ public class Queries {
     Displays the latest messages of all users.
     */
     public static Result<ArrayList<Tweet>> publicTimeline() {
-        Connection conn = null;
         try{
-            conn = connectDb().get();
-            PreparedStatement  stmt = conn.prepareStatement("""
+            var db = DB.connectDb().get();
+
+            List<HashMap> result = db.sql("""
             select message.*, user.* from message, user
                 where message.flagged = 0 and message.authorId = user.userId
-                order by message.pubDate desc limit ?""");
-
-
-            stmt.setInt(1, PER_PAGE);
-
-            ResultSet rs = stmt.executeQuery();
+                order by message.pubDate desc limit ?""", PER_PAGE).results(HashMap.class);
 
             ArrayList<Tweet> tweets = new ArrayList<>();
+            for (HashMap hm: result) {
+                String email = (String) hm.get("email");
+                String username = (String) hm.get("username");
+                String text = (String) hm.get("text");
+                String pubDate = formatDatetime((long) hm.get("pubDate") + "").get();
+                String profilePic = gravatarUrl(email);
 
-            while (rs.next()) {
-                String username = rs.getString("username");
-                String email = rs.getString("email");
-                long pubDate = rs.getLong("pubDate");
-                String formattedDate = formatDatetime(String.valueOf(pubDate)).get();
-                String text = rs.getString("text");
-                tweets.add(new Tweet(email, username, text, formattedDate, gravatarUrl(email)));
+                tweets.add(new Tweet(email, username, text, pubDate, profilePic));
             }
 
             return new Success<>(tweets);
         } catch (Exception e) {
             e.printStackTrace();
             return new Failure<>(e);
-        } finally {
-            closeConnection(conn);
         }
     }
 
     public static Result<ArrayList<Tweet>> getTweetsByUsername(String username) {
         try{
-            var user = getUser(username);
-            conn = connectDb().get();
-            PreparedStatement  stmt = conn.prepareStatement("""
+            var userId = getUserId(username);
+            var db = DB.connectDb().get();
+
+            List<HashMap> result = db.sql("""
             select message.*, user.* from message, user
                 where message.flagged = 0 and message.authorId = user.userId
                 and user.userId = ?
-                order by message.pubDate desc limit ?""");
-
-            stmt.setInt(1, user.get().userId());
-            stmt.setInt(2, PER_PAGE);
-
-            ResultSet rs = stmt.executeQuery();
+                order by message.pubDate desc limit ?""", userId.get(), PER_PAGE).results(HashMap.class);
 
             ArrayList<Tweet> tweets = new ArrayList<>();
+            for (HashMap hm: result) {
+                String email = (String) hm.get("email");
+                String text = (String) hm.get("text");
+                String pubDate = formatDatetime((long) hm.get("pubDate") + "").get();
+                String profilePic = gravatarUrl(email);
 
-            while (rs.next()) {
-                long pubDate = rs.getLong("pubDate");
-                String formattedDate = formatDatetime(String.valueOf(pubDate)).get();
-                String text = rs.getString("text");
-                String email = user.get().email();
-
-                tweets.add(new Tweet(email, user.get().username(), text, formattedDate, gravatarUrl(email)));
+                tweets.add(new Tweet(email, username, text, pubDate, profilePic));
             }
 
             return new Success<>(tweets);
         } catch (Exception e) {
             e.printStackTrace();
             return new Failure<>(e);
-        } finally {
-            closeConnection(conn);
         }
-    }
-
-    private static Result<ArrayList<Tweet>> getArrayListResult(List<Tweet> result) {
-        ArrayList<Tweet> tweets = new ArrayList<>(result);
-
-        for (Tweet t : tweets) {
-            t.setPubDate(formatDatetime(String.valueOf(t.getPubDate())).get());
-            t.setProfilePic(gravatarUrl(t.getEmail()));
-        }
-
-        return new Success<>(tweets);
     }
 
     public static Result<ArrayList<Tweet>> getPersonalTweetsById(int userId) {
         try{
-            conn = connectDb().get();
-            PreparedStatement  stmt = conn.prepareStatement("""
+            var db = DB.connectDb().get();
+
+            List<HashMap> result = db.sql("""
              select message.*, user.* from message, user
                     where message.flagged = 0 and message.authorId = user.userId and (
                         user.userId = ? or
                         user.userId in (select whomId from follower
                                                 where whoId = ?))
-                    order by message.pubDate desc limit ?""");
-
-            stmt.setInt(1, userId);
-            stmt.setInt(2, userId);
-            stmt.setInt(3, PER_PAGE);
-
-            ResultSet rs = stmt.executeQuery();
+                    order by message.pubDate desc limit ?""", userId, userId, PER_PAGE).results(HashMap.class);
 
             ArrayList<Tweet> tweets = new ArrayList<>();
+            for (HashMap hm: result) {
+                String email = (String) hm.get("email");
+                String username = (String) hm.get("username");
+                String text = (String) hm.get("text");
+                String pubDate = formatDatetime((long) hm.get("pubDate") + "").get();
+                String profilePic = gravatarUrl(email);
 
-            while (rs.next()) {
-                long pubDate = rs.getLong("pubDate");
-                String formattedDate = formatDatetime(String.valueOf(pubDate)).get();
-                String text = rs.getString("text");
-                String email = rs.getString("email");
-                String username = rs.getString("username");
-
-                tweets.add(new Tweet(email, username, text, formattedDate, gravatarUrl(email)));
+                tweets.add(new Tweet(email, username, text, pubDate, profilePic));
             }
             return new Success<>(tweets);
+
         } catch (Exception e) {
             e.printStackTrace();
             return new Failure<>(e);
-        } finally {
-            closeConnection(conn);
         }
     }
 
     /*
         Registers a new message for the user.
     */
-    public static Result<Integer> addMessage(String text, int loggedInUserId) {
+    public static Result<Boolean> addMessage(String text, int loggedInUserId) {
         if (!text.equals("")) {
             try{
-                conn = connectDb().get();
-                PreparedStatement  stmt = conn.prepareStatement("insert into message (authorId, text, pubDate, flagged) values (?, ?, ?, 0)");
                 long timestamp = new Date().getTime();
+                var db = DB.connectDb().get();
+                db.insert(new Message(loggedInUserId, text, timestamp, 0));
 
-                stmt.setInt(1, loggedInUserId);
-                stmt.setString(2, text);
-                stmt.setString(3, timestamp + "");
-
-                int res = stmt.executeUpdate();
-                return new Success<>(res);
+                return new Success<>(true);
             } catch (Exception e) {
                 e.printStackTrace();
                 return new Failure<>(e);
-            } finally {
-                closeConnection(conn);
             }
         }
         return new Failure<>("You need to add text to the message");
     }
 
-    static Result<String> queryLogin(String username, String password) {
+    static Result<Boolean> queryLogin(String username, String password) {
         String error;
         var user = getUser(username);
         if (!user.isSuccess()) {
             error = "Invalid username";
-        } else if (!Hashing.checkPasswordHash(user.get().pwHash(), password)) {
+        } else if (!Hashing.checkPasswordHash(user.get().pwHash, password)) {
             error = "Invalid password";
         } else {
             System.out.println("You were logged in");
-            return new Success<>("login successful");
+            return new Success<>(true);
         }
 
         return new Failure<>(error);
@@ -343,19 +284,12 @@ public class Queries {
             error = "The username is already taken";
         } else {
             try {
-                var conn = connectDb();
-                if(conn.isSuccess()) {
-                    PreparedStatement stmt = conn.get().prepareStatement("insert into user (username, email, pwHash) values (?, ?, ?)");
-                    stmt.setString(1, username);
-                    stmt.setString(2, email);
-                    stmt.setString(3, Hashing.generatePasswordHash(password1));
-
-                    stmt.executeUpdate();
-                    closeConnection(conn.get());
+                var db = DB.connectDb().get();
+                db.insert(new User(username,email, Hashing.generatePasswordHash(password1)));
 
                     System.out.println("You were successfully registered and can login now");
                     return new Success<>("OK");
-                }
+
 
             } catch (Exception e) {
                 e.printStackTrace();
@@ -363,19 +297,5 @@ public class Queries {
             }
         }
         return new Failure<>(error);
-    }
-
-    private static void closeConnection(Connection conn) {
-        if (conn != null) {
-            try {
-                conn.close();
-            } catch (SQLException throwables) {
-                throwables.printStackTrace();
-            }
-        }
-    }
-
-    public static void setDATABASE(String dbName) {
-        DATABASE = dbName;
     }
 }
