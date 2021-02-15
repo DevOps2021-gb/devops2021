@@ -1,4 +1,4 @@
-package Records;
+package Model;
 
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -8,13 +8,15 @@ import javax.persistence.Table;
 public class Message {
     @Id
     @GeneratedValue
-    int messageId;
+    public int messageId;
+    public int authorId;
+    public String text;
+    public long pubDate;
+    public int flagged;
 
-    int authorId;
-    String text;
-    long pubDate;
-    int flagged;
-
+    // must have 0-arg constructor
+    public Message() {}
+    // must be public or privat with getter and setter
     public Message(int authorId, String text, long pubDate, int flagged) {
         this.authorId = authorId;
         this.text = text;
@@ -22,20 +24,4 @@ public class Message {
         this.flagged = flagged;
     }
 
-
-    public int getMessageId() {
-        return messageId;
-    }
-
-    public int getAuthorId() {
-        return authorId;
-    }
-
-    public String getText() {
-        return text;
-    }
-
-    public int getFlagged() {
-        return flagged;
-    }
 }

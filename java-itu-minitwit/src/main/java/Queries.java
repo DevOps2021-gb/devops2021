@@ -1,16 +1,14 @@
-import Records.Follower;
-import Records.Message;
-import Records.Tweet;
-import Records.User;
+import Model.Follower;
+import Model.Message;
+import Model.Tweet;
+import Model.User;
 import RoP.Failure;
 import RoP.Result;
 import RoP.Success;
 
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 public class Queries {
 
@@ -74,7 +72,7 @@ public class Queries {
 
         if (!user.isSuccess()) return new Failure<>(user.toString());
 
-        return new Success<>(user.get().userId());
+        return new Success<>(user.get().userId);
     }
 
     public static Result<User> getUser(String username) {
@@ -238,17 +236,6 @@ public class Queries {
         } finally {
             closeConnection(conn);
         }
-    }
-
-    private static Result<ArrayList<Tweet>> getArrayListResult(List<Tweet> result) {
-        ArrayList<Tweet> tweets = new ArrayList<>(result);
-
-        for (Tweet t : tweets) {
-            t.setPubDate(formatDatetime(String.valueOf(t.getPubDate())).get());
-            t.setProfilePic(gravatarUrl(t.getEmail()));
-        }
-
-        return new Success<>(tweets);
     }
 
     public static Result<ArrayList<Tweet>> getPersonalTweetsById(int userId) {
