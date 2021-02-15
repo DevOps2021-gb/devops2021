@@ -22,7 +22,7 @@ public class minitwit {
 
             registerEndpoints();
 
-            //Queries.initDb();
+            Queries.initDb();
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -43,7 +43,7 @@ public class minitwit {
                 return;
             }
 
-            var user = Queries.querySingleUser("select * from user where userId = ?", userId.toString());
+            var user = Queries.getUserById(userId);
             if (user.isSuccess()) {
                 request.session().attribute("userId", user.get().userId());
             }

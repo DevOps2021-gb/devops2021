@@ -130,16 +130,16 @@ class queriesTest {
         var rs = Queries.getPersonalTweetsById(id1.get());
         assert (rs.isSuccess());
         var tweet1 = rs.get().get(0);
-        assert (tweet1.email().equals("foo@example.com"));
-        assert (tweet1.username().equals("foo"));
-        assert (tweet1.text().equals("the message by foo"));
+        assert (tweet1.getEmail().equals("foo@example.com"));
+        assert (tweet1.getUsername().equals("foo"));
+        assert (tweet1.getText().equals("the message by foo"));
 
         rs = Queries.getPersonalTweetsById(id2.get());
         assert (rs.isSuccess());
         var tweet2 = rs.get().get(0);
-        assert (tweet2.email().equals("bar@example.com"));
-        assert (tweet2.username().equals("bar"));
-        assert (tweet2.text().equals("the message by bar"));
+        assert (tweet2.getEmail().equals("bar@example.com"));
+        assert (tweet2.getUsername().equals("bar"));
+        assert (tweet2.getText().equals("the message by bar"));
     }
 
     @Test
@@ -153,16 +153,16 @@ class queriesTest {
         var rs = Queries.getTweetsByUsername("foo");
         assert (rs.isSuccess());
         var tweet1 = rs.get().get(0);
-        assert (tweet1.email().equals("foo@example.com"));
-        assert (tweet1.username().equals("foo"));
-        assert (tweet1.text().equals("the message by foo"));
+        assert (tweet1.getEmail().equals("foo@example.com"));
+        assert (tweet1.getUsername().equals("foo"));
+        assert (tweet1.getText().equals("the message by foo"));
 
         rs = Queries.getTweetsByUsername("bar");
         assert (rs.isSuccess());
         var tweet2 = rs.get().get(0);
-        assert (tweet2.email().equals("bar@example.com"));
-        assert (tweet2.username().equals("bar"));
-        assert (tweet2.text().equals("the message by bar"));
+        assert (tweet2.getEmail().equals("bar@example.com"));
+        assert (tweet2.getUsername().equals("bar"));
+        assert (tweet2.getText().equals("the message by bar"));
     }
 
     @Test

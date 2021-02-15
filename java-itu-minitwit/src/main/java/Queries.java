@@ -1,16 +1,16 @@
+import Records.Follower;
+import Records.Message;
 import Records.Tweet;
 import Records.User;
 import RoP.Failure;
 import RoP.Result;
 import RoP.Success;
-import org.apache.ibatis.jdbc.ScriptRunner;
 
-import java.io.FileReader;
 import java.nio.charset.StandardCharsets;
-import java.sql.*;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 public class Queries {
 
@@ -18,42 +18,17 @@ public class Queries {
     static final int PER_PAGE         = 30;
 
     /*
-    Returns a new connection to the database.
-     */
-    public static Result<Connection> connectDb() {
-        try{
-            Connection conn = DriverManager.getConnection("jdbc:sqlite:" + DATABASE);
-            if (conn != null) {
-                DatabaseMetaData meta = conn.getMetaData();
-                //System.out.println("Connected to " + meta.getDriverName());
-                return new Success<>(conn);
-            }
-
-            return new Failure<>("could not establish connection to DB");
-
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-            return new Failure<>(e);
-        }
-    }
-
-    /*
     Creates the database tables.
      */
     public static void initDb()  {
-        System.out.println(DATABASE);
-        Connection c = null;
-        try {
-            c = connectDb().get();
-            ScriptRunner sr = new ScriptRunner(c);
+        var db = DB.connectDb().get();
+        db.sql("drop table if exists user").execute();
+        db.sql("drop table if exists follower").execute();
+        db.sql("drop table if exists message").execute();
 
-            sr.runScript(new FileReader("schema.sql"));
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            closeConnection(c);
-        }
+        db.createTable(User.class);
+        db.createTable(Message.class);
+        db.createTable(Follower.class);
     }
 
     /*
@@ -71,50 +46,17 @@ public class Queries {
         }
     }
 
-    static Result<User> querySingleUser(String query, String ... args) {
-        Connection conn = null;
-        try{
-            conn = connectDb().get();
-            PreparedStatement  stmt = conn.prepareStatement(query);
-
-            //PreparedStatement indices starts at 1
-            for (int i = 0; i < args.length; i++) {
-                stmt.setString(i+1, args[i]);
-            }
-
-            ResultSet rs = stmt.executeQuery();
-
-            if(!rs.next()) return new Failure<>("No user found for " + query + " args " + Arrays.asList(args));
-
-            int userId = rs.getInt("userId");
-            String username = rs.getString("username");
-            String email = rs.getString("email");
-            String pwHash = rs.getString("pwHash");
-
-            return new Success<>(new User(userId,username,email,pwHash));
-        } catch (Exception e) {
-            e.printStackTrace();
-            return new Failure<>(e);
-        } finally {
-            closeConnection(conn);
-        }
-    }
-
     public static Result<Boolean> following(int whoId, int whomId) {
-        Connection conn = null;
         try {
-            conn = connectDb().get();
-            var stmt = conn.prepareStatement("select 1 from follower where follower.whoId = ? and follower.whomId = ?");
+            var db = DB.connectDb().get();
+            var result = db.where("whoId=?", whoId).where("whomId=?", whomId).results(Follower.class);
 
-            stmt.setInt(1, whoId);
-            stmt.setInt(2, whomId);
-
-            var rs = stmt.executeQuery();
+            //var stmt = conn.prepareStatement("select 1 from follower where follower.whoId = ? and follower.whomId = ?");
 
             if (rs.next()) {
                 return new Success<>(true);
             } else {
-                return new Success<>(false);
+                return new Success<>(true);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -136,7 +78,8 @@ public class Queries {
     }
 
     public static Result<User> getUser(String username) {
-        var user = querySingleUser("select * from user where username = ?", username);
+        var db = DB.connectDb().get();
+        var result = db.where("username=?", username).first(User.class);
 
         if (!user.isSuccess()) return new Failure<>(user.toString());
 
@@ -144,7 +87,8 @@ public class Queries {
     }
 
     public static Result<User> getUserById(int userId) {
-        var user = querySingleUser("select * from user where userId = ?", userId + "");
+        var db = DB.connectDb().get();
+        var result = db.where("userId=?", userId).first(User.class);
 
         if (!user.isSuccess()) return new Failure<>(user.toString());
 
@@ -173,7 +117,6 @@ public class Queries {
         } else if (!whomId.isSuccess()) {
             return new Failure<>(whomId.toString());
         } else {
-            Connection conn = null;
             try {
                 conn = connectDb().get();
                 var stmt = conn.prepareStatement("insert into follower (whoId, whomId) values (?, ?)");
@@ -263,7 +206,6 @@ public class Queries {
     }
 
     public static Result<ArrayList<Tweet>> getTweetsByUsername(String username) {
-        Connection conn = null;
         try{
             var user = getUser(username);
             conn = connectDb().get();
@@ -298,8 +240,18 @@ public class Queries {
         }
     }
 
+    private static Result<ArrayList<Tweet>> getArrayListResult(List<Tweet> result) {
+        ArrayList<Tweet> tweets = new ArrayList<>(result);
+
+        for (Tweet t : tweets) {
+            t.setPubDate(formatDatetime(String.valueOf(t.getPubDate())).get());
+            t.setProfilePic(gravatarUrl(t.getEmail()));
+        }
+
+        return new Success<>(tweets);
+    }
+
     public static Result<ArrayList<Tweet>> getPersonalTweetsById(int userId) {
-        Connection conn = null;
         try{
             conn = connectDb().get();
             PreparedStatement  stmt = conn.prepareStatement("""
@@ -341,7 +293,6 @@ public class Queries {
     */
     public static Result<Integer> addMessage(String text, int loggedInUserId) {
         if (!text.equals("")) {
-            Connection conn = null;
             try{
                 conn = connectDb().get();
                 PreparedStatement  stmt = conn.prepareStatement("insert into message (authorId, text, pubDate, flagged) values (?, ?, ?, 0)");
@@ -365,7 +316,7 @@ public class Queries {
 
     static Result<String> queryLogin(String username, String password) {
         String error;
-        var user = querySingleUser("select * from user where username = ?", username);
+        var user = getUser(username);
         if (!user.isSuccess()) {
             error = "Invalid username";
         } else if (!Hashing.checkPasswordHash(user.get().pwHash(), password)) {
@@ -379,7 +330,7 @@ public class Queries {
     }
 
     static Result<String> register(String username, String email, String password1, String password2) {
-        String error = "";
+        String error;
         if (username == null || username.equals("")) {
             error = "You have to enter a username";
         } else if (email == null || !email.contains("@")) {
