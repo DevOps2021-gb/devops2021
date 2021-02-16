@@ -1,18 +1,25 @@
+import Records.Tweet;
 import RoP.Failure;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 import com.hubspot.jinjava.Jinjava;
+import org.eclipse.jetty.http.HttpStatus;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import spark.Request;
 import spark.Response;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static spark.Spark.*;
 
 public class minitwit {
+    private static int latest = 0;
 
     //configuration
     static Boolean DEBUG        = true;
@@ -25,7 +32,7 @@ public class minitwit {
 
             registerEndpoints();
 
-            Queries.initDb();
+            //Queries.initDb();
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -91,11 +98,12 @@ public class minitwit {
         post("/register",           minitwit::register);
         get("/logout",              minitwit::logout);
 
-        get("/latest",              (req, res)-> renderTemplate("register.html")); //TODO figure out
-        get("/msgs/:username",      minitwit::userTimeline);//minitwit::userTimeline); //TODO
-        post("/msgs/:username",     minitwit::addMessage);//minitwit::userTimeline); //TODO
-        get("/fllws/:username",     minitwit::followUser); //TODO
-        post("/fllws/:username",    minitwit::followUser); //TODO
+        get("/latest",              minitwit::getLatest);
+        get("msgs",                 minitwit::messages);
+        get("/msgs/:username",      minitwit::messagesPerUser);
+        post("/msgs/:username",     minitwit::addMessage);
+        get("/fllws/:username",     minitwit::getFollow); //TODO
+        post("/fllws/:username",    minitwit::postFollow);
 
 
         get("/:username/follow",    minitwit::followUser);
@@ -105,6 +113,25 @@ public class minitwit {
 
 
     }
+
+    private static boolean reqFromSimulator(Request request) {
+        var fromSimulator = request.headers("Authorization");
+        return fromSimulator.equals("Basic c2ltdWxhdG9yOnN1cGVyX3NhZmUh");
+    }
+
+
+    private static void updateLatest(Request request) {
+        String stringLat = request.queryParams("latest");
+        if (stringLat != null) {
+            try {
+                latest = Integer.parseInt(stringLat);
+            } catch (NumberFormatException ne) {
+                // Do nothing
+            }
+        }
+    }
+
+
 
     private static Boolean userLoggedIn(Request request) {
         return getSessionUserId(request) != null;
@@ -124,12 +151,121 @@ public class minitwit {
         return renderTemplate(template, new HashMap<>());
     }
 
+    private static Object getLatest(Request request, Response response) {
+        response.type("application/json");
+        return "{\"latest\":" + latest + "}";
+    }
+
+    private static JSONArray tweetsToJSON(ArrayList<Tweet> tweets) {
+        List<JSONObject> msgs = new ArrayList<JSONObject>();
+        for (Tweet t : tweets) {
+            HashMap<String, String> msg = new HashMap<>();
+            msg.put("content", t.text());
+            msg.put("pub_date", t.pubDate());
+            msg.put("user", t.username());
+            msgs.add(new JSONObject(msg));
+        }
+       return new JSONArray(msgs);
+    }
+
+    private static Object messagesPerUser(Request request, Response response) {
+        updateLatest(request);
+        var params = getParamsFromRequest(request);
+        var username = params.get(":username");
+        var userIdResult = Queries.getUserId(username);
+
+        if (!userIdResult.isSuccess()) {
+            response.status(HttpStatus.NOT_FOUND_404);
+            response.type("application/json");
+            return "{\"message\":\"404 not found\"}";
+        } else {
+            var tweets = Queries.getTweetsByUsername(username).get();
+            var json = tweetsToJSON(tweets);
+            if (json.length() == 0) {
+                response.status(HttpStatus.NO_CONTENT_204);
+                return "";
+            } else {
+                response.status(HttpStatus.OK_200);
+                response.type("application/json");
+                return json;
+            }
+        }
+    }
+
+    private static Object messages(Request request, Response response) {
+        updateLatest(request);
+        var tweets = Queries.publicTimeline().get();
+        var json = tweetsToJSON(tweets);
+        if (json.length() == 0) {
+            response.status(HttpStatus.NO_CONTENT_204);
+            return "";
+        } else {
+            response.status(HttpStatus.OK_200);
+            response.type("application/json");
+            return json;
+        }
+    }
+
+    private static Object getFollow(Request request, Response response) {
+        updateLatest(request);
+        //TODO implement when query exists for retrieving everyone someone follows (only usernames needed)
+        return null;
+    }
+
+    private static Object postFollow(Request request, Response response) {
+        updateLatest(request);
+        var params = getParamsFromRequest(request);
+        var username = params.get(":username");
+        var userIdResult = Queries.getUserId(username);
+
+        if (!userIdResult.isSuccess()) {
+            response.status(HttpStatus.NOT_FOUND_404);
+            response.type("application/json");
+            return "{\"message\":\"404 not found\"}";
+        }
+
+        if (params.containsKey("follow")) {
+            var followUser = params.get("follow");
+            if (!Queries.getUserId(followUser).isSuccess()) {
+                response.status(HttpStatus.NOT_FOUND_404);
+                response.type("application/json");
+                return "{\"message\":\"404 not found\"}";
+            }
+            var result = Queries.followUser(userIdResult.get(), followUser);
+            if (result.isSuccess()) {
+                response.status(HttpStatus.NO_CONTENT_204);
+                return "";
+            } else {
+                response.status(HttpStatus.CONFLICT_409);
+                return "";
+            }
+        } else if (params.containsKey("unfollow")) {
+            var unfollowUser = params.get("unfollow");
+            if (!Queries.getUserId(unfollowUser).isSuccess()) {
+                response.status(HttpStatus.NOT_FOUND_404);
+                response.type("application/json");
+                return "{\"message\":\"404 not found\"}";
+            }
+            var result = Queries.unfollowUser(userIdResult.get(), unfollowUser);
+            if (result.isSuccess()) {
+                response.status(HttpStatus.NO_CONTENT_204);
+                return "";
+            } else {
+                response.status(HttpStatus.CONFLICT_409);
+                return "";
+            }
+        }
+        response.status(HttpStatus.BAD_REQUEST_400);
+        return "";
+    }
+
     /*
     Shows a users timeline or if no user is logged in it will
     redirect to the public timeline.  This timeline shows the user's
     messages as well as all the messages of followed users.
      */
     static Object timeline(Request request, Response response) {
+        updateLatest(request);
         System.out.println("We got a visitor from: " + request.ip());
 
         if (!userLoggedIn(request)) {
@@ -156,6 +292,7 @@ public class minitwit {
      Displays the latest messages of all users.
     */
     public static Object publicTimeline(Request request, Response response) {
+        updateLatest(request);
         var loggedInUser = getSessionUserId(request);
         if(loggedInUser != null) {
             var user = Queries.getUserById(loggedInUser);
@@ -181,6 +318,7 @@ public class minitwit {
     Display's a users tweets.
      */
     static Object userTimeline(Request request, Response response) {
+        updateLatest(request);
         var params = getParamsFromRequest(request);
         var profileUsername = params.get(":username");
 
@@ -249,8 +387,17 @@ public class minitwit {
     Adds the current user as follower of the given user.
      */
     static Object followUser(Request request, Response response) {
+        updateLatest(request);
+        System.out.println(request.params());
+        System.out.println(request.queryParams());
+        System.out.println(request.body());
         var params = getParamsFromRequest(request);
-        String profileUsername = params.get("username");
+        String profileUsername;
+        if (params.isEmpty()) {
+            profileUsername = request.queryParams("username");
+        } else {
+            profileUsername = params.get(":username");
+        }
 
         if (!userLoggedIn(request)) {
             halt(401, "You need to sign in to follow a user");
@@ -285,8 +432,14 @@ public class minitwit {
     Removes the current user as follower of the given user.
      */
     static Object unfollowUser(Request request, Response response) {
+        updateLatest(request);
         var params = getParamsFromRequest(request);
-        String profileUsername = params.get("username");
+        String profileUsername;
+        if (params.isEmpty()) {
+            profileUsername = request.queryParams("username");
+        } else {
+            profileUsername = params.get(":username");
+        }
 
         if (!userLoggedIn(request)) {
             halt(401, "You need to sign in to unfollow a user");
@@ -310,9 +463,18 @@ public class minitwit {
     Registers a new message for the user.
      */
     static Object addMessage(Request request, Response response) {
+        var isSim = request.headers("Authorization") != null && reqFromSimulator(request);
+        updateLatest(request);
         var params = getParamsFromRequest(request);
-        String username = params.get(":username");
-        String content  = params.get("content");
+        String username;
+        String content;
+        if (params.isEmpty()) {
+            username = request.queryParams("username");
+            content  = request.queryParams("content");
+        } else {
+            username = params.get(":username");
+            content  = params.get("content");
+        }
         Integer userId = null;
         if(username == null){
             if (!userLoggedIn(request)) {
@@ -327,8 +489,13 @@ public class minitwit {
 
         var rs = Queries.addMessage(content, userId);
         if (rs.isSuccess()){
-            System.out.println("Your message was recorded");
-            request.session().attribute("flash", "Your message was recorded");
+            if (isSim) {
+                response.status(HttpStatus.NO_CONTENT_204);
+                return "";
+            } else {
+                System.out.println("Your message was recorded");
+                request.session().attribute("flash", "Your message was recorded");
+            }
         }
         response.redirect("/");
         return null;
@@ -338,9 +505,17 @@ public class minitwit {
     Logs the user in.
      */
     static Object login(Request request, Response response) {
+        updateLatest(request);
         var params = getParamsFromRequest(request);
-        String username = params.get("username");
-        String password = params.get("password");   //todo
+        String username;
+        String password;
+        if (params.isEmpty()) {
+            username = request.queryParams("username");
+            password = request.queryParams("password");
+        } else {
+            username = params.get("username");
+            password = params.get("password");
+        }
 
         if (userLoggedIn(request)) {
             response.redirect("/");
@@ -368,17 +543,30 @@ public class minitwit {
     Registers the user.
      */
     static Object register(Request request, Response response) {
+        var isSim = request.headers("Authorization") != null && reqFromSimulator(request);
+
         System.out.println("Start register:");
+        updateLatest(request);
         var params = getParamsFromRequest(request);
-        String username     = params.get("username");
-        String email        = params.get("email").replaceAll("%40", "@") ;
-        String password1    = params.get("password");
-        String password2    = params.get("password2");
-        if(password1 == null && password2 == null){
-            password1 = params.get("pwd");
-            password2 = password1;
+        String username;
+        String email;
+        String password1;
+        String password2;
+        if (params.isEmpty()) {
+            username = request.queryParams("username");
+            email = request.queryParams("email");
+            password1 = request.queryParams("password");
+            password2 = request.queryParams("password2");
+        } else {
+            username = params.get("username");
+            email = params.get("email").replaceAll("%40", "@");
+            password1 = params.get("password");
+            password2 = params.get("password2");
+            if (password1 == null && password2 == null) {
+                password1 = params.get("pwd");
+                password2 = password1;
+            }
         }
-        System.out.println(params);
 
         if (userLoggedIn(request)) {
             return renderTemplate("timeline.html");
@@ -387,16 +575,27 @@ public class minitwit {
         var result = Queries.register(username, email, password1, password2);
 
         if (result.isSuccess()) {
-            request.session().attribute("flash", "You were successfully registered and can login now");
-            response.redirect("/login");
-            return null;
+            if (isSim) {
+                response.status(HttpStatus.NO_CONTENT_204);
+                return "";
+            } else {
+                request.session().attribute("flash", "You were successfully registered and can login now");
+                response.redirect("/login");
+                return null;
+            }
         } else {
-            return renderTemplate("register.html", new HashMap<>() {{
-                put("error", result.getFailureMessage());
-                //TODO handle each case individually
-                put("username", username);
-                put("email", email);
-            }});
+            if (isSim) {
+                response.status(HttpStatus.BAD_REQUEST_400);
+                response.type("application/json");
+                return "{\"message\":\"404 not found\", \"error_msg\": "+ result.getFailureMessage() + "}";
+            } else {
+                return renderTemplate("register.html", new HashMap<>() {{
+                    put("error", result.getFailureMessage());
+                    put("username", username);
+                    put("email", email);
+                }});
+
+            }
         }
     }
 
