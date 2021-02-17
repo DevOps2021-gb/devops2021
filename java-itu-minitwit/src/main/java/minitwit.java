@@ -32,7 +32,7 @@ public class minitwit {
 
             registerEndpoints();
 
-            //Queries.initDb();
+            Queries.initDb();
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -162,13 +162,13 @@ public class minitwit {
     }
 
     private static Map<String,String> getParamsFromRequest(Request request, String ... args){
-        Map<String,String>  map = new HashMap<>();
+        Map<String,String> map = new HashMap<>();
 
         map.putAll(request.params());
 
-        for (int i = 0; i < args.length; i++) {
-            if (request.queryParams(args[i]) != null) {
-                map.put(args[i], request.queryParams(args[i]));
+        for (String arg : args) {
+            if (request.queryParams(arg) != null) {
+                map.put(arg, request.queryParams(arg));
             }
         }
 
@@ -198,7 +198,7 @@ public class minitwit {
     }
 
     private static Object tweetsToJSONResponse(ArrayList<Tweet> tweets, Response response) {
-        List<JSONObject> msgs = new ArrayList<JSONObject>();
+        List<JSONObject> msgs = new ArrayList<>();
         for (Tweet t : tweets) {
             HashMap<String, String> msg = new HashMap<>();
             msg.put("content", t.text);
@@ -253,8 +253,23 @@ public class minitwit {
         if (!reqFromSimulator(request)) {
             return notFromSimulatorResponse(response);
         }
-        //TODO implement when query exists for retrieving everyone someone follows (only usernames needed)
-        return null;
+
+        var params = getParamsFromRequest(request);
+        var username = params.get(":username");
+        var userIdResult = Queries.getUserId(username);
+
+        if (!userIdResult.isSuccess()) {
+            response.status(HttpStatus.NOT_FOUND_404);
+            response.type("application/json");
+            return "{\"message\":\"404 not found\"}";
+        }
+
+        ArrayList<String> following = Queries.getFollowing(userIdResult.get()).get();
+        JSONArray json = new JSONArray(following);
+
+        response.status(HttpStatus.OK_200);
+        response.type("application/json");
+        return "{\"follows\": " + json + " }";
     }
 
     private static Object postFollow(Request request, Response response) {
@@ -471,7 +486,7 @@ public class minitwit {
         String username = params.get("username") != null ? params.get("username") : params.get(":username");
         String content = params.get("content");
 
-        Integer userId = null;
+        Integer userId;
         if(username == null){
             if (!userLoggedIn(request)) {
                 halt(401, "You need to sign in to post a message");

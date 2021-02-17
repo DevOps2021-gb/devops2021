@@ -148,6 +148,23 @@ public class Queries {
         }
     }
 
+    static Result<ArrayList<String>> getFollowing(int whoId) {
+        try{
+            var db = DB.connectDb().get();
+
+            List<String> result = db.sql("""
+            select user.username from user
+                   inner join follower on follower.whomId=user.userId
+                   where follower.whoId=?
+                   limit ?""", whoId, PER_PAGE).results(String.class);
+            ArrayList<String> usernames = new ArrayList<>(result);
+            return new Success<>(usernames);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new Failure<>(e);
+        }
+    }
+
     /*
     Displays the latest messages of all users.
     */
