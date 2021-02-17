@@ -43,9 +43,9 @@ public class minitwit {
                 return;
             }
 
-            var user = Queries.querySingleUser("select * from user where userId = ?", userId.toString());
+            var user = Queries.getUserById(userId);
             if (user.isSuccess()) {
-                request.session().attribute("userId", user.get().userId());
+                request.session().attribute("userId", user.get().userId);
             }
         });
 
@@ -129,10 +129,10 @@ public class minitwit {
             var user = Queries.getUserById(getSessionUserId(request)).get();
 
             return renderTemplate("timeline.html", new HashMap<>() {{
-                put("username", user.username());
-                put("user", user.username());
+                put("username", user.username);
+                put("user", user.username);
                 put("endpoint","timeline");
-                put("messages", Queries.getPersonalTweetsById(user.userId()).get());
+                put("messages", Queries.getPersonalTweetsById(user.userId).get());
                 put("title", "My Timeline");
                 put("flash", getSessionFlash(request));
             }});
@@ -147,8 +147,8 @@ public class minitwit {
             var user = Queries.getUserById(loggedInUser);
             return renderTemplate("timeline.html", new HashMap<>() {{
                 put("messages", Queries.publicTimeline().get());
-                put("username", user.get().username());
-                put("user", user.get().username());
+                put("username", user.get().username);
+                put("user", user.get().username);
                 put("endpoint", "publicTimeline");
                 put("title", "Public Timeline");
             }});
@@ -178,9 +178,9 @@ public class minitwit {
             return renderTemplate("timeline.html", new HashMap<>() {{
                 put("endpoint", "userTimeline");
                 put("username", profileUsername);
-                put("title", profileUser.get().username() + "'s Timeline");
-                put("profileUserId", profileUser.get().userId());
-                put("profileUserUsername", profileUser.get().username());
+                put("title", profileUser.get().username + "'s Timeline");
+                put("profileUserId", profileUser.get().userId);
+                put("profileUserUsername", profileUser.get().username);
                 put("messages", Queries.getTweetsByUsername(profileUsername).get());
             }});
         } else {
@@ -193,13 +193,13 @@ public class minitwit {
 
             return renderTemplate("timeline.html", new HashMap<>() {{
                 put("endpoint", "userTimeline");
-                put("username", loggedInUser.get().username());
-                put("title", profileUser.get().username() + "'s Timeline");
-                put("user", loggedInUser.get().userId());
+                put("username", loggedInUser.get().username);
+                put("title", profileUser.get().username + "'s Timeline");
+                put("user", loggedInUser.get().userId);
                 put("userId", userId);
-                put("profileUserId", profileUser.get().userId());
-                put("profileUserUsername", profileUser.get().username());
-                put("followed", Queries.following(loggedInUser.get().userId(), profileUser.get().userId()).get());
+                put("profileUserId", profileUser.get().userId);
+                put("profileUserUsername", profileUser.get().username);
+                put("followed", Queries.following(loggedInUser.get().userId, profileUser.get().userId).get());
                 put("messages", Queries.getTweetsByUsername(profileUsername).get());
                 put("flash", getSessionFlash(request));
             }});
@@ -303,7 +303,7 @@ public class minitwit {
             response.redirect("/");
             return null;
         } else {
-            Failure<String> error = (Failure<String>) loginResult;
+            Failure<Boolean> error = (Failure<Boolean>) loginResult;
             System.out.println(loginResult);
 
             return renderTemplate("login.html", new HashMap<>() {{

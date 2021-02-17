@@ -40,11 +40,11 @@
   {% else %}
     {% for message in messages %}
       <li>
-        <img src="{{ message.profilePic() }}"><p>
-        <strong><a href="/{{message.username()}}">
-          {{ message.username() }}</a></strong>
-        {{ message.text() }}
-        <small>&mdash; {{ message.pubDate() }}</small>
+        <img src="{{ message.profilePic }}"><p>
+        <strong><a href="/{{ message.username }}">
+          {{ message.username }}</a></strong>
+        {{ message.text }}
+        <small>&mdash; {{ message.pubDate }}</small>
     {% endfor %}
   {% endif %}
   </ul>

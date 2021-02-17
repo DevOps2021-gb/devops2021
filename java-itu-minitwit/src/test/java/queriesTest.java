@@ -12,23 +12,16 @@ class queriesTest {
     File databaseFile;
     @org.junit.jupiter.api.BeforeEach
     void setUp() {
-        try {
-            databaseFile = File.createTempFile("testDB-", ".db");
-            Queries.setDATABASE(databaseFile.getName());
-            Queries.initDb();
-            //awaitInitialization();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        Queries.initDb();
+        //awaitInitialization();
     }
 
     @org.junit.jupiter.api.AfterEach
     void tearDown() {
-        databaseFile.delete();      //todo: findout why it doesn't delete the file
         stop();
     }
 
-    /* Helper functions */
+    //Helper functions
 
     //Helper function to register a user
     Result<String> register(String username, String password, String password2, String email){
@@ -38,12 +31,12 @@ class queriesTest {
     }
 
     //Helper function to login
-    Result<String> login(String username, String password) {
+    Result<Boolean> login(String username, String password) {
         return Queries.queryLogin(username, password);
     }
 
     //Helper function to register and login in one go
-    Result<String> register_and_login(String username, String password) {
+    Result<Boolean> register_and_login(String username, String password) {
         register(username, password, null, null);
         return login(username, password);
     }
@@ -56,19 +49,19 @@ class queriesTest {
         return id;
     }
     //Helper function to logout
-    Result<String> logout() {
+    Result<Boolean> logout() {
         //todo logout helper function
-        return new Success<>("");
+        return new Success<>(true);
     }
 
     //Records a message
-    void add_message(String text, int loggedInUserId) throws SQLException {
+    void add_message(String text, int loggedInUserId) {
         var rs = Queries.addMessage(text, loggedInUserId);
-        if(rs == null) assert (false);
-        else assert (rs.get() > 0);
+        assert (rs.get());
     }
 
-    /* Tests */
+    //Tests
+
 
     @Test
     void test_register(){
@@ -89,9 +82,9 @@ class queriesTest {
     @Test
     void test_login_logout() {
         var result = register_and_login("user1", "default");
-        assert (result.isSuccess() && result.get().equals("login successful"));
+        assert (result.isSuccess() && result.get());
         result = logout();
-        assert (result.isSuccess() && result.get().equals("")); //TODO will always succeed as is now
+        assert (result.isSuccess() && result.get()); //TODO will always succeed as is now
         result = login("user2", "wrongpassword");
         var msg = result.getFailureMessage();
         assert (!result.isSuccess() && result.getFailureMessage().equals("Invalid username"));
@@ -110,13 +103,13 @@ class queriesTest {
         assert (rs.isSuccess());
         var tweet1 = rs.get().get(1);
         var tweet2 = rs.get().get(0);
-        assert (tweet1.email().equals("foo@example.com"));
-        assert (tweet1.username().equals("foo"));
-        assert (tweet1.text().equals(text1));
+        assert (tweet1.email.equals("foo@example.com"));
+        assert (tweet1.username.equals("foo"));
+        assert (tweet1.text.equals(text1));
 
-        assert (tweet2.email().equals("foo@example.com"));
-        assert (tweet2.username().equals("foo"));
-        assert (tweet2.text().equals(text2));//todo store as: "&lt;test message 2&gt;"
+        assert (tweet2.email.equals("foo@example.com"));
+        assert (tweet2.username.equals("foo"));
+        assert (tweet2.text.equals(text2));//todo store as: "&lt;test message 2&gt;"
     }
 
     @Test
@@ -130,16 +123,16 @@ class queriesTest {
         var rs = Queries.getPersonalTweetsById(id1.get());
         assert (rs.isSuccess());
         var tweet1 = rs.get().get(0);
-        assert (tweet1.email().equals("foo@example.com"));
-        assert (tweet1.username().equals("foo"));
-        assert (tweet1.text().equals("the message by foo"));
+        assert (tweet1.email.equals("foo@example.com"));
+        assert (tweet1.username.equals("foo"));
+        assert (tweet1.text).equals("the message by foo");
 
         rs = Queries.getPersonalTweetsById(id2.get());
         assert (rs.isSuccess());
         var tweet2 = rs.get().get(0);
-        assert (tweet2.email().equals("bar@example.com"));
-        assert (tweet2.username().equals("bar"));
-        assert (tweet2.text().equals("the message by bar"));
+        assert (tweet2.email.equals("bar@example.com"));
+        assert (tweet2.username.equals("bar"));
+        assert (tweet2.text.equals("the message by bar"));
     }
 
     @Test
@@ -153,35 +146,35 @@ class queriesTest {
         var rs = Queries.getTweetsByUsername("foo");
         assert (rs.isSuccess());
         var tweet1 = rs.get().get(0);
-        assert (tweet1.email().equals("foo@example.com"));
-        assert (tweet1.username().equals("foo"));
-        assert (tweet1.text().equals("the message by foo"));
+        assert (tweet1.email.equals("foo@example.com"));
+        assert (tweet1.username.equals("foo"));
+        assert (tweet1.text.equals("the message by foo"));
 
         rs = Queries.getTweetsByUsername("bar");
         assert (rs.isSuccess());
         var tweet2 = rs.get().get(0);
-        assert (tweet2.email().equals("bar@example.com"));
-        assert (tweet2.username().equals("bar"));
-        assert (tweet2.text().equals("the message by bar"));
+        assert (tweet2.email.equals("bar@example.com"));
+        assert (tweet2.username.equals("bar"));
+        assert (tweet2.text.equals("the message by bar"));
     }
 
     @Test
-    void test_queryGetUser() throws SQLException {
+    void test_queryGetUser() {
         var id1 = register_login_getID("foo", "default", null, "myEmail@itu.dk");
         var user1_1 = Queries.getUser("foo");
         var id1_rs = Queries.getUserId("foo");
         var user1_2 = Queries.getUserById(id1.get());
 
-        assert (id1.get() == id1_rs.get());
-        assert (user1_1.get().userId() == id1.get());
-        assert (user1_1.get().username().equals("foo"));
-        assert (user1_1.get().pwHash().equals(Hashing.generatePasswordHash("default")));
-        assert (user1_1.get().email().equals("myEmail@itu.dk"));
+        assert (id1.get().equals(id1_rs.get()));
+        assert (user1_1.get().userId == id1.get());
+        assert (user1_1.get().username.equals("foo"));
+        assert (user1_1.get().pwHash.equals(Hashing.generatePasswordHash("default")));
+        assert (user1_1.get().email.equals("myEmail@itu.dk"));
         assert (
-                user1_1.get().userId() == user1_2.get().userId() &&
-                user1_1.get().username().equals(user1_2.get().username()) &&
-                user1_1.get().pwHash().equals(user1_2.get().pwHash()) &&
-                user1_1.get().email().equals(user1_2.get().email()));
+                user1_1.get().userId == user1_2.get().userId &&
+                user1_1.get().username.equals(user1_2.get().username) &&
+                user1_1.get().pwHash.equals(user1_2.get().pwHash) &&
+                user1_1.get().email.equals(user1_2.get().email));
     }
 
 
