@@ -78,6 +78,17 @@
             <artifactId>json</artifactId>
             <version>20201115</version>
         </dependency>
+        <!-- https://github.com/dieselpoint/norm -->
+        <dependency>
+            <groupId>com.dieselpoint</groupId>
+            <artifactId>norm</artifactId>
+            <version>0.8.5</version>
+        </dependency>
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+            <version>8.0.15</version>
+        </dependency>
     </dependencies>
 
 </project>
