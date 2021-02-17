@@ -99,7 +99,7 @@ public class minitwit {
         get("/logout",              minitwit::logout);
 
         get("/latest",              minitwit::getLatest);
-        get("msgs",                 minitwit::messages);
+        get("/msgs",                 minitwit::messages);
         get("/msgs/:username",      minitwit::messagesPerUser);
         post("/msgs/:username",     minitwit::addMessage);
         get("/fllws/:username",     minitwit::getFollow); //TODO
@@ -116,7 +116,14 @@ public class minitwit {
 
     private static boolean reqFromSimulator(Request request) {
         var fromSimulator = request.headers("Authorization");
-        return fromSimulator.equals("Basic c2ltdWxhdG9yOnN1cGVyX3NhZmUh");
+        return fromSimulator != null && fromSimulator.equals("Basic c2ltdWxhdG9yOnN1cGVyX3NhZmUh");
+    }
+
+    private static Object notFromSimulatorResponse(Response response) {
+        response.status(HttpStatus.FORBIDDEN_403);
+        response.type("application/json");
+        var error = "You are not authorized to use this resource!";
+        return "{\"status\": 403, \"error_msg\": " + error + " }";
     }
 
 
@@ -170,6 +177,11 @@ public class minitwit {
 
     private static Object messagesPerUser(Request request, Response response) {
         updateLatest(request);
+
+        if (!reqFromSimulator(request)) {
+            return notFromSimulatorResponse(response);
+        }
+
         var params = getParamsFromRequest(request);
         var username = params.get(":username");
         var userIdResult = Queries.getUserId(username);
@@ -194,6 +206,11 @@ public class minitwit {
 
     private static Object messages(Request request, Response response) {
         updateLatest(request);
+
+        if (!reqFromSimulator(request)) {
+            return notFromSimulatorResponse(response);
+        }
+
         var tweets = Queries.publicTimeline().get();
         var json = tweetsToJSON(tweets);
         if (json.length() == 0) {
@@ -208,12 +225,21 @@ public class minitwit {
 
     private static Object getFollow(Request request, Response response) {
         updateLatest(request);
+
+        if (!reqFromSimulator(request)) {
+            return notFromSimulatorResponse(response);
+        }
         //TODO implement when query exists for retrieving everyone someone follows (only usernames needed)
         return null;
     }
 
     private static Object postFollow(Request request, Response response) {
         updateLatest(request);
+
+        if (!reqFromSimulator(request)) {
+            return notFromSimulatorResponse(response);
+        }
+
         var params = getParamsFromRequest(request);
         var username = params.get(":username");
         var userIdResult = Queries.getUserId(username);
@@ -463,7 +489,6 @@ public class minitwit {
     Registers a new message for the user.
      */
     static Object addMessage(Request request, Response response) {
-        var isSim = request.headers("Authorization") != null && reqFromSimulator(request);
         updateLatest(request);
         var params = getParamsFromRequest(request);
         String username;
@@ -489,7 +514,7 @@ public class minitwit {
 
         var rs = Queries.addMessage(content, userId);
         if (rs.isSuccess()){
-            if (isSim) {
+            if (reqFromSimulator(request)) {
                 response.status(HttpStatus.NO_CONTENT_204);
                 return "";
             } else {
@@ -543,9 +568,6 @@ public class minitwit {
     Registers the user.
      */
     static Object register(Request request, Response response) {
-        var isSim = request.headers("Authorization") != null && reqFromSimulator(request);
-
-        System.out.println("Start register:");
         updateLatest(request);
         var params = getParamsFromRequest(request);
         String username;
@@ -575,7 +597,7 @@ public class minitwit {
         var result = Queries.register(username, email, password1, password2);
 
         if (result.isSuccess()) {
-            if (isSim) {
+            if (reqFromSimulator(request)) {
                 response.status(HttpStatus.NO_CONTENT_204);
                 return "";
             } else {
@@ -584,7 +606,7 @@ public class minitwit {
                 return null;
             }
         } else {
-            if (isSim) {
+            if (reqFromSimulator(request)) {
                 response.status(HttpStatus.BAD_REQUEST_400);
                 response.type("application/json");
                 return "{\"message\":\"404 not found\", \"error_msg\": "+ result.getFailureMessage() + "}";
