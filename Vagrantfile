@@ -14,53 +14,6 @@ Vagrant.configure("2") do |config|
     config.ssh.private_key_path = '~/.ssh/id_rsa'
     config.vm.synced_folder ".", "/vagrant", type: "rsync"
   
-    config.vm.define "dbserver", primary: true do |server|
-      server.vm.provider :digital_ocean do |provider|
-      server.vm.network "forwarded_port", guest: 3306, host: 3306
-        provider.ssh_key_name = ENV["SSH_KEY_NAME"]
-        provider.token = ENV["DIGITAL_OCEAN_TOKEN"]
-        provider.image = 'ubuntu-18-04-x64'
-        provider.region = 'fra1'
-        provider.size = 's-1vcpu-1gb'
-        provider.privatenetworking = true
-      end
-  
-      server.vm.hostname = "dbserver"
-
-      server.trigger.after :up do |trigger|
-        trigger.info =  "Writing dbserver's IP to file..."
-        trigger.ruby do |env,machine|
-          remote_ip = machine.instance_variable_get(:@communicator).instance_variable_get(:@connection_ssh_info)[:host]
-          File.write($ip_file, remote_ip)
-        end 
-      end
-
-      server.vm.provision "shell", inline: <<-SHELL
-	    	# Updating packages
-		sudo apt-get update
-
-		# ---------------------------------------
-		#          MySQL Setup
-		# ---------------------------------------
-
-		# Setting MySQL root user password root/root
-		sudo debconf-set-selections <<< 'mysql-server mysql-server/root_password password root'
-		sudo debconf-set-selections <<< 'mysql-server mysql-server/root_password_again password root'
-
-
-		# Installing packages
-		sudo apt-get install -y mysql-server mysql-client
-
-		# Allow External Connections on your MySQL Service
-		sudo sed -i "s/.*bind-address.*/bind-address = 0.0.0.0/" /etc/mysql/mysql.conf.d/mysqld.cnf
-
-		
-		sudo mysql -u root -proot -e "GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' IDENTIFIED BY 'root'; FLUSH privileges;"
-		sudo service mysql restart
-		# create client database
-		sudo mysql -u root -proot -e "CREATE DATABASE minitwit;"
-      SHELL
-    end
 
     config.vm.define "webserver", primary: false do |server|
   
@@ -75,28 +28,28 @@ Vagrant.configure("2") do |config|
 
       server.vm.hostname = "webserver"
 
-      server.trigger.before :up do |trigger|
-        trigger.info =  "Waiting to create server until dbserver's IP is available."
-        trigger.ruby do |env,machine|
-          ip_file = "db_ip.txt"
-          while !File.file?($ip_file) do
-            sleep(1)
-          end
-          db_ip = File.read($ip_file).strip()
-          puts "Now, I have it..."
-          puts db_ip
-        end 
-      end
-
-      server.trigger.after :provision do |trigger|
-        trigger.ruby do |env,machine|
-          File.delete($ip_file) if File.exists? $ip_file
-        end 
-      end
-
       server.vm.provision "shell", inline: <<-SHELL
-        export DB_IP=`cat /vagrant/db_ip.txt`
-        echo $DB_IP
+        
+        # Updating packages
+	sudo apt-get update
+
+	# ---------------------------------------
+	#          MySQL Setup
+	# ---------------------------------------
+
+	# Setting MySQL root user password root/root
+	sudo debconf-set-selections <<< 'mysql-server mysql-server/root_password password root'
+	sudo debconf-set-selections <<< 'mysql-server mysql-server/root_password_again password root'
+
+
+	# Installing packages
+	sudo apt-get install -y mysql-server mysql-client
+	
+	sudo mysql -u root -proot -e "GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' IDENTIFIED BY 'root'; FLUSH privileges;"
+	sudo service mysql restart
+	# create client database
+	sudo mysql -u root -proot -e "CREATE DATABASE minitwit;"
+        
 
         echo "CLONING REPOSITORY"
 	sudo git clone https://github.com/JesperFalkenberg/devops2021.git -b feature/deploy
@@ -106,10 +59,8 @@ Vagrant.configure("2") do |config|
 	echo "BUILDING PROJECT"
 	sudo mvn package
 	cd target
-	echo "EXECUTING JAR with ${DB_IP}"
-	sudo java -jar java-itu-minitwit-1.0-SNAPSHOT.jar $DB_IP
-
-        echo $DB_IP
+	
+	sudo java -jar java-itu-minitwit-1.0-SNAPSHOT.jar
 
         echo "================================================================="
         echo "=                            DONE                               ="
