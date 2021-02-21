@@ -46,14 +46,14 @@ public class Queries {
         }
     }
 
-    public static Result<Boolean> following(int whoId, int whomId) {
+    public static Result<Boolean> isFollowing(int whoId, int whomId) {
         try {
             var db = DB.connectDb().get();
             var result = db.where("whoId=?", whoId).where("whomId=?", whomId).results(Follower.class);
 
             //var stmt = conn.prepareStatement("select 1 from follower where follower.whoId = ? and follower.whomId = ?");
 
-            return new Success<>(result.isEmpty());
+            return new Success<>(!result.isEmpty());
         } catch (Exception e) {
             e.printStackTrace();
             return new Failure<>(e);
@@ -147,17 +147,16 @@ public class Queries {
         }
     }
 
-    static Result<ArrayList<String>> getFollowing(int whoId) {
+    static Result<List<User>> getFollowing(int whoId) {
         try{
             var db = DB.connectDb().get();
 
-            List<String> result = db.sql("""
-            select user.username from user
+            List<User> result = db.sql("""
+            select user.* from user
                    inner join follower on follower.whomId=user.id
                    where follower.whoId=?
-                   limit ?""", whoId, PER_PAGE).results(String.class);
-            ArrayList<String> usernames = new ArrayList<>(result);
-            return new Success<>(usernames);
+                   limit ?""", whoId, PER_PAGE).results(User.class);
+            return new Success<>(result);
         } catch (Exception e) {
             e.printStackTrace();
             return new Failure<>(e);

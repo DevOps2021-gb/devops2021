@@ -1,4 +1,5 @@
 import Model.Tweet;
+import Model.User;
 import RoP.Failure;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
@@ -264,8 +265,8 @@ public class minitwit {
             return "{\"message\":\"404 not found\"}";
         }
 
-        ArrayList<String> following = Queries.getFollowing(userIdResult.get()).get();
-        JSONArray json = new JSONArray(following);
+        List<User> following = Queries.getFollowing(userIdResult.get()).get();
+        JSONArray json = new JSONArray(following.stream().map(u->u.username));
 
         response.status(HttpStatus.OK_200);
         response.type("application/json");
@@ -414,7 +415,7 @@ public class minitwit {
                 put("userId", userId);
                 put("profileUserId", profileUser.get().id);
                 put("profileUserUsername", profileUser.get().username);
-                put("followed", Queries.following(loggedInUser.get().id, profileUser.get().id).get());
+                put("followed", Queries.isFollowing(loggedInUser.get().id, profileUser.get().id).get());
                 put("messages", Queries.getTweetsByUsername(profileUsername).get());
                 put("flash", getSessionFlash(request));
             }});
