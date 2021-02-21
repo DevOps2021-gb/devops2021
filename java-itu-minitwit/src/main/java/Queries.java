@@ -52,12 +52,8 @@ public class Queries {
             var result = db.where("whoId=?", whoId).where("whomId=?", whomId).results(Follower.class);
 
             //var stmt = conn.prepareStatement("select 1 from follower where follower.whoId = ? and follower.whomId = ?");
-
-            if (result.isEmpty()) {
-                return new Success<>(false);
-            } else {
-                return new Success<>(true);
-            }
+            
+            return new Success<>(result.isEmpty());
         } catch (Exception e) {
             e.printStackTrace();
             return new Failure<>(e);
