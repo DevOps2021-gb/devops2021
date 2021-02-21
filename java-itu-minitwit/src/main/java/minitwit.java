@@ -55,7 +55,7 @@ public class minitwit {
 
             var user = Queries.getUserById(userId);
             if (user.isSuccess()) {
-                request.session().attribute("userId", user.get().userId);
+                request.session().attribute("userId", user.get().id);
             }
         });
 
@@ -345,7 +345,7 @@ public class minitwit {
                 put("username", user.username);
                 put("user", user.username);
                 put("endpoint","timeline");
-                put("messages", Queries.getPersonalTweetsById(user.userId).get());
+                put("messages", Queries.getPersonalTweetsById(user.id).get());
                 put("title", "My Timeline");
                 put("flash", getSessionFlash(request));
             }});
@@ -395,7 +395,7 @@ public class minitwit {
                 put("endpoint", "userTimeline");
                 put("username", profileUsername);
                 put("title", profileUser.get().username + "'s Timeline");
-                put("profileUserId", profileUser.get().userId);
+                put("profileUserId", profileUser.get().id);
                 put("profileUserUsername", profileUser.get().username);
                 put("messages", Queries.getTweetsByUsername(profileUsername).get());
             }});
@@ -410,11 +410,11 @@ public class minitwit {
                 put("endpoint", "userTimeline");
                 put("username", loggedInUser.get().username);
                 put("title", profileUser.get().username + "'s Timeline");
-                put("user", loggedInUser.get().userId);
+                put("user", loggedInUser.get().id);
                 put("userId", userId);
-                put("profileUserId", profileUser.get().userId);
+                put("profileUserId", profileUser.get().id);
                 put("profileUserUsername", profileUser.get().username);
-                put("followed", Queries.following(loggedInUser.get().userId, profileUser.get().userId).get());
+                put("followed", Queries.following(loggedInUser.get().id, profileUser.get().id).get());
                 put("messages", Queries.getTweetsByUsername(profileUsername).get());
                 put("flash", getSessionFlash(request));
             }});

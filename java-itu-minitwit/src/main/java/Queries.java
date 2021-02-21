@@ -52,7 +52,7 @@ public class Queries {
             var result = db.where("whoId=?", whoId).where("whomId=?", whomId).results(Follower.class);
 
             //var stmt = conn.prepareStatement("select 1 from follower where follower.whoId = ? and follower.whomId = ?");
-            
+
             return new Success<>(result.isEmpty());
         } catch (Exception e) {
             e.printStackTrace();
@@ -68,7 +68,7 @@ public class Queries {
 
         if (!user.isSuccess()) return new Failure<>(user.toString());
 
-        return new Success<>(user.get().userId);
+        return new Success<>(user.get().id);
     }
 
     public static Result<User> getUser(String username) {

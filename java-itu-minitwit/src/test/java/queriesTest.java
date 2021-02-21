@@ -3,7 +3,6 @@ import RoP.Success;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
-import java.io.IOException;
 import java.sql.SQLException;
 
 import static spark.Spark.stop;
@@ -166,12 +165,12 @@ class queriesTest {
         var user1_2 = Queries.getUserById(id1.get());
 
         assert (id1.get().equals(id1_rs.get()));
-        assert (user1_1.get().userId == id1.get());
+        assert (user1_1.get().id == id1.get());
         assert (user1_1.get().username.equals("foo"));
         assert (user1_1.get().pwHash.equals(Hashing.generatePasswordHash("default")));
         assert (user1_1.get().email.equals("myEmail@itu.dk"));
         assert (
-                user1_1.get().userId == user1_2.get().userId &&
+                user1_1.get().id == user1_2.get().id &&
                 user1_1.get().username.equals(user1_2.get().username) &&
                 user1_1.get().pwHash.equals(user1_2.get().pwHash) &&
                 user1_1.get().email.equals(user1_2.get().email));
