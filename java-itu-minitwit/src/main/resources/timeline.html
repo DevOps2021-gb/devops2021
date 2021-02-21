@@ -28,7 +28,7 @@
       <div class=twitbox>
         <h3>What's on your mind {{ username }}?</h3>
         <form action="/add_message" method=post>
-          <p><input type=text name=text size=60><!--
+          <p><input type=text name=content size=60><!--
           --><input type=submit value="Share">
         </form>
       </div>
@@ -40,11 +40,11 @@
   {% else %}
     {% for message in messages %}
       <li>
-        <img src="{{ message.profilePic() }}"><p>
-        <strong><a href="/{{message.username()}}">
-          {{ message.username() }}</a></strong>
-        {{ message.text() }}
-        <small>&mdash; {{ message.pubDate() }}</small>
+        <img src="{{ message.profilePic }}"><p>
+        <strong><a href="/{{ message.username }}">
+          {{ message.username }}</a></strong>
+        {{ message.text }}
+        <small>&mdash; {{ message.pubDate }}</small>
     {% endfor %}
   {% endif %}
   </ul>
