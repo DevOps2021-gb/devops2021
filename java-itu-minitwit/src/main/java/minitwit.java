@@ -197,7 +197,7 @@ public class minitwit {
         return "{\"latest\":" + latest + "}";
     }
 
-    private static Object tweetsToJSONResponse(ArrayList<Tweet> tweets, Response response) {
+    private static Object tweetsToJSONResponse(List<Tweet> tweets, Response response) {
         List<JSONObject> msgs = new ArrayList<>();
         for (Tweet t : tweets) {
             HashMap<String, String> msg = new HashMap<>();

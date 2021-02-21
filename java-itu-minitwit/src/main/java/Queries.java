@@ -165,10 +165,23 @@ public class Queries {
         }
     }
 
+    public static List<Tweet> tweetsFromListOfHashMap(List<HashMap> result){
+        List<Tweet> tweets = new ArrayList<>();
+        for (HashMap hm: result) {
+            String email        = (String) hm.get("email");
+            String username     = (String) hm.get("username");
+            String text         = (String) hm.get("text");
+            String pubDate      = formatDatetime((long) hm.get("pubDate") + "").get();
+            String profilePic   = gravatarUrl(email);
+            tweets.add(new Tweet(email, username, text, pubDate, profilePic));
+        }
+        return tweets;
+    }
+
     /*
     Displays the latest messages of all users.
     */
-    public static Result<ArrayList<Tweet>> publicTimeline() {
+    public static Result<List<Tweet>> publicTimeline() {
         try{
             var db = DB.connectDb().get();
 
@@ -177,25 +190,14 @@ public class Queries {
                 where message.flagged = 0 and message.authorId = user.userId
                 order by message.pubDate desc limit ?""", PER_PAGE).results(HashMap.class);
 
-            ArrayList<Tweet> tweets = new ArrayList<>();
-            for (HashMap hm: result) {
-                String email = (String) hm.get("email");
-                String username = (String) hm.get("username");
-                String text = (String) hm.get("text");
-                String pubDate = formatDatetime((long) hm.get("pubDate") + "").get();
-                String profilePic = gravatarUrl(email);
-
-                tweets.add(new Tweet(email, username, text, pubDate, profilePic));
-            }
-
-            return new Success<>(tweets);
+            return new Success<>(tweetsFromListOfHashMap(result));
         } catch (Exception e) {
             e.printStackTrace();
             return new Failure<>(e);
         }
     }
 
-    public static Result<ArrayList<Tweet>> getTweetsByUsername(String username) {
+    public static Result<List<Tweet>> getTweetsByUsername(String username) {
         try{
             var userId = getUserId(username);
             var db = DB.connectDb().get();
@@ -206,24 +208,14 @@ public class Queries {
                 and user.userId = ?
                 order by message.pubDate desc limit ?""", userId.get(), PER_PAGE).results(HashMap.class);
 
-            ArrayList<Tweet> tweets = new ArrayList<>();
-            for (HashMap hm: result) {
-                String email = (String) hm.get("email");
-                String text = (String) hm.get("text");
-                String pubDate = formatDatetime((long) hm.get("pubDate") + "").get();
-                String profilePic = gravatarUrl(email);
-
-                tweets.add(new Tweet(email, username, text, pubDate, profilePic));
-            }
-
-            return new Success<>(tweets);
+            return new Success<>(tweetsFromListOfHashMap(result));
         } catch (Exception e) {
             e.printStackTrace();
             return new Failure<>(e);
         }
     }
 
-    public static Result<ArrayList<Tweet>> getPersonalTweetsById(int userId) {
+    public static Result<List<Tweet>> getPersonalTweetsById(int userId) {
         try{
             var db = DB.connectDb().get();
 
@@ -235,17 +227,7 @@ public class Queries {
                                                 where whoId = ?))
                     order by message.pubDate desc limit ?""", userId, userId, PER_PAGE).results(HashMap.class);
 
-            ArrayList<Tweet> tweets = new ArrayList<>();
-            for (HashMap hm: result) {
-                String email = (String) hm.get("email");
-                String username = (String) hm.get("username");
-                String text = (String) hm.get("text");
-                String pubDate = formatDatetime((long) hm.get("pubDate") + "").get();
-                String profilePic = gravatarUrl(email);
-
-                tweets.add(new Tweet(email, username, text, pubDate, profilePic));
-            }
-            return new Success<>(tweets);
+            return new Success<>(tweetsFromListOfHashMap(result));
 
         } catch (Exception e) {
             e.printStackTrace();
