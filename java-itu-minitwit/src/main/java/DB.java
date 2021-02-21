@@ -31,6 +31,7 @@ public class DB {
     }
 
     public static void setIP(String IP) {
+        System.out.println("Database IP set to: " + IP);
         DB.IP = IP;
     }
 

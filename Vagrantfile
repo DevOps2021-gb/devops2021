@@ -16,6 +16,7 @@ Vagrant.configure("2") do |config|
   
     config.vm.define "dbserver", primary: true do |server|
       server.vm.provider :digital_ocean do |provider|
+      server.vm.network "forwarded_port", guest: 3306, host: 3306
         provider.ssh_key_name = ENV["SSH_KEY_NAME"]
         provider.token = ENV["DIGITAL_OCEAN_TOKEN"]
         provider.image = 'ubuntu-18-04-x64'
@@ -51,8 +52,9 @@ Vagrant.configure("2") do |config|
 		sudo apt-get install -y mysql-server mysql-client
 
 		# Allow External Connections on your MySQL Service
-		sudo sed -i -e 's/bind-addres/#bind-address/g' /etc/mysql/mysql.conf.d/mysqld.cnf
-		sudo sed -i -e 's/skip-external-locking/#skip-external-locking/g' /etc/mysql/mysql.conf.d/mysqld.cnf
+		sudo sed -i "s/.*bind-address.*/bind-address = 0.0.0.0/" /etc/mysql/mysql.conf.d/mysqld.cnf
+
+		
 		sudo mysql -u root -proot -e "GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' IDENTIFIED BY 'root'; FLUSH privileges;"
 		sudo service mysql restart
 		# create client database
@@ -104,7 +106,7 @@ Vagrant.configure("2") do |config|
 	echo "BUILDING PROJECT"
 	sudo mvn package
 	cd target
-	echo "EXECUTING JAR"
+	echo "EXECUTING JAR with ${DB_IP}"
 	sudo java -jar java-itu-minitwit-1.0-SNAPSHOT.jar $DB_IP
 
         echo $DB_IP
