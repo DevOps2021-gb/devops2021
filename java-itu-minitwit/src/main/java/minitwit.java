@@ -29,6 +29,10 @@ public class minitwit {
         try {
             staticFiles.location("/");
 
+            if(args.length > 0) {
+                DB.setIP(args[0]);
+            }
+
             registerHooks();
 
             registerEndpoints();

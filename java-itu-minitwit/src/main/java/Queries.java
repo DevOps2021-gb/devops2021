@@ -151,11 +151,11 @@ public class Queries {
         try{
             var db = DB.connectDb().get();
 
-            List<User> result = db.sql("""
-            select user.* from user
-                   inner join follower on follower.whomId=user.id
-                   where follower.whoId=?
-                   limit ?""", whoId, PER_PAGE).results(User.class);
+            List<User> result = db.sql(
+            "select user.* from user " +
+                    "inner join follower on follower.whomId=user.id " +
+                   "where follower.whoId=? "+
+                   "limit ?", whoId, PER_PAGE).results(User.class);
             return new Success<>(result);
         } catch (Exception e) {
             e.printStackTrace();
@@ -183,11 +183,10 @@ public class Queries {
         try{
             var db = DB.connectDb().get();
 
-            List<HashMap> result = db.sql("""
-            select message.*, user.* from message, user
-                where message.flagged = 0 and message.authorId = user.id
-                order by message.pubDate desc limit ?""", PER_PAGE).results(HashMap.class);
-
+            List<HashMap> result = db.sql(
+                    "select message.*, user.* from message, user " +
+                "where message.flagged = 0 and message.authorId = user.id " +
+                "order by message.pubDate desc limit ?", PER_PAGE).results(HashMap.class);
             return new Success<>(tweetsFromListOfHashMap(result));
         } catch (Exception e) {
             e.printStackTrace();
@@ -200,11 +199,11 @@ public class Queries {
             var userId = getUserId(username);
             var db = DB.connectDb().get();
 
-            List<HashMap> result = db.sql("""
-            select message.*, user.* from message, user
-                where message.flagged = 0 and message.authorId = user.id
-                and user.id = ?
-                order by message.pubDate desc limit ?""", userId.get(), PER_PAGE).results(HashMap.class);
+            List<HashMap> result = db.sql(
+                    "select message.*, user.* from message, user " +
+                "where message.flagged = 0 and message.authorId = user.id " +
+                "and user.id = ? " +
+                "order by message.pubDate desc limit ?", userId.get(), PER_PAGE).results(HashMap.class);
 
             return new Success<>(tweetsFromListOfHashMap(result));
         } catch (Exception e) {
@@ -217,13 +216,12 @@ public class Queries {
         try{
             var db = DB.connectDb().get();
 
-            List<HashMap> result = db.sql("""
-             select message.*, user.* from message, user
-                    where message.flagged = 0 and message.authorId = user.id and (
-                        user.id = ? or
-                        user.id in (select whomId from follower
-                                                where whoId = ?))
-                    order by message.pubDate desc limit ?""", userId, userId, PER_PAGE).results(HashMap.class);
+            List<HashMap> result = db.sql(
+                    "select message.*, user.* from message, user " +
+                    "where message.flagged = 0 and message.authorId = user.id and (" +
+                        "user.id = ? or " +
+                        "user.id in (select whomId from follower where whoId = ?)) " +
+                    "order by message.pubDate desc limit ?", userId, userId, PER_PAGE).results(HashMap.class);
 
             return new Success<>(tweetsFromListOfHashMap(result));
 
