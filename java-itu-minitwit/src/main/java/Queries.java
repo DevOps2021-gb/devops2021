@@ -19,13 +19,16 @@ public class Queries {
      */
     public static void initDb()  {
         var db = DB.connectDb().get();
-        db.sql("drop table if exists user").execute();
         db.sql("drop table if exists follower").execute();
         db.sql("drop table if exists message").execute();
+        db.sql("drop table if exists user").execute();
 
         db.createTable(User.class);
         db.createTable(Message.class);
+        db.sql("ALTER TABLE message ADD FOREIGN KEY (authorId) REFERENCES user(userId)").execute();
         db.createTable(Follower.class);
+        db.sql("ALTER TABLE follower ADD FOREIGN KEY (whoId) REFERENCES user(userId)").execute();
+        db.sql("ALTER TABLE follower ADD FOREIGN KEY (whomId) REFERENCES user(userId)").execute();
     }
 
     /*
