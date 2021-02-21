@@ -25,10 +25,10 @@ public class Queries {
 
         db.createTable(User.class);
         db.createTable(Message.class);
-        db.sql("ALTER TABLE message ADD FOREIGN KEY (authorId) REFERENCES user(userId)").execute();
+        db.sql("ALTER TABLE message ADD FOREIGN KEY (authorId) REFERENCES user(id)").execute();
         db.createTable(Follower.class);
-        db.sql("ALTER TABLE follower ADD FOREIGN KEY (whoId) REFERENCES user(userId)").execute();
-        db.sql("ALTER TABLE follower ADD FOREIGN KEY (whomId) REFERENCES user(userId)").execute();
+        db.sql("ALTER TABLE follower ADD FOREIGN KEY (whoId) REFERENCES user(id)").execute();
+        db.sql("ALTER TABLE follower ADD FOREIGN KEY (whomId) REFERENCES user(id)").execute();
     }
 
     /*
@@ -82,7 +82,7 @@ public class Queries {
 
     public static Result<User> getUserById(int userId) {
         var db = DB.connectDb().get();
-        var result = db.where("userId=?", userId).first(User.class);
+        var result = db.where("id=?", userId).first(User.class);
 
         if (result == null) return new Failure<>("No user found for id " + userId);
 
@@ -153,7 +153,7 @@ public class Queries {
 
             List<String> result = db.sql("""
             select user.username from user
-                   inner join follower on follower.whomId=user.userId
+                   inner join follower on follower.whomId=user.id
                    where follower.whoId=?
                    limit ?""", whoId, PER_PAGE).results(String.class);
             ArrayList<String> usernames = new ArrayList<>(result);
@@ -186,7 +186,7 @@ public class Queries {
 
             List<HashMap> result = db.sql("""
             select message.*, user.* from message, user
-                where message.flagged = 0 and message.authorId = user.userId
+                where message.flagged = 0 and message.authorId = user.id
                 order by message.pubDate desc limit ?""", PER_PAGE).results(HashMap.class);
 
             return new Success<>(tweetsFromListOfHashMap(result));
@@ -203,8 +203,8 @@ public class Queries {
 
             List<HashMap> result = db.sql("""
             select message.*, user.* from message, user
-                where message.flagged = 0 and message.authorId = user.userId
-                and user.userId = ?
+                where message.flagged = 0 and message.authorId = user.id
+                and user.id = ?
                 order by message.pubDate desc limit ?""", userId.get(), PER_PAGE).results(HashMap.class);
 
             return new Success<>(tweetsFromListOfHashMap(result));
@@ -220,9 +220,9 @@ public class Queries {
 
             List<HashMap> result = db.sql("""
              select message.*, user.* from message, user
-                    where message.flagged = 0 and message.authorId = user.userId and (
-                        user.userId = ? or
-                        user.userId in (select whomId from follower
+                    where message.flagged = 0 and message.authorId = user.id and (
+                        user.id = ? or
+                        user.id in (select whomId from follower
                                                 where whoId = ?))
                     order by message.pubDate desc limit ?""", userId, userId, PER_PAGE).results(HashMap.class);
 

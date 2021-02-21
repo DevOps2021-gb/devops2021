@@ -8,9 +8,11 @@ import java.sql.SQLException;
 import static spark.Spark.stop;
 
 class queriesTest {
-    File databaseFile;
+    String testDatabaseName = "testMinitwit";
+
     @org.junit.jupiter.api.BeforeEach
     void setUp() {
+        DB.setDATABASE(testDatabaseName);
         Queries.initDb();
         //awaitInitialization();
     }
