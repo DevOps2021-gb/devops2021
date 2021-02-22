@@ -19,13 +19,16 @@ public class Queries {
      */
     public static void initDb()  {
         var db = DB.connectDb().get();
-        db.sql("drop table if exists user").execute();
         db.sql("drop table if exists follower").execute();
         db.sql("drop table if exists message").execute();
+        db.sql("drop table if exists user").execute();
 
         db.createTable(User.class);
         db.createTable(Message.class);
+        db.sql("ALTER TABLE message ADD FOREIGN KEY (authorId) REFERENCES user(id)").execute();
         db.createTable(Follower.class);
+        db.sql("ALTER TABLE follower ADD FOREIGN KEY (whoId) REFERENCES user(id)").execute();
+        db.sql("ALTER TABLE follower ADD FOREIGN KEY (whomId) REFERENCES user(id)").execute();
     }
 
     /*
@@ -43,18 +46,14 @@ public class Queries {
         }
     }
 
-    public static Result<Boolean> following(int whoId, int whomId) {
+    public static Result<Boolean> isFollowing(int whoId, int whomId) {
         try {
             var db = DB.connectDb().get();
             var result = db.where("whoId=?", whoId).where("whomId=?", whomId).results(Follower.class);
 
             //var stmt = conn.prepareStatement("select 1 from follower where follower.whoId = ? and follower.whomId = ?");
 
-            if (result.isEmpty()) {
-                return new Success<>(false);
-            } else {
-                return new Success<>(true);
-            }
+            return new Success<>(!result.isEmpty());
         } catch (Exception e) {
             e.printStackTrace();
             return new Failure<>(e);
@@ -69,7 +68,7 @@ public class Queries {
 
         if (!user.isSuccess()) return new Failure<>(user.toString());
 
-        return new Success<>(user.get().userId);
+        return new Success<>(user.get().id);
     }
 
     public static Result<User> getUser(String username) {
@@ -83,7 +82,7 @@ public class Queries {
 
     public static Result<User> getUserById(int userId) {
         var db = DB.connectDb().get();
-        var result = db.where("userId=?", userId).first(User.class);
+        var result = db.where("id=?", userId).first(User.class);
 
         if (result == null) return new Failure<>("No user found for id " + userId);
 
@@ -148,103 +147,83 @@ public class Queries {
         }
     }
 
-    static Result<ArrayList<String>> getFollowing(int whoId) {
+    static Result<List<User>> getFollowing(int whoId) {
         try{
             var db = DB.connectDb().get();
 
-            List<String> result = db.sql(
-            "select user.username from user" +
-                    "inner join follower on follower.whomId=user.userId" +
-                   "where follower.whoId=?"+
-                   "limit ?", whoId, PER_PAGE).results(String.class);
-            ArrayList<String> usernames = new ArrayList<>(result);
-            return new Success<>(usernames);
+            List<User> result = db.sql(
+            "select user.* from user " +
+                    "inner join follower on follower.whomId=user.id " +
+                   "where follower.whoId=? "+
+                   "limit ?", whoId, PER_PAGE).results(User.class);
+            return new Success<>(result);
         } catch (Exception e) {
             e.printStackTrace();
             return new Failure<>(e);
         }
+    }
+
+    public static List<Tweet> tweetsFromListOfHashMap(List<HashMap> result){
+        List<Tweet> tweets = new ArrayList<>();
+        for (HashMap hm: result) {
+            String email        = (String) hm.get("email");
+            String username     = (String) hm.get("username");
+            String text         = (String) hm.get("text");
+            String pubDate      = formatDatetime((long) hm.get("pubDate") + "").get();
+            String profilePic   = gravatarUrl(email);
+            tweets.add(new Tweet(email, username, text, pubDate, profilePic));
+        }
+        return tweets;
     }
 
     /*
     Displays the latest messages of all users.
     */
-    public static Result<ArrayList<Tweet>> publicTimeline() {
+    public static Result<List<Tweet>> publicTimeline() {
         try{
             var db = DB.connectDb().get();
 
             List<HashMap> result = db.sql(
                     "select message.*, user.* from message, user " +
-                "where message.flagged = 0 and message.authorId = user.userId " +
+                "where message.flagged = 0 and message.authorId = user.id " +
                 "order by message.pubDate desc limit ?", PER_PAGE).results(HashMap.class);
-
-            ArrayList<Tweet> tweets = new ArrayList<>();
-            for (HashMap hm: result) {
-                String email = (String) hm.get("email");
-                String username = (String) hm.get("username");
-                String text = (String) hm.get("text");
-                String pubDate = formatDatetime((long) hm.get("pubDate") + "").get();
-                String profilePic = gravatarUrl(email);
-
-                tweets.add(new Tweet(email, username, text, pubDate, profilePic));
-            }
-
-            return new Success<>(tweets);
+            return new Success<>(tweetsFromListOfHashMap(result));
         } catch (Exception e) {
             e.printStackTrace();
             return new Failure<>(e);
         }
     }
 
-    public static Result<ArrayList<Tweet>> getTweetsByUsername(String username) {
+    public static Result<List<Tweet>> getTweetsByUsername(String username) {
         try{
             var userId = getUserId(username);
             var db = DB.connectDb().get();
 
             List<HashMap> result = db.sql(
                     "select message.*, user.* from message, user " +
-                "where message.flagged = 0 and message.authorId = user.userId " +
-                "and user.userId = ? " +
+                "where message.flagged = 0 and message.authorId = user.id " +
+                "and user.id = ? " +
                 "order by message.pubDate desc limit ?", userId.get(), PER_PAGE).results(HashMap.class);
 
-            ArrayList<Tweet> tweets = new ArrayList<>();
-            for (HashMap hm: result) {
-                String email = (String) hm.get("email");
-                String text = (String) hm.get("text");
-                String pubDate = formatDatetime((long) hm.get("pubDate") + "").get();
-                String profilePic = gravatarUrl(email);
-
-                tweets.add(new Tweet(email, username, text, pubDate, profilePic));
-            }
-
-            return new Success<>(tweets);
+            return new Success<>(tweetsFromListOfHashMap(result));
         } catch (Exception e) {
             e.printStackTrace();
             return new Failure<>(e);
         }
     }
 
-    public static Result<ArrayList<Tweet>> getPersonalTweetsById(int userId) {
+    public static Result<List<Tweet>> getPersonalTweetsById(int userId) {
         try{
             var db = DB.connectDb().get();
 
             List<HashMap> result = db.sql(
                     "select message.*, user.* from message, user " +
-                    "where message.flagged = 0 and message.authorId = user.userId and (" +
-                        "user.userId = ? or " +
-                        "user.userId in (select whomId from follower where whoId = ?)) " +
+                    "where message.flagged = 0 and message.authorId = user.id and (" +
+                        "user.id = ? or " +
+                        "user.id in (select whomId from follower where whoId = ?)) " +
                     "order by message.pubDate desc limit ?", userId, userId, PER_PAGE).results(HashMap.class);
 
-            ArrayList<Tweet> tweets = new ArrayList<>();
-            for (HashMap hm: result) {
-                String email = (String) hm.get("email");
-                String username = (String) hm.get("username");
-                String text = (String) hm.get("text");
-                String pubDate = formatDatetime((long) hm.get("pubDate") + "").get();
-                String profilePic = gravatarUrl(email);
-
-                tweets.add(new Tweet(email, username, text, pubDate, profilePic));
-            }
-            return new Success<>(tweets);
+            return new Success<>(tweetsFromListOfHashMap(result));
 
         } catch (Exception e) {
             e.printStackTrace();

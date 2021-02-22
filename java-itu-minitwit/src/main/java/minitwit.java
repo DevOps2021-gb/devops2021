@@ -1,4 +1,5 @@
 import Model.Tweet;
+import Model.User;
 import RoP.Failure;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
@@ -59,7 +60,7 @@ public class minitwit {
 
             var user = Queries.getUserById(userId);
             if (user.isSuccess()) {
-                request.session().attribute("userId", user.get().userId);
+                request.session().attribute("userId", user.get().id);
             }
         });
 
@@ -201,7 +202,7 @@ public class minitwit {
         return "{\"latest\":" + latest + "}";
     }
 
-    private static Object tweetsToJSONResponse(ArrayList<Tweet> tweets, Response response) {
+    private static Object tweetsToJSONResponse(List<Tweet> tweets, Response response) {
         List<JSONObject> msgs = new ArrayList<>();
         for (Tweet t : tweets) {
             HashMap<String, String> msg = new HashMap<>();
@@ -268,8 +269,8 @@ public class minitwit {
             return "{\"message\":\"404 not found\"}";
         }
 
-        ArrayList<String> following = Queries.getFollowing(userIdResult.get()).get();
-        JSONArray json = new JSONArray(following);
+        List<User> following = Queries.getFollowing(userIdResult.get()).get();
+        JSONArray json = new JSONArray(following.stream().map(u->u.username));
 
         response.status(HttpStatus.OK_200);
         response.type("application/json");
@@ -349,7 +350,7 @@ public class minitwit {
                 put("username", user.username);
                 put("user", user.username);
                 put("endpoint","timeline");
-                put("messages", Queries.getPersonalTweetsById(user.userId).get());
+                put("messages", Queries.getPersonalTweetsById(user.id).get());
                 put("title", "My Timeline");
                 put("flash", getSessionFlash(request));
             }});
@@ -399,7 +400,7 @@ public class minitwit {
                 put("endpoint", "userTimeline");
                 put("username", profileUsername);
                 put("title", profileUser.get().username + "'s Timeline");
-                put("profileUserId", profileUser.get().userId);
+                put("profileUserId", profileUser.get().id);
                 put("profileUserUsername", profileUser.get().username);
                 put("messages", Queries.getTweetsByUsername(profileUsername).get());
             }});
@@ -414,11 +415,11 @@ public class minitwit {
                 put("endpoint", "userTimeline");
                 put("username", loggedInUser.get().username);
                 put("title", profileUser.get().username + "'s Timeline");
-                put("user", loggedInUser.get().userId);
+                put("user", loggedInUser.get().id);
                 put("userId", userId);
-                put("profileUserId", profileUser.get().userId);
+                put("profileUserId", profileUser.get().id);
                 put("profileUserUsername", profileUser.get().username);
-                put("followed", Queries.following(loggedInUser.get().userId, profileUser.get().userId).get());
+                put("followed", Queries.isFollowing(loggedInUser.get().id, profileUser.get().id).get());
                 put("messages", Queries.getTweetsByUsername(profileUsername).get());
                 put("flash", getSessionFlash(request));
             }});
