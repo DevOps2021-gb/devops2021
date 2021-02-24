@@ -25,7 +25,6 @@ install:
 
 stages:
   - docker_build
-  - test
   - deploy
 
 jobs:
@@ -37,21 +36,9 @@ jobs:
         - echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
         - echo "BUILD"
         - docker build -t $DOCKER_USERNAME/minitwitimage:latest . -f Dockerfile-minitwit
-        - docker build -t $DOCKER_USERNAME/mysqlimage:latest . -f Dockerfile-mysql
-        - docker build -t $DOCKER_USERNAME/flagtoolimage:latest . -f Dockerfile-flagtool
         - echo "PUSH"
         - docker push $DOCKER_USERNAME/minitwitimage:latest
-        - docker push $DOCKER_USERNAME/mysqlimage:latest
-        - docker push $DOCKER_USERNAME/flagtoolimage:latest
-
-    - stage: test
-      name: "run pytest"
-      install: skip
-      script:
-        - docker build -t $DOCKER_USERNAME/minitwittestimage -f Dockerfile-minitwit-tests .
-        - yes | docker-compose up -d
-        - docker run -it --rm --network=itu-minitwit-network $DOCKER_USERNAME/minitwittestimage
-
+        
     - stage: deploy
       name: "deploy new version"
       install: skip
@@ -61,5 +48,4 @@ jobs:
         "source /root/.bash_profile && \
         cd /vagrant && \
         docker-compose pull && \
-        docker-compose up -d && \
-        docker pull $DOCKER_USERNAME/flagtoolimage:latest"
+        docker-compose up -d "
