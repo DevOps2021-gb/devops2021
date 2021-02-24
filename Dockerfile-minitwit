@@ -1,8 +1,7 @@
-FROM python:3.7-alpine
+FROM ubuntu:18.04
 
-RUN mkdir /minitwit
 # Updating packages
-apt-get update
+sudo apt-get update
 
 # ---------------------------------------
 #          MySQL Setup
@@ -14,24 +13,24 @@ apt-get update
 
 
 # Installing packages
-apt-get install -y mysql-server mysql-client
+sudo apt-get install -y mysql-server mysql-client
 
-mysql -u root -proot -e "GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' IDENTIFIED BY 'root'; FLUSH privileges;"
-service mysql restart
+sudo mysql -u root -proot -e "GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' IDENTIFIED BY 'root'; FLUSH privileges;"
+sudo service mysql restart
 # create client database
-mysql -u root -proot -e "CREATE DATABASE minitwit;"
+sudo mysql -u root -proot -e "CREATE DATABASE minitwit;"
 
 
 echo "CLONING REPOSITORY"
-git clone https://github.com/JesperFalkenberg/devops2021.git -b feature/deploy
+sudo git clone https://github.com/JesperFalkenberg/devops2021.git -b feature/deploy
 echo "INSTALLING MAVEN"
-apt install maven -y
+sudo apt install maven -y
 cd devops2021/java-itu-minitwit/
 echo "BUILDING PROJECT"
-mvn package
+sudo mvn package
 cd target
 
-java -jar java-itu-minitwit-1.0-SNAPSHOT.jar
+sudo java -jar java-itu-minitwit-1.0-SNAPSHOT.jar
 
 echo "================================================================="
 echo "=                            DONE                               ="
@@ -39,10 +38,5 @@ echo "================================================================="
 echo "Navigate in your browser to:"
 THIS_IP=`hostname -I | cut -d" " -f1`
 echo "http://${THIS_IP}:4567"
-WORKDIR /minitwit
 
-RUN pip install -r requirements.txt
-
-EXPOSE 5000
-
-ENTRYPOINT ["python", "minitwit_mysql.py"]
+EXPOSE 4567
