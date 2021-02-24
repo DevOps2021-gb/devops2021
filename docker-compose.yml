@@ -1,0 +1,17 @@
+version: '3.5'
+
+networks:
+  main:
+    name: itu-minitwit-network
+
+services:
+
+  minitwitimage:
+    image: ${DOCKER_USERNAME}/java_minitwit
+    container_name: minitwit
+    networks:
+      - main
+    depends_on:
+      - itusqlimage
+    ports:
+        - '4567:4567'
