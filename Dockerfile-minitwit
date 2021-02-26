@@ -19,11 +19,4 @@ WORKDIR "/devops2021/java-itu-minitwit/target"
 
 EXPOSE 4567
 
-RUN echo "================================================================="
-RUN echo "=                            DONE                               ="
-RUN echo "================================================================="
-RUN echo "Navigate in your browser to:"
-RUN THIS_IP=`hostname -I | cut -d" " -f1`
-RUN echo "http://${THIS_IP}:4567"
-
 ENTRYPOINT ["java", "-jar", "java-itu-minitwit-1.0-SNAPSHOT.jar"]
