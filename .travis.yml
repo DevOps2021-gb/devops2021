@@ -41,8 +41,10 @@ jobs:
         - echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
         - echo "BUILD"
         - docker build -t $DOCKER_USERNAME/java_minitwit:latest . -f Dockerfile-minitwit
+        - docker build -t $DOCKER_USERNAME/minitwit_mysqlimage:latest . -f Dockerfile-mysql
         - echo "PUSH"
         - docker push $DOCKER_USERNAME/java_minitwit:latest
+        - docker push $DOCKER_USERNAME/minitwit_mysqlimage:latest
         
     - stage: deploy
       name: "deploy new version"

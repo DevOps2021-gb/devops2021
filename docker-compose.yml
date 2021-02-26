@@ -13,3 +13,13 @@ services:
       - main
     ports:
         - '4567:4567'
+        
+  mysqlimage:
+    image: ${DOCKER_USERNAME}/minitwit_mysqlimage
+    container_name: minitwit_mysql
+    networks:
+      - main
+    ports:
+      - '3306:3306'
+    environment:
+        - MYSQL_ROOT_PASSWORD=root

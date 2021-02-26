@@ -4,14 +4,6 @@ FROM ubuntu:18.04
 RUN apt-get update
 
 # ---------------------------------------
-#          MySQL Setup
-# ---------------------------------------
-
-RUN apt-get install -y mysql-server mysql-client
-RUN /etc/init.d/mysql start
-RUN mysql -u root -proot -e "CREATE DATABASE minitwit;"
-
-# ---------------------------------------
 #          Repository Setup
 # ---------------------------------------
 
@@ -25,7 +17,7 @@ RUN echo "BUILDING PROJECT"
 RUN mvn package
 WORKDIR "/devops2021/java-itu-minitwit/target"
 
-RUN java -jar java-itu-minitwit-1.0-SNAPSHOT.jar
+RUN nohup java -jar java-itu-minitwit-1.0-SNAPSHOT.jar
 
 RUN echo "================================================================="
 RUN echo "=                            DONE                               ="
