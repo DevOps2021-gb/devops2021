@@ -2,7 +2,6 @@ os: linux
 dist: bionic
 
 language: java
-#  - oraclejdk11
 
 services:
   - docker  # required, but travis uses older version of docker :(
@@ -50,7 +49,7 @@ jobs:
       script: |
         ssh -o "StrictHostKeyChecking no" ${MT_USER}@${MT_SERVER} \
         ls -a
-        "source .profile && \
+        "source /root/.bash_profile && \
         cd /vagrant && \
         docker-compose pull && \
         docker-compose up -d "
