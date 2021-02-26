@@ -30,7 +30,7 @@ RUN apt-get update
 # create client database
 # RUN mysql -u root -proot -e "CREATE DATABASE minitwit;"
 
-RUN apt-get install git
+RUN apt-get -y install git
 RUN echo "CLONING REPOSITORY"
 RUN git clone https://github.com/JesperFalkenberg/devops2021.git -b feature/deploy
 RUN echo "INSTALLING MAVEN"
