@@ -40,6 +40,7 @@ WORKDIR "/devops2021/java-itu-minitwit"
 RUN echo "BUILDING PROJECT"
 RUN mvn package
 WORKDIR "/devops2021/java-itu-minitwit/target"
+RUN ls -a
 
 RUN java -jar minitwit-1.jar
 
