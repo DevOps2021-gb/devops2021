@@ -39,9 +39,9 @@ RUN ls -a
 WORKDIR "/devops2021/java-itu-minitwit"
 RUN echo "BUILDING PROJECT"
 RUN mvn package
-RUN cd target
+WORKDIR "/devops2021/java-itu-minitwit/target"
 
-RUN java -jar java-itu-minitwit-1.0-SNAPSHOT.jar
+RUN java -jar minitwit-1.jar
 
 RUN echo "================================================================="
 RUN echo "=                            DONE                               ="
