@@ -8,8 +8,7 @@ RUN apt-get update
 # ---------------------------------------
 
 RUN apt-get install -y mysql-server mysql-client
-
-# create client database
+RUN /etc/init.d/mysql start
 RUN mysql -u root -proot -e "CREATE DATABASE minitwit;"
 
 # ---------------------------------------
