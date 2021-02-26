@@ -6,6 +6,7 @@ language: java
 
 services:
   - docker  # required, but travis uses older version of docker :(
+  - mysql
 
 notifications:
   email: false
@@ -21,6 +22,8 @@ before_install:
   - eval "$(ssh-agent -s)"
   # Add the key to the authentication agent
   - DISPLAY=":0.0" SSH_ASKPASS="/tmp/askpass" setsid ssh-add /tmp/git_deploy_key </dev/null
+  # Mysql:
+  - mysql -e 'CREATE DATABASE IF NOT EXISTS minitwit;'
 
 install:
   - docker --version  # document the version travis is using
