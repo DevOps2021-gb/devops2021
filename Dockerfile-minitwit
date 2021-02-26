@@ -7,34 +7,14 @@ RUN apt-get update
 #          MySQL Setup
 # ---------------------------------------
 
-# Setting MySQL root user password root/root
-# RUN  debconf-set-selections <<< 'mysql-server mysql-server/root_password password root'
-# RUN  debconf-set-selections <<< 'mysql-server mysql-server/root_password_again password root'
-# Installing packages
 RUN apt-get install -y mysql-server mysql-client
-
-RUN { \
-         echo mysql-community-server mysql-community-server/root-pass password 'root'; \
-         echo mysql-community-server mysql-community-server/re-root-pass password 'root'; \
-     } | debconf-set-selections \
-	   && apt-get update && apt-get install -y mysql-server
-
-RUN echo $(ls /var)
-RUN echo $(ls /var/run)
-RUN echo $(ls /var/run/mysqld)
-RUN service mysql restart
-RUN touch /var/run/mysqld/mysqld.sock
-RUN touch /var/run/mysqld/mysqld.pid
-RUN chown -R mysql:mysql /var/run/mysqld/mysqld.sock
-RUN chown -R mysql:mysql /var/run/mysqld/mysqld.pid
-RUN chmod -R 644 /var/run/mysqld/mysqld.sock
-RUN service mysql restart
-RUN mysql -u root -proot -e "GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' IDENTIFIED BY 'root';"
-RUN mysql -u root -proot -e "FLUSH privileges;"
-RUN service mysql restart
 
 # create client database
 RUN mysql -u root -proot -e "CREATE DATABASE minitwit;"
+
+# ---------------------------------------
+#          Repository Setup
+# ---------------------------------------
 
 RUN apt-get -y install git
 RUN echo "CLONING REPOSITORY"
