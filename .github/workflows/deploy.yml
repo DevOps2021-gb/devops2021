@@ -18,7 +18,7 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME_SIF }}
           password: ${{ secrets.DOCKERHUB_PASSWORD_SIF }}
-          repository: mertz/minitwit
+          repository: psiphph/minitwit
         
   deploy:
     needs: build
