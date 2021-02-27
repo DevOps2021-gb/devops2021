@@ -48,9 +48,8 @@ jobs:
       # -o flag to get around "add ip to known hosts prompt"
       script: |
         ssh -o "StrictHostKeyChecking no" ${MT_USER}@${MT_SERVER} \
+        echo $HOME
         cd $HOME
         ls -a
-        "source .bash_profile && \
-        cd /vagrant && \
-        docker-compose pull && \
-        docker-compose up -d "
+        docker-compose pull
+        docker-compose up -d
