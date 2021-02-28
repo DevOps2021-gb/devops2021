@@ -19,7 +19,7 @@ public class User {
     // must be public or privat with getter and setter
     @Id
     @GeneratedValue
-    public int userId;
+    public int id;
 
     public String username;
     public String email;

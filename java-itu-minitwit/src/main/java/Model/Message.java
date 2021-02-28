@@ -8,7 +8,7 @@ import javax.persistence.Table;
 public class Message {
     @Id
     @GeneratedValue
-    public int messageId;
+    public int id;
     public int authorId;
     public String text;
     public long pubDate;

@@ -1,0 +1,50 @@
+FROM ubuntu:18.04
+
+# Updating packages
+RUN apt-get update
+
+# ---------------------------------------
+#          MySQL Setup
+# ---------------------------------------
+
+# Setting MySQL root user password root/root
+# RUN  debconf-set-selections <<< 'mysql-server mysql-server/root_password password root'
+# RUN  debconf-set-selections <<< 'mysql-server mysql-server/root_password_again password root'
+# Installing packages
+# RUN apt-get install -y mysql-server mysql-client
+
+RUN { \
+        echo mysql-community-server mysql-community-server/root-pass password 'root'; \
+        echo mysql-community-server mysql-community-server/re-root-pass password 'root'; \
+    } | debconf-set-selections \
+    && apt-get update && apt-get install -y mysql-server
+
+
+
+
+
+RUN mysql -u root -proot -e "GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' IDENTIFIED BY 'root'; FLUSH privileges;"
+RUN service mysql restart
+# create client database
+RUN mysql -u root -proot -e "CREATE DATABASE minitwit;"
+
+
+RUN echo "CLONING REPOSITORY"
+RUN git clone https://github.com/JesperFalkenberg/devops2021.git -b feature/deploy
+RUN echo "INSTALLING MAVEN"
+RUN apt install maven -y
+RUN cd devops2021/java-itu-minitwit/
+RUN echo "BUILDING PROJECT"
+RUN mvn package
+RUN cd target
+
+RUN java -jar java-itu-minitwit-1.0-SNAPSHOT.jar
+
+RUN echo "================================================================="
+RUN echo "=                            DONE                               ="
+RUN echo "================================================================="
+RUN echo "Navigate in your browser to:"
+RUN THIS_IP=`hostname -I | cut -d" " -f1`
+RUN echo "http://${THIS_IP}:4567"
+
+EXPOSE 4567
