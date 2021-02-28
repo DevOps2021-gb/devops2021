@@ -1,0 +1,11 @@
+FROM mysql:5.7
+
+RUN apt-get -y install git
+RUN echo "CLONING REPOSITORY"
+RUN git clone https://github.com/DevOps2021-gb/devops2021.git -b deploy/actions
+
+WORKDIR "devops2021"
+
+COPY minitwit_init.sql /docker-entrypoint-initdb.d/
+
+EXPOSE 3306

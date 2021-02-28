@@ -1,15 +1,28 @@
-version: '3.5'
-
-networks:
-  main:
-    name: itu-minitwit-network
+version: '3.3'
 
 services:
+    db:
+        image: mysql:5.7
+        networks:
+            - main
+        restart: always
+        environment:
+            MYSQL_ROOT_PASSWORD: root
+            MYSQL_DATABASE: minitwit
+        ports:
+            - "3306:3306"
+    minitwit:
+        build:
+            context: ./
+            dockerfile: Dockerfile
+        ports:
+            - "4567:4567"
+        networks:
+            - main
+        depends_on:
+            - db
+        restart: always
+networks:
+    main:
+        driver: bridge
 
-  minitwitimage:
-    image: ${DOCKER_USERNAME}/java_minitwit
-    container_name: minitwit
-    networks:
-      - main
-    ports:
-        - '4567:4567'
