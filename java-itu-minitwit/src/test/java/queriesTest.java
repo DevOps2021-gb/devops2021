@@ -13,6 +13,7 @@ class queriesTest {
     void setUp() {
         DB.setDATABASE(testDatabaseName);
         Queries.initDb();
+        DB.dropDATABASE();
         //awaitInitialization();
     }
 

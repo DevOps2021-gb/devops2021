@@ -67,11 +67,11 @@ public class Queries {
 
     public static Result<User> getUser(String username) {
         var db = DB.connectDb().get();
-        var result = (User) db.createCriteria(User.class).add(Restrictions.eq("username", username)).list().get(0);
+        var result = (List<User>) db.createCriteria(User.class).add(Restrictions.eq("username", username)).list();
 
-        if (result == null) return new Failure<>("No user found for " + username);
+        if (result == null || result.size() == 0) return new Failure<>("No user found for " + username);
 
-        return new Success<>(result);
+        return new Success<>(result.get(0));
     }
 
     public static Result<User> getUserById(int userId) {

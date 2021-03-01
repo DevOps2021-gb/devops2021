@@ -38,5 +38,16 @@ public class DB {
     public static void setDATABASE(String dbName) {
         DATABASE = dbName;
     }
+    public static Result<Session>  dropDATABASE(){
+        instance.beginTransaction();
+        instance.createSQLQuery("drop table if exists Follower").executeUpdate();
+        instance.createSQLQuery("drop table if exists Message").executeUpdate();
+        instance.createSQLQuery("drop table if exists User").executeUpdate();
+        instance.getTransaction().commit();
+        instance.close();
+        instance = null;
+        dbConnectionFactory = null;
+        return connectDb();
+    }
 
 }
