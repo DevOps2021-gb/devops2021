@@ -1,6 +1,14 @@
 package Model;
 
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.Table;
+
+@Table(name = "Tweet")
 public class Tweet {
+    @Id
+    @GeneratedValue
+    public int id;
     public String email;
     public String username;
     public String text;
@@ -16,6 +24,14 @@ public class Tweet {
     }
 
     //Jinjava needs to have access to getters/setters
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
 
     public String getEmail() {
         return email;

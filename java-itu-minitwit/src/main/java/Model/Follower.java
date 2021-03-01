@@ -1,9 +1,14 @@
 package Model;
 
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
 import javax.persistence.Table;
 
-@Table(name = "follower")
+@Table(name = "Follower")
 public class Follower {
+    @Id
+    @GeneratedValue
+    public int id;
     public int whoId;
     public int whomId;
 
@@ -17,4 +22,27 @@ public class Follower {
         this.whomId = whomId;
     }
 
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public int getWhoId() {
+        return whoId;
+    }
+
+    public void setWhoId(int whoId) {
+        this.whoId = whoId;
+    }
+
+    public int getWhomId() {
+        return whomId;
+    }
+
+    public void setWhomId(int whomId) {
+        this.whomId = whomId;
+    }
 }

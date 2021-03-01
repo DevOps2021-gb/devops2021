@@ -1,21 +1,21 @@
-<?xmlversion="1.0"?>
-<!DOCTYPEhibernate-mappingPUBLIC
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
         "-//Hibernate/Hibernate Mapping DTD//EN"
         "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
 
 <hibernate-mapping>
-    <class name="Model.User" table="USER">
-        <id name="id" type="int" column="ID">
+    <class name="Model.User" table="User">
+        <id name="id" type="int" column="id">
             <generator class="assigned"/>
         </id>
         <property name="username">
-            <column name="USERNAME"/>
+            <column name="username"/>
         </property>
         <property name="email">
-            <column name="EMAIL"/>
+            <column name="email"/>
         </property>
         <property name="pwHash">
-            <column name="PW_HASH"/>
+            <column name="pw_hash"/>
         </property>
     </class>
 </hibernate-mapping>

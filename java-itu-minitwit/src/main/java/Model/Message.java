@@ -4,7 +4,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
-@Table (name = "message")
+@Table (name = "Message")
 public class Message {
     @Id
     @GeneratedValue
@@ -24,4 +24,43 @@ public class Message {
         this.flagged = flagged;
     }
 
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public int getAuthorId() {
+        return authorId;
+    }
+
+    public void setAuthorId(int authorId) {
+        this.authorId = authorId;
+    }
+
+    public String getText() {
+        return text;
+    }
+
+    public void setText(String text) {
+        this.text = text;
+    }
+
+    public long getPubDate() {
+        return pubDate;
+    }
+
+    public void setPubDate(long pubDate) {
+        this.pubDate = pubDate;
+    }
+
+    public int getFlagged() {
+        return flagged;
+    }
+
+    public void setFlagged(int flagged) {
+        this.flagged = flagged;
+    }
 }

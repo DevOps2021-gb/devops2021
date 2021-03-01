@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+        "-//Hibernate/Hibernate Mapping DTD//EN"
+        "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping>
+    <class name="Model.Tweet" table="Tweet">
+        <id name="id" type="int" column="id">
+            <generator class="assigned"/>
+        </id>
+        <property name="email">
+            <column name="email"/>
+        </property>
+        <property name="username">
+            <column name="username"/>
+        </property>
+        <property name="text">
+            <column name="text"/>
+        </property>
+        <property name="pubDate">
+            <column name="pubDate"/>
+        </property>
+        <property name="profilePic">
+            <column name="profilePic"/>
+        </property>
+    </class>
+</hibernate-mapping>

@@ -10,13 +10,15 @@ public class Test {
         session.beginTransaction();
         User user = new User();
 
-        user.setId(1);
+        //user.setId(2);
         user.setUsername("Mukesh");
         user.setEmail("Google");
         user.setPwHash("qq");
 
         session.save(user);
         session.getTransaction().commit();
+
+        HibernateUtil.shutdown();
 
     }
 
