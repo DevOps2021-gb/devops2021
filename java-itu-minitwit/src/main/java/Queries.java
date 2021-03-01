@@ -5,6 +5,7 @@ import Model.User;
 import RoP.Failure;
 import RoP.Result;
 import RoP.Success;
+import org.hibernate.criterion.Restrictions;
 
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
@@ -19,16 +20,6 @@ public class Queries {
      */
     public static void initDb()  {
         var db = DB.connectDb().get();
-        db.sql("drop table if exists follower").execute();
-        db.sql("drop table if exists message").execute();
-        db.sql("drop table if exists user").execute();
-
-        db.createTable(User.class);
-        db.createTable(Message.class);
-        db.sql("ALTER TABLE message ADD FOREIGN KEY (authorId) REFERENCES user(id)").execute();
-        db.createTable(Follower.class);
-        db.sql("ALTER TABLE follower ADD FOREIGN KEY (whoId) REFERENCES user(id)").execute();
-        db.sql("ALTER TABLE follower ADD FOREIGN KEY (whomId) REFERENCES user(id)").execute();
     }
 
     /*
@@ -49,7 +40,10 @@ public class Queries {
     public static Result<Boolean> isFollowing(int whoId, int whomId) {
         try {
             var db = DB.connectDb().get();
-            var result = db.where("whoId=?", whoId).where("whomId=?", whomId).results(Follower.class);
+            var result = (List<Follower>) db.createCriteria(Follower.class)
+                    .add(Restrictions.eq("whoId", whoId))
+                    .add(Restrictions.eq("whomId", whomId))
+                    .list();
 
             //var stmt = conn.prepareStatement("select 1 from follower where follower.whoId = ? and follower.whomId = ?");
 
@@ -73,7 +67,7 @@ public class Queries {
 
     public static Result<User> getUser(String username) {
         var db = DB.connectDb().get();
-        var result = db.table("user").where("username=?", username).first(User.class);
+        var result = (User) db.createCriteria(User.class).add(Restrictions.eq("username", username)).list().get(0);
 
         if (result == null) return new Failure<>("No user found for " + username);
 
@@ -82,7 +76,7 @@ public class Queries {
 
     public static Result<User> getUserById(int userId) {
         var db = DB.connectDb().get();
-        var result = db.where("id=?", userId).first(User.class);
+        var result = (User) db.get(User.class, userId);
 
         if (result == null) return new Failure<>("No user found for id " + userId);
 
@@ -113,7 +107,9 @@ public class Queries {
         } else {
             try {
                 var db = DB.connectDb().get();
-                db.insert(new Follower(whoId, whomId.get()));
+                db.beginTransaction();  //todo test if needed
+                db.save(new Follower(whoId, whomId.get()));
+                db.getTransaction().commit();
 
                 return new Success<>("OK");
             } catch (Exception e) {
@@ -137,7 +133,11 @@ public class Queries {
         } else {
             try {
                 var db = DB.connectDb().get();
-                db.table("follower").where("whoId=?", whoId).where("whomId=?", whomId.get()).delete();
+                var followerToDelete = new Follower();
+                followerToDelete.setWhoId(whoId);
+                followerToDelete.setWhomId(whomId.get());
+                db.delete(followerToDelete);       //toto: test if it works
+                //db.table("follower").where("whoId=?", whoId).where("whomId=?", whomId.get()).delete();
 
                 return new Success<>("OK");
             } catch (Exception e) {
@@ -151,11 +151,11 @@ public class Queries {
         try{
             var db = DB.connectDb().get();
 
-            List<User> result = db.sql(
-            "select user.* from user " +
-                    "inner join follower on follower.whomId=user.id " +
-                   "where follower.whoId=? "+
-                   "limit ?", whoId, PER_PAGE).results(User.class);
+            List<User> result = db.createSQLQuery(
+            "select User.* from User " +
+                    "inner join Follower on Follower.whomId=User.id " +
+                    "where Follower.whoId=:whoId " +
+                    "limit :PER_PAGE").setString("whoId", whoId+"").setString("PER_PAGE", PER_PAGE+"").list();
             return new Success<>(result);
         } catch (Exception e) {
             e.printStackTrace();
@@ -182,11 +182,13 @@ public class Queries {
     public static Result<List<Tweet>> publicTimeline() {
         try{
             var db = DB.connectDb().get();
-
+            /* todo
             List<HashMap> result = db.sql(
                     "select message.*, user.* from message, user " +
                 "where message.flagged = 0 and message.authorId = user.id " +
                 "order by message.pubDate desc limit ?", PER_PAGE).results(HashMap.class);
+             */
+            List<HashMap> result = null;
             return new Success<>(tweetsFromListOfHashMap(result));
         } catch (Exception e) {
             e.printStackTrace();
@@ -198,13 +200,14 @@ public class Queries {
         try{
             var userId = getUserId(username);
             var db = DB.connectDb().get();
-
+            /* todo
             List<HashMap> result = db.sql(
                     "select message.*, user.* from message, user " +
                 "where message.flagged = 0 and message.authorId = user.id " +
                 "and user.id = ? " +
                 "order by message.pubDate desc limit ?", userId.get(), PER_PAGE).results(HashMap.class);
-
+            */
+            List<HashMap> result = null;
             return new Success<>(tweetsFromListOfHashMap(result));
         } catch (Exception e) {
             e.printStackTrace();
@@ -215,14 +218,15 @@ public class Queries {
     public static Result<List<Tweet>> getPersonalTweetsById(int userId) {
         try{
             var db = DB.connectDb().get();
-
+            /* todo
             List<HashMap> result = db.sql(
                     "select message.*, user.* from message, user " +
                     "where message.flagged = 0 and message.authorId = user.id and (" +
                         "user.id = ? or " +
                         "user.id in (select whomId from follower where whoId = ?)) " +
                     "order by message.pubDate desc limit ?", userId, userId, PER_PAGE).results(HashMap.class);
-
+            */
+            List<HashMap> result = null;
             return new Success<>(tweetsFromListOfHashMap(result));
 
         } catch (Exception e) {
@@ -239,7 +243,7 @@ public class Queries {
             try{
                 long timestamp = new Date().getTime();
                 var db = DB.connectDb().get();
-                db.insert(new Message(loggedInUserId, text, timestamp, 0));
+                db.save(new Message(loggedInUserId, text, timestamp, 0));
 
                 return new Success<>(true);
             } catch (Exception e) {
@@ -280,7 +284,7 @@ public class Queries {
         } else {
             try {
                 var db = DB.connectDb().get();
-                db.insert(new User(username,email, Hashing.generatePasswordHash(password1)));
+                db.save(new User(username,email, Hashing.generatePasswordHash(password1)));
 
                     System.out.println("You were successfully registered and can login now");
                     return new Success<>("OK");

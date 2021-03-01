@@ -1,6 +1,7 @@
 package Model;
 
 import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
@@ -8,7 +9,7 @@ import javax.persistence.Table;
 public class User {
     // must be public or privat with getter and setter
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.AUTO)
     public int id;
 
     public String username;
@@ -54,5 +55,15 @@ public class User {
 
     public void setPwHash(String pwHash) {
         this.pwHash = pwHash;
+    }
+
+    @Override
+    public String toString() {
+        return "User{" +
+                "id=" + id +
+                ", username='" + username + '\'' +
+                ", email='" + email + '\'' +
+                ", pwHash='" + pwHash + '\'' +
+                '}';
     }
 }

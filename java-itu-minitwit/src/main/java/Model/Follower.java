@@ -45,4 +45,13 @@ public class Follower {
     public void setWhomId(int whomId) {
         this.whomId = whomId;
     }
+
+    @Override
+    public String toString() {
+        return "Follower{" +
+                "id=" + id +
+                ", whoId=" + whoId +
+                ", whomId=" + whomId +
+                '}';
+    }
 }

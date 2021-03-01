@@ -2,31 +2,28 @@ import RoP.Failure;
 import RoP.Result;
 import RoP.Success;
 import com.dieselpoint.norm.Database;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.hibernate.cfg.Configuration;
 
 public class DB {
-    static Database instance;
-    static String DATABASE = "minitwit";
-    static String IP = "minitwit_mysql"; //docker container name
-    static int PORT = 3306;
-    static String USER = "root";
-    static String PW = "root";
+    private static SessionFactory dbConnectionFactory;
+    private static Session instance;
+    static String DATABASE = "minitwit";    //todo: use
+    static String IP = "minitwit_mysql"; //docker container name    //todo: replace in hibernate.cfg.xml
 
     /*
         Returns a new connection to the database.
     */
-    public static Result<Database> connectDb() {
-        if (instance == null) {
+    public static Result<Session> connectDb() {
+        if (instance == null || !instance.isOpen()) {
             try {
-                System.setProperty("norm.jdbcUrl", "jdbc:mysql://" + IP + ":" + PORT + "/" + DATABASE + "?allowPublicKeyRetrieval=true&useSSL=false");
-                System.setProperty("norm.user", USER);
-                System.setProperty("norm.password", PW);
-
-                instance = new Database();
+                dbConnectionFactory = new Configuration().configure().buildSessionFactory();
+                instance = dbConnectionFactory.openSession();
             } catch (Exception e) {
                 return new Failure<>("could not establish connection to DB");
             }
         }
-
         return new Success<>(instance);
     }
 
