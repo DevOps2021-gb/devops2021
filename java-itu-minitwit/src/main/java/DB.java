@@ -16,13 +16,16 @@ public class DB {
         Returns a new connection to the database.
     */
     public static Result<Session> connectDb() {
-        if (instance == null || !instance.isOpen()) {
-            try {
-                dbConnectionFactory = new Configuration().configure().buildSessionFactory();
-                instance = dbConnectionFactory.openSession();
-            } catch (Exception e) {
-                return new Failure<>("could not establish connection to DB");
+        try {
+            if(dbConnectionFactory == null){
+                var config = new Configuration().setProperty("connection.url", "jdbc:mysql://localhost:3306/"+DATABASE+"?allowPublicKeyRetrieval=true&amp;useSSL=false");
+                dbConnectionFactory = config.configure().buildSessionFactory();
             }
+            if (instance == null || !instance.isOpen()) {
+                instance = dbConnectionFactory.openSession();
+            }
+        } catch (Exception e) {
+            return new Failure<>("could not establish connection to DB");
         }
         return new Success<>(instance);
     }
