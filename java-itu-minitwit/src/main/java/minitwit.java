@@ -38,6 +38,7 @@ public class minitwit {
             registerEndpoints();
 
             Queries.initDb();
+            Logger.StartLogging();
 
         } catch (Exception e) {
             e.printStackTrace();
