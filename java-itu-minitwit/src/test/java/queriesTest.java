@@ -217,16 +217,19 @@ class queriesTest {
         assert (Queries.isFollowing(id1.get(), id2.get()).get());
         assert (Queries.isFollowing(id1.get(), id3.get()).get());
 
+        var rs = Queries.getFollowing(id1.get());
+        assert (rs.get().size() == 2);
+
         var rsUnfollow1 = Queries.unfollowUser(id1.get(), "bar");
         assert (rsUnfollow1.isSuccess());
-        var test = Queries.isFollowing(id1.get(), id2.get()).get();
-        assert (!test);
+        assert (!Queries.isFollowing(id1.get(), id2.get()).get());
+        rs = Queries.getFollowing(id1.get());
+        assert (rs.get().size() == 1);
+
         var rsUnfollow2 = Queries.unfollowUser(id1.get(), "brian");
         assert (rsUnfollow2.isSuccess());
         assert (!Queries.isFollowing(id1.get(), id3.get()).get());
-
-        var rs = Queries.getFollowing(id1.get());
-        assert (rs.isSuccess());
+        rs = Queries.getFollowing(id1.get());
         assert (rs.get().size()==0);
     }
 

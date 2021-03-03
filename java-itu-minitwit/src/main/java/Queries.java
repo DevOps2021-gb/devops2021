@@ -10,6 +10,7 @@ import org.hibernate.criterion.Restrictions;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class Queries {
 
@@ -40,7 +41,7 @@ public class Queries {
     public static Result<Boolean> isFollowing(int whoId, int whomId) {
         try {
             var db = DB.connectDb().get();
-            List<Follower> result = db.createQuery("from Follower f where f.who.id>:whoId AND f.whom.id>:whomId")
+            List<Follower> result = db.createQuery("from Follower f where f.who.id=:whoId AND f.whom.id=:whomId")
                     .setInteger("whoId", whoId).setInteger("whomId", whomId).list();
             //var stmt = conn.prepareStatement("select 1 from follower where follower.whoId = ? and follower.whomId = ?");
 
@@ -93,7 +94,7 @@ public class Queries {
     /*
     Current user follow username
     */
-    static Result<String> followUser(int whoId, String whomUsername) {
+    static Result<Follower> followUser(int whoId, String whomUsername) {
         Result<User> whoUser = getUserById(whoId);
         Result<User> whomUser= getUser(whomUsername);
 
@@ -105,10 +106,11 @@ public class Queries {
             try {
                 var db = DB.connectDb().get();
                 db.beginTransaction();  //todo test if needed
-                db.save(new Follower(whoUser.get(), whoUser.get()));
+                var follower = new Follower(whoUser.get(), whomUser.get());
+                db.save(follower);
                 db.getTransaction().commit();
 
-                return new Success<>("OK");
+                return new Success<>(follower);
             } catch (Exception e) {
                 e.printStackTrace();
                 return new Failure<>(e);
@@ -131,9 +133,8 @@ public class Queries {
             try {
                 var db = DB.connectDb().get();
                 db.beginTransaction();
-                List<Follower> followersToDelete = db.createCriteria(Follower.class)
-                        .add(Restrictions.eq("whoId", whoId))
-                        .add(Restrictions.eq("whomId", whomId.get())).list();
+                List<Follower> followersToDelete = db.createQuery("from Follower f where f.who.id=:whoId AND f.whom.id=:whomId")
+                        .setInteger("whoId", whoId).setInteger("whomId", whomId.get()).list();
                 for(var follower: followersToDelete) {
                     db.delete(follower);       //toto: test if it works
                 }
@@ -151,12 +152,9 @@ public class Queries {
     static Result<List<User>> getFollowing(int whoId) {
         try{
             var db = DB.connectDb().get();
-
-            List<User> result = db.createSQLQuery(
-            "select u from User u " +
-                    "inner join Follower f on f.whomId=u.id " +
-                    "where f.whoId=:whoId " +
-                    "limit :PER_PAGE").setString("whoId", whoId+"").setString("PER_PAGE", PER_PAGE+"").list();
+            List<Object[]> test = db.createQuery("from Follower f inner join f.who u where u.id=:whoId")
+                    .setInteger("whoId", whoId).setMaxResults(PER_PAGE).list();
+            List<User> result = test.stream().map(o->((Follower) o[0]).getWhom()).collect(Collectors.toList());;
             return new Success<>(result);
         } catch (Exception e) {
             e.printStackTrace();

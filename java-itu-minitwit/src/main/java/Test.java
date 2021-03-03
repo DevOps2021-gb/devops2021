@@ -34,15 +34,25 @@ public class Test {
 
         User rUser = (User) session.get(User.class, 2);
 
-        List<Follower> rFolower = session.createQuery("from Follower f where f.who.id>:whoId").setInteger("whoId", 0).list();
+
+        List rFolower = session.createQuery("from Follower f inner join f.who u where u.id>:whoId").setInteger("whoId", 0).list();
         for (var fol : rFolower) {
             System.out.println(fol);
         }
-        System.out.println(rUser);
+/*
+        List<Object[]> authors1 = session.createQuery("from User where Follower.whoId = User.id").list();
+        //List<Object[]> authors4 = session.createQuery("SELECT u.*, f.* FROM User u LEFT JOIN Follower f on u.id = f.whoId").list();
+        for (var o: authors1) {
+            System.out.println(o);
+        }
 
+        System.out.println(rUser);
+*/
         session.getTransaction().commit();
         session.close();
         DB.close();
+
+
     }
 
     static Result<User> register(String username, String password, String password2, String email){
