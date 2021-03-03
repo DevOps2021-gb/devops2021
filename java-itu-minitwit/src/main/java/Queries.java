@@ -133,10 +133,14 @@ public class Queries {
         } else {
             try {
                 var db = DB.connectDb().get();
-                var followerToDelete = new Follower();
-                followerToDelete.setWhoId(whoId);
-                followerToDelete.setWhomId(whomId.get());
-                db.delete(followerToDelete);       //toto: test if it works
+                db.beginTransaction();
+                List<Follower> followersToDelete = db.createCriteria(Follower.class)
+                        .add(Restrictions.eq("whoId", whoId))
+                        .add(Restrictions.eq("whomId", whomId.get())).list();
+                for(var follower: followersToDelete) {
+                    db.delete(follower);       //toto: test if it works
+                }
+                db.getTransaction().commit();
                 //db.table("follower").where("whoId=?", whoId).where("whomId=?", whomId.get()).delete();
 
                 return new Success<>("OK");
@@ -269,7 +273,7 @@ public class Queries {
         return new Failure<>(error);
     }
 
-    static Result<String> register(String username, String email, String password1, String password2) {
+    static Result<User> register(String username, String email, String password1, String password2) {
         String error;
         if (username == null || username.equals("")) {
             error = "You have to enter a username";
@@ -284,10 +288,13 @@ public class Queries {
         } else {
             try {
                 var db = DB.connectDb().get();
-                db.save(new User(username,email, Hashing.generatePasswordHash(password1)));
+                db.beginTransaction();
+                User user = new User(username,email, Hashing.generatePasswordHash(password1));
+                db.save(user);
+                db.getTransaction().commit();
 
-                    System.out.println("You were successfully registered and can login now");
-                    return new Success<>("OK");
+                System.out.println("You were successfully registered and can login now");
+                return new Success<>(user);
 
 
             } catch (Exception e) {

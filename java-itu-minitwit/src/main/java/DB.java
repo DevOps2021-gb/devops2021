@@ -10,7 +10,7 @@ public class DB {
     private static SessionFactory dbConnectionFactory;
     private static Session instance;
     static String DATABASE = "minitwit";    //todo: use
-    static String IP = "minitwit_mysql"; //docker container name    //todo: replace in hibernate.cfg.xml
+    static String IP = "minitwit_mysql"; //docker container name    //todo: replace in hibernate.cfg.xml or below
 
     /*
         Returns a new connection to the database.

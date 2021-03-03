@@ -4,6 +4,7 @@ import java.util.List;
 import Model.Follower;
 import Model.Tweet;
 import Model.User;
+import RoP.Result;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.criterion.Restrictions;
@@ -11,8 +12,12 @@ import org.hibernate.hql.internal.ast.tree.FromClause;
 
 public class Test {
     public static void main(String[] args) {
-        Session session = DB.connectDb().get();
+        DB.setDATABASE("testMinitwit");
+        Queries.initDb();
+        DB.dropDATABASE();
 
+
+        /*
         session.beginTransaction();
         User user = new User("Mukesh","Google", "qq");
         session.save(user);
@@ -38,6 +43,26 @@ public class Test {
 
         session.close();
 
+         */
+        var error = register("user1", "q123", null, null);
+        error = register("user1", "q123", null, null);
+
+        var session = DB.connectDb().get();
+        session.beginTransaction();
+        User userT = new User("user3","email", Hashing.generatePasswordHash("password1"));
+        session.save(userT);
+        List<User> rUsers = session.createCriteria(User.class).list();
+        List<User> rUsers2 = session.createSQLQuery("select * from User").list();
+        for(var user: rUsers){
+            System.out.println(user);
+        }
+        session.getTransaction().commit();
+    }
+
+    static Result<User> register(String username, String password, String password2, String email){
+        if (password2==null) password2 = password;
+        if (email==null)     email = username + "@example.com";
+        return Queries.register(username, email, password, password2);
     }
 
 }

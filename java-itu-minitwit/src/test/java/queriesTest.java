@@ -1,3 +1,4 @@
+import Model.User;
 import RoP.Result;
 import RoP.Success;
 import org.junit.jupiter.api.Test;
@@ -25,7 +26,7 @@ class queriesTest {
     //Helper functions
 
     //Helper function to register a user
-    Result<String> register(String username, String password, String password2, String email){
+    Result<User> register(String username, String password, String password2, String email){
         if (password2==null) password2 = password;
         if (email==null)     email = username + "@example.com";
         return Queries.register(username, email, password, password2);
@@ -67,7 +68,7 @@ class queriesTest {
     @Test
     void test_register(){
         var error = register("user1", "q123", null, null);
-        assert (error.isSuccess() && error.get().equals("OK"));
+        assert (error.isSuccess());
         error = register("user1", "q123", null, null);
         assert (!error.isSuccess() && error.getFailureMessage().equals("The username is already taken"));
         error = register("", "q123", null, null);
@@ -218,7 +219,8 @@ class queriesTest {
 
         var rsUnfollow1 = Queries.unfollowUser(id1.get(), "bar");
         assert (rsUnfollow1.isSuccess());
-        assert (!Queries.isFollowing(id1.get(), id2.get()).get());
+        var test = Queries.isFollowing(id1.get(), id2.get()).get();
+        assert (!test);
         var rsUnfollow2 = Queries.unfollowUser(id1.get(), "brian");
         assert (rsUnfollow2.isSuccess());
         assert (!Queries.isFollowing(id1.get(), id3.get()).get());
