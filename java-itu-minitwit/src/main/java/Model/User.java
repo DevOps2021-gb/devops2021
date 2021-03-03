@@ -19,7 +19,7 @@ public class User {
     @OneToMany(fetch = FetchType.EAGER, mappedBy="Follower")
     private Set<Follower> follower_whom;
     @OneToMany(fetch = FetchType.EAGER, mappedBy="Message")
-    private Set<Follower> messages;
+    private Set<Message> messages;
 
     // must have 0-arg constructor
     public User() {}
@@ -30,6 +30,7 @@ public class User {
         this.pwHash = pwHash;
         follower_who = new HashSet<>();
         follower_whom = new HashSet<>();
+        messages = new HashSet<>();
     }
 
     public int getId() {
@@ -80,11 +81,11 @@ public class User {
         this.follower_whom = follower_whom;
     }
 
-    public Set<Follower> getMessages() {
+    public Set<Message> getMessages() {
         return messages;
     }
 
-    public void setMessages(Set<Follower> messages) {
+    public void setMessages(Set<Message> messages) {
         this.messages = messages;
     }
 

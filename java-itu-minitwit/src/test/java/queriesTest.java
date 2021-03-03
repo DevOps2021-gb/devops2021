@@ -1,3 +1,4 @@
+import Model.Message;
 import Model.User;
 import RoP.Result;
 import RoP.Success;
@@ -57,9 +58,10 @@ class queriesTest {
     }
 
     //Records a message
-    void add_message(String text, int loggedInUserId) {
+    Message add_message(String text, int loggedInUserId) {
         var rs = Queries.addMessage(text, loggedInUserId);
-        assert (rs.get());
+        assert (rs.isSuccess());
+        return rs.get();
     }
 
     //Tests
@@ -99,8 +101,8 @@ class queriesTest {
         var id1 = register_login_getID("foo", "default", null, null);
 
         String text1 = "test message 1", text2 = "<test message 2>";
-        add_message(text1, id1.get());
-        add_message(text2, id1.get());
+        var msg1 = add_message(text1, id1.get());
+        var msg2 = add_message(text2, id1.get());
         var rs = Queries.publicTimeline();
         assert (rs.isSuccess());
         var tweet1 = rs.get().get(1);
@@ -140,10 +142,10 @@ class queriesTest {
     @Test
     void test_getTweetsByUsername() throws SQLException {
         var id1 = register_login_getID("foo", "default", null, null);
-        add_message("the message by foo", id1.get());
+        var msg1 = add_message("the message by foo", id1.get());
         logout();
         var id2 = register_login_getID("bar","default", null, null);
-        add_message("the message by bar", id2.get());
+        var msg2 = add_message("the message by bar", id2.get());
 
         var rs = Queries.getTweetsByUsername("foo");
         assert (rs.isSuccess());

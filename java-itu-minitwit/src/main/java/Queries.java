@@ -5,6 +5,7 @@ import Model.User;
 import RoP.Failure;
 import RoP.Result;
 import RoP.Success;
+import org.hibernate.Query;
 import org.hibernate.criterion.Restrictions;
 
 import java.nio.charset.StandardCharsets;
@@ -162,15 +163,14 @@ public class Queries {
         }
     }
 
-    public static List<Tweet> tweetsFromListOfHashMap(List<HashMap> result){
+    public static List<Tweet> tweetsFromMsgUser(List<Object[]> msgUser){
         List<Tweet> tweets = new ArrayList<>();
-        for (HashMap hm: result) {
-            String email        = (String) hm.get("email");
-            String username     = (String) hm.get("username");
-            String text         = (String) hm.get("text");
-            String pubDate      = formatDatetime((long) hm.get("pubDate") + "").get();
-            String profilePic   = gravatarUrl(email);
-            tweets.add(new Tweet(email, username, text, pubDate, profilePic));
+        for (Object[] hm: msgUser) {
+            Message message = (Message) hm[0];
+            User user       = (User) hm[1];
+            String pubDate      = formatDatetime(message.pubDate + "").get();
+            String profilePic   = gravatarUrl(user.email);
+            tweets.add(new Tweet(user.email, user.username, message.text, pubDate, profilePic));
         }
         return tweets;
     }
@@ -181,14 +181,9 @@ public class Queries {
     public static Result<List<Tweet>> publicTimeline() {
         try{
             var db = DB.connectDb().get();
-            /* todo
-            List<HashMap> result = db.sql(
-                    "select message.*, user.* from message, user " +
-                "where message.flagged = 0 and message.authorId = user.id " +
-                "order by message.pubDate desc limit ?", PER_PAGE).results(HashMap.class);
-             */
-            List<HashMap> result = null;
-            return new Success<>(tweetsFromListOfHashMap(result));
+            List<Object[]> result = db.createQuery("from Message m inner join m.author u where m.flagged = 0 order by m.pubDate desc")
+                    .setMaxResults(PER_PAGE).list();
+            return new Success<>(tweetsFromMsgUser(result));
         } catch (Exception e) {
             e.printStackTrace();
             return new Failure<>(e);
@@ -199,15 +194,9 @@ public class Queries {
         try{
             var userId = getUserId(username);
             var db = DB.connectDb().get();
-            /* todo
-            List<HashMap> result = db.sql(
-                    "select message.*, user.* from message, user " +
-                "where message.flagged = 0 and message.authorId = user.id " +
-                "and user.id = ? " +
-                "order by message.pubDate desc limit ?", userId.get(), PER_PAGE).results(HashMap.class);
-            */
-            List<HashMap> result = null;
-            return new Success<>(tweetsFromListOfHashMap(result));
+            List<Object[]> result = db.createQuery("from Message m inner join m.author u where u.id=:authorId AND m.flagged = 0 order by m.pubDate desc")
+                    .setInteger("authorId", userId.get()).setMaxResults(PER_PAGE).list();
+            return new Success<>(tweetsFromMsgUser(result));
         } catch (Exception e) {
             e.printStackTrace();
             return new Failure<>(e);
@@ -217,6 +206,13 @@ public class Queries {
     public static Result<List<Tweet>> getPersonalTweetsById(int userId) {
         try{
             var db = DB.connectDb().get();
+            // inner join Follower f on f.who.id = u.id OR f.whom.id = u.id
+            Query x = db.createSQLQuery(
+                    "select m.*, u.* from Message m, User u "
+                            + "where m.flagged = 0 and m.author_id = u.id and u.id = :authorId1 or "
+                            + "EXISTS(select * from Follower f where f.who_id = :authorId2 AND f.whom_id = u.id)")
+                    .setInteger("authorId1", userId).setInteger("authorId2", userId).setMaxResults(PER_PAGE);
+            List<Object[]> result = x.list();
             /* todo
             List<HashMap> result = db.sql(
                     "select message.*, user.* from message, user " +
@@ -225,8 +221,7 @@ public class Queries {
                         "user.id in (select whomId from follower where whoId = ?)) " +
                     "order by message.pubDate desc limit ?", userId, userId, PER_PAGE).results(HashMap.class);
             */
-            List<HashMap> result = null;
-            return new Success<>(tweetsFromListOfHashMap(result));
+            return new Success<>(tweetsFromMsgUser(result));
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -237,15 +232,18 @@ public class Queries {
     /*
         Registers a new message for the user.
     */
-    public static Result<Boolean> addMessage(String text, int loggedInUserId) {
+    public static Result<Message> addMessage(String text, int loggedInUserId) {
         if (!text.equals("")) {
             try{
                 long timestamp = new Date().getTime();
                 var db = DB.connectDb().get();
+                db.beginTransaction();
                 User user = getUserById(loggedInUserId).get();
-                db.save(new Message(user, text, timestamp, 0));
+                var msg = new Message(user, text, timestamp, 0);
+                db.save(msg);
+                db.getTransaction().commit();
 
-                return new Success<>(true);
+                return new Success<>(msg);
             } catch (Exception e) {
                 e.printStackTrace();
                 return new Failure<>(e);
