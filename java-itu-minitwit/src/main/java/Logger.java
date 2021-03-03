@@ -47,7 +47,7 @@ public class Logger {
             var cpuLoadLastMinute   = operatingSystemMXBean.getSystemLoadAverage() / operatingSystemMXBean.getAvailableProcessors();
 
             WriteToFileWriter(writeLogNumberOfUsers,        date, new StringBuilder().append(numberOfUsers));
-            WriteToFileWriter(writeLogAvgNumberOfFollowers, date, new StringBuilder().append((numberOfFollowers==0)? 0: (numberOfUsers + 0.0) / numberOfFollowers) );
+            WriteToFileWriter(writeLogAvgNumberOfFollowers, date, new StringBuilder().append((numberOfUsers==0)? 0: (numberOfFollowers + 0.0) / numberOfUsers) );
             WriteToFileWriter(writeLogCPULoad,              date, new StringBuilder().append(cpuLoadLastMinute));
         } catch (IOException e) {
             e.printStackTrace();
