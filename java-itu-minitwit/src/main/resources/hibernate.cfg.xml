@@ -13,8 +13,6 @@
         <property name="show_sql">false</property>
         <property name="format_sql">false</property>
         <property name="hbm2ddl.auto">update </property>
-        <mapping resource="Model/user.hbm.xml" />
-        <mapping resource="Model/follower.hbm.xml" />
-        <mapping resource="Model/message.hbm.xml" />
+        <mapping resource="Model/classes.hbm.xml" />
     </session-factory>
 </hibernate-configuration>

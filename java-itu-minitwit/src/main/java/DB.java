@@ -20,12 +20,14 @@ public class DB {
             if(dbConnectionFactory == null){
                 var config = new Configuration().setProperty("connection.url", "jdbc:mysql://localhost:3306/"+DATABASE+"?allowPublicKeyRetrieval=true&amp;useSSL=false");
                 dbConnectionFactory = config.configure().buildSessionFactory();
+
             }
             if (instance == null || !instance.isOpen()) {
                 instance = dbConnectionFactory.openSession();
             }
         } catch (Exception e) {
-            return new Failure<>("could not establish connection to DB");
+            throw e;
+            //return new Failure<>("could not establish connection to DB");
         }
         return new Success<>(instance);
     }
@@ -33,6 +35,12 @@ public class DB {
     public static void setIP(String IP) {
         System.out.println("Database IP set to: " + IP);
         DB.IP = IP;
+    }
+    public static void close(){
+        dbConnectionFactory.close();
+        instance=null;
+        dbConnectionFactory = null;
+        System.out.println("Closed");
     }
 
     public static void setDATABASE(String dbName) {

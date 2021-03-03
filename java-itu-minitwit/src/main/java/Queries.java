@@ -40,11 +40,8 @@ public class Queries {
     public static Result<Boolean> isFollowing(int whoId, int whomId) {
         try {
             var db = DB.connectDb().get();
-            var result = (List<Follower>) db.createCriteria(Follower.class)
-                    .add(Restrictions.eq("whoId", whoId))
-                    .add(Restrictions.eq("whomId", whomId))
-                    .list();
-
+            List<Follower> result = db.createQuery("from Follower f where f.who.id>:whoId AND f.whom.id>:whomId")
+                    .setInteger("whoId", whoId).setInteger("whomId", whomId).list();
             //var stmt = conn.prepareStatement("select 1 from follower where follower.whoId = ? and follower.whomId = ?");
 
             return new Success<>(!result.isEmpty());
@@ -98,17 +95,17 @@ public class Queries {
     */
     static Result<String> followUser(int whoId, String whomUsername) {
         Result<User> whoUser = getUserById(whoId);
-        Result<Integer> whomId = getUserId(whomUsername);
+        Result<User> whomUser= getUser(whomUsername);
 
         if (!whoUser.isSuccess()) {
             return new Failure<>(whoUser.toString());
-        } else if (!whomId.isSuccess()) {
-            return new Failure<>(whomId.toString());
+        } else if (!whomUser.isSuccess()) {
+            return new Failure<>(whomUser.toString());
         } else {
             try {
                 var db = DB.connectDb().get();
                 db.beginTransaction();  //todo test if needed
-                db.save(new Follower(whoId, whomId.get()));
+                db.save(new Follower(whoUser.get(), whoUser.get()));
                 db.getTransaction().commit();
 
                 return new Success<>("OK");
@@ -156,9 +153,9 @@ public class Queries {
             var db = DB.connectDb().get();
 
             List<User> result = db.createSQLQuery(
-            "select User.* from User " +
-                    "inner join Follower on Follower.whomId=User.id " +
-                    "where Follower.whoId=:whoId " +
+            "select u from User u " +
+                    "inner join Follower f on f.whomId=u.id " +
+                    "where f.whoId=:whoId " +
                     "limit :PER_PAGE").setString("whoId", whoId+"").setString("PER_PAGE", PER_PAGE+"").list();
             return new Success<>(result);
         } catch (Exception e) {
@@ -247,7 +244,8 @@ public class Queries {
             try{
                 long timestamp = new Date().getTime();
                 var db = DB.connectDb().get();
-                db.save(new Message(loggedInUserId, text, timestamp, 0));
+                User user = getUserById(loggedInUserId).get();
+                db.save(new Message(user, text, timestamp, 0));
 
                 return new Success<>(true);
             } catch (Exception e) {

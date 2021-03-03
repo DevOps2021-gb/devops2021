@@ -1,0 +1,55 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+        "-//Hibernate/Hibernate Mapping DTD//EN"
+        "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping>
+    <class name="Model.User" table="User">
+        <id name="id" type="int" column="id">
+            <generator class="increment"/>
+        </id>
+        <property name="username">
+            <column name="username"/>
+        </property>
+        <property name="email">
+            <column name="email"/>
+        </property>
+        <property name="pwHash">
+            <column name="pw_hash"/>
+        </property>
+        <set name="follower_who" inverse="true">
+            <key column="who_id"/>
+            <one-to-many class="Model.Follower"/>
+        </set>
+        <set name="follower_whom" inverse="true">
+            <key column="whom_id"/>
+            <one-to-many class="Model.Follower"/>
+        </set>
+        <set name="messages" inverse="true">
+            <key column="author_id"/>
+            <one-to-many class="Model.Message"/>
+        </set>
+    </class>
+    <class name="Model.Follower" table="Follower">
+        <id name="id" type="int" column="id">
+            <generator class="increment"/>
+        </id>
+        <many-to-one name="who" class="Model.User" column="who_id" not-null="true"/>
+        <many-to-one name="whom" class="Model.User" column="whom_id" not-null="true"/>
+    </class>
+    <class name="Model.Message" table="Message">
+        <id name="id" type="int" column="id">
+            <generator class="increment"/>
+        </id>
+        <many-to-one name="author" class="Model.User" column="author_id" not-null="true"/>
+        <property name="text">
+            <column name="text"/>
+        </property>
+        <property type="long" name="pubDate">
+            <column name="pubDate"/>
+        </property>
+        <property type="int" name="flagged">
+            <column name="flagged"/>
+        </property>
+    </class>
+</hibernate-mapping>

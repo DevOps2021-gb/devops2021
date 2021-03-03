@@ -1,25 +1,27 @@
 package Model;
 
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import javax.persistence.*;
 
 @Table(name = "Follower")
 public class Follower {
     @Id
     @GeneratedValue
     public int id;
-    public int whoId;
-    public int whomId;
+    @ManyToOne
+    @JoinColumn(name = "who")
+    private User who;
+    @ManyToOne
+    @JoinColumn(name = "whom")
+    private User whom;
 
     // must have 0-arg constructor
     public Follower() {
 
     }
 
-    public Follower(int whoId, int whomId) {
-        this.whoId = whoId;
-        this.whomId = whomId;
+    public Follower(User who, User whom) {
+        this.who = who;
+        this.whom = whom;
     }
 
     public int getId() {
@@ -30,28 +32,28 @@ public class Follower {
         this.id = id;
     }
 
-    public int getWhoId() {
-        return whoId;
+    public User getWho() {
+        return who;
     }
 
-    public void setWhoId(int whoId) {
-        this.whoId = whoId;
+    public void setWho(User who) {
+        this.who = who;
     }
 
-    public int getWhomId() {
-        return whomId;
+    public User getWhom() {
+        return whom;
     }
 
-    public void setWhomId(int whomId) {
-        this.whomId = whomId;
+    public void setWhom(User whom) {
+        this.whom = whom;
     }
 
     @Override
     public String toString() {
         return "Follower{" +
                 "id=" + id +
-                ", whoId=" + whoId +
-                ", whomId=" + whomId +
+                ", who=" + who +
+                ", whom=" + whom +
                 '}';
     }
 }

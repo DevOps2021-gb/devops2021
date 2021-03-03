@@ -1,9 +1,8 @@
 package Model;
 
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import javax.persistence.*;
+import java.util.HashSet;
+import java.util.Set;
 
 @Table(name = "User")
 public class User {
@@ -15,6 +14,12 @@ public class User {
     public String username;
     public String email;
     public String pwHash;
+    @OneToMany(fetch = FetchType.EAGER, mappedBy="Follower")
+    private Set<Follower> follower_who;
+    @OneToMany(fetch = FetchType.EAGER, mappedBy="Follower")
+    private Set<Follower> follower_whom;
+    @OneToMany(fetch = FetchType.EAGER, mappedBy="Message")
+    private Set<Follower> messages;
 
     // must have 0-arg constructor
     public User() {}
@@ -23,6 +28,8 @@ public class User {
         this.username = username;
         this.email = email;
         this.pwHash = pwHash;
+        follower_who = new HashSet<>();
+        follower_whom = new HashSet<>();
     }
 
     public int getId() {
@@ -57,6 +64,30 @@ public class User {
         this.pwHash = pwHash;
     }
 
+    public Set<Follower> getFollower_who() {
+        return follower_who;
+    }
+
+    public void setFollower_who(Set<Follower> follower_who) {
+        this.follower_who = follower_who;
+    }
+
+    public Set<Follower> getFollower_whom() {
+        return follower_whom;
+    }
+
+    public void setFollower_whom(Set<Follower> follower_whom) {
+        this.follower_whom = follower_whom;
+    }
+
+    public Set<Follower> getMessages() {
+        return messages;
+    }
+
+    public void setMessages(Set<Follower> messages) {
+        this.messages = messages;
+    }
+
     @Override
     public String toString() {
         return "User{" +
@@ -64,6 +95,8 @@ public class User {
                 ", username='" + username + '\'' +
                 ", email='" + email + '\'' +
                 ", pwHash='" + pwHash + '\'' +
+                ", follower_who=" + follower_who +
+                ", follower_whom=" + follower_whom +
                 '}';
     }
 }

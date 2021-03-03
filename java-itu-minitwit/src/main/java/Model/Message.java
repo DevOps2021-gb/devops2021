@@ -1,15 +1,15 @@
 package Model;
 
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import javax.persistence.*;
 
 @Table (name = "Message")
 public class Message {
     @Id
     @GeneratedValue
     public int id;
-    public int authorId;
+    @ManyToOne
+    @JoinColumn(name = "author")
+    private User author;
     public String text;
     public long pubDate;
     public int flagged;
@@ -17,8 +17,8 @@ public class Message {
     // must have 0-arg constructor
     public Message() {}
     // must be public or privat with getter and setter
-    public Message(int authorId, String text, long pubDate, int flagged) {
-        this.authorId = authorId;
+    public Message(User author, String text, long pubDate, int flagged) {
+        this.author = author;
         this.text = text;
         this.pubDate = pubDate;
         this.flagged = flagged;
@@ -32,12 +32,12 @@ public class Message {
         this.id = id;
     }
 
-    public int getAuthorId() {
-        return authorId;
+    public User getAuthor() {
+        return author;
     }
 
-    public void setAuthorId(int authorId) {
-        this.authorId = authorId;
+    public void setAuthor(User author) {
+        this.author = author;
     }
 
     public String getText() {
