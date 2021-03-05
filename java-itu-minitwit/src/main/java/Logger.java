@@ -57,7 +57,7 @@ public class Logger {
     }
     public static void LogResponseTimeFrontPage(float time){
         try {
-            WriteToFileWriter(writeLogResponseTimeFrontPage, new Date(), new StringBuilder().append(time).append("ns"));
+            WriteToFileWriter(writeLogResponseTimeFrontPage, new Date(), new StringBuilder().append(time));
         } catch (IOException e) {
             e.printStackTrace();
         }
