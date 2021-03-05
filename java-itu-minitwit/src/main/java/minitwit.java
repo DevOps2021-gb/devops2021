@@ -30,14 +30,18 @@ public class minitwit {
             staticFiles.location("/");
 
             if(args.length > 0) {
-                DB.setIP(args[0]);
+                System.out.println("Connecting to remote database");
+                DB.setCONNECTIONSTRING(args[0]);
+                DB.setUSER(args[1]);
+                DB.setPW(args[2]);
             }
 
             registerHooks();
 
             registerEndpoints();
 
-            Queries.initDb();
+            //add db clear here if working LOCALLY
+
             Logger.StartLogging();
 
         } catch (Exception e) {

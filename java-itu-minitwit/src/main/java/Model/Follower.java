@@ -1,9 +1,14 @@
 package Model;
 
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
 import javax.persistence.Table;
 
 @Table(name = "follower")
 public class Follower {
+    @Id
+    @GeneratedValue
+    public int id;
     public int whoId;
     public int whomId;
 
