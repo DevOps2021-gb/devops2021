@@ -387,7 +387,7 @@ public class minitwit {
                     put("flash", getSessionFlash(request));
                 }});
         }
-        Logger.LogResponseTimeFrontPage(System.nanoTime() - startTime);
+        //Logger.LogResponseTimeFrontPage(System.nanoTime() - startTime);
         return returnPage;
     }
 
