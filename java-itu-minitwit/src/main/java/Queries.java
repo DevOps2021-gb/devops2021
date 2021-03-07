@@ -79,6 +79,16 @@ public class Queries {
 
         return new Success<>(result);
     }
+    public static Result<List<User>> getAllUsers() {
+        var db = DB.connectDb().get();
+        var result = db.table("user").results(User.class);
+        return new Success<>(result);
+    }
+    public static Result<List<Follower>> getAllFollowers() {
+        var db = DB.connectDb().get();
+        var result = db.table("follower").results(Follower.class);
+        return new Success<>(result);
+    }
 
     public static Result<User> getUserById(int userId) {
         var db = DB.connectDb().get();

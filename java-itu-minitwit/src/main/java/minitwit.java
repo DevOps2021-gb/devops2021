@@ -20,7 +20,7 @@ import java.util.Map;
 import static spark.Spark.*;
 
 public class minitwit {
-    private static int latest = 0;
+    private static int latest = 110371;
 
     //configuration
     static Boolean DEBUG        = true;
@@ -30,14 +30,19 @@ public class minitwit {
             staticFiles.location("/");
 
             if(args.length > 0) {
-                DB.setIP(args[0]);
+                System.out.println("Connecting to remote database");
+                DB.setCONNECTIONSTRING(args[0]);
+                DB.setUSER(args[1]);
+                DB.setPW(args[2]);
             }
 
             registerHooks();
 
             registerEndpoints();
 
-            Queries.initDb();
+            //add db clear here if working LOCALLY
+
+            Logger.StartLogging();
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -343,29 +348,30 @@ public class minitwit {
         if (getSessionUserId(request) == null) {
             response.redirect("/public");
             return null;
-        } else {
-            var user = Queries.getUserById(getSessionUserId(request)).get();
-
-            return renderTemplate("timeline.html", new HashMap<>() {{
-                put("username", user.username);
-                put("user", user.username);
-                put("endpoint","timeline");
-                put("messages", Queries.getPersonalTweetsById(user.id).get());
-                put("title", "My Timeline");
-                put("flash", getSessionFlash(request));
-            }});
         }
+        var user = Queries.getUserById(getSessionUserId(request)).get();
+
+        return renderTemplate("timeline.html", new HashMap<>() {{
+            put("username", user.username);
+            put("user", user.username);
+            put("endpoint","timeline");
+            put("messages", Queries.getPersonalTweetsById(user.id).get());
+            put("title", "My Timeline");
+            put("flash", getSessionFlash(request));
+        }});
     }
 
     /*
      Displays the latest messages of all users.
     */
     public static Object publicTimeline(Request request, Response response) {
+        var startTime = System.nanoTime();
         updateLatest(request);
         var loggedInUser = getSessionUserId(request);
+        Object returnPage;
         if(loggedInUser != null) {
             var user = Queries.getUserById(loggedInUser);
-            return renderTemplate("timeline.html", new HashMap<>() {{
+            returnPage = renderTemplate("timeline.html", new HashMap<>() {{
                 put("messages", Queries.publicTimeline().get());
                 put("username", user.get().username);
                 put("user", user.get().username);
@@ -373,7 +379,7 @@ public class minitwit {
                 put("title", "Public Timeline");
             }});
         } else {
-            return renderTemplate("timeline.html", new HashMap<>() {
+            returnPage = renderTemplate("timeline.html", new HashMap<>() {
                 {
                     put("messages", Queries.publicTimeline().get());
                     put("endpoint", "publicTimeline");
@@ -381,6 +387,8 @@ public class minitwit {
                     put("flash", getSessionFlash(request));
                 }});
         }
+        Logger.LogResponseTimeFrontPage(System.nanoTime() - startTime);
+        return returnPage;
     }
 
     /*
