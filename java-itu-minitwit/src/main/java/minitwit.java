@@ -42,7 +42,7 @@ public class minitwit {
 
             //add db clear here if working LOCALLY
 
-            Logger.StartLogging();
+            //Logger.StartLogging();
 
         } catch (Exception e) {
             e.printStackTrace();
