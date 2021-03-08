@@ -20,7 +20,7 @@ import java.util.Map;
 import static spark.Spark.*;
 
 public class minitwit {
-    private static int latest = 110371;
+    private static int latest = 147371;
 
     //configuration
     static Boolean DEBUG        = true;
