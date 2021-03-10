@@ -14,14 +14,33 @@ services:
     minitwit:
         build:
             context: ./
-            dockerfile: Dockerfile
+            dockerfile: Dockerfile-localDB
         ports:
             - "4567:4567"
         networks:
             - main
         depends_on:
             - db
+            - grafana
+            - prometheus
         restart: always
+
+    prometheus:
+        image: prom/prometheus
+        container_name: prometheus
+        volumes:
+        - ./prometheus.yml:/etc/prometheus/prometheus.yml
+        ports:
+        - "9090:9090"
+        networks:
+        - main
+
+    grafana:
+        image: grafana/grafana:4.5.2
+        ports:
+        - "3000:3000"  
+        networks:
+        - main
 networks:
     main:
         driver: bridge

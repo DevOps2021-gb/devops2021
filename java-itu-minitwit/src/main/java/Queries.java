@@ -5,6 +5,7 @@ import Model.User;
 import RoP.Failure;
 import RoP.Result;
 import RoP.Success;
+import com.dieselpoint.norm.Database;
 
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
@@ -17,8 +18,12 @@ public class Queries {
     /*
     Creates the database tables.
      */
-    public static void initDb()  {
+    public static Database initDb()  {
         var db = DB.connectDb().get();
+        return db;
+    }
+    public static void dropDB(){
+        var db = initDb();
         db.sql("drop table if exists follower").execute();
         db.sql("drop table if exists message").execute();
         db.sql("drop table if exists user").execute();
