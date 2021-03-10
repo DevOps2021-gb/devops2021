@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 import com.hubspot.jinjava.Jinjava;
+import io.prometheus.client.CollectorRegistry;
+import io.prometheus.client.exporter.common.TextFormat;
 import org.eclipse.jetty.http.HttpStatus;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -12,6 +14,7 @@ import spark.Request;
 import spark.Response;
 
 import java.io.IOException;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -114,6 +117,7 @@ public class minitwit {
 
         get("/",                    minitwit::timeline);
         get("/metrics",             minitwit::metrics);
+        get("/metrics_CPU_load",    minitwit::metrics_CPU_load);
         get("/public",              minitwit::publicTimeline);
         post("/add_message",        minitwit::addMessage);
         post("/login",              minitwit::login);
@@ -125,6 +129,7 @@ public class minitwit {
         get("/:username/unfollow",  minitwit::unfollowUser);
         get("/:username",           minitwit::userTimeline);
     }
+
 
     private static boolean reqFromSimulator(Request request) {
         var fromSimulator = request.headers("Authorization");
@@ -339,7 +344,8 @@ public class minitwit {
     }
 
 
-    private static Object metrics(Request request, Response response) {
+    final private static CollectorRegistry registry = CollectorRegistry.defaultRegistry;
+    private static Object metrics(Request request, Response response) throws IOException {
         System.out.println(request.body());
         System.out.println(request.requestMethod());
         System.out.println(request.queryMap());
@@ -347,11 +353,11 @@ public class minitwit {
         System.out.println(request.params());
         System.out.println(request.headers());
         //todo test
-        //response.status(HttpStatus.NO_CONTENT_204);
-        return Logger.users;
+        response.type(TextFormat.CONTENT_TYPE_004);
+        final StringWriter writer = new StringWriter();
+        TextFormat.write004(writer, registry.metricFamilySamples());
+        return writer.toString();
     }
-
-
 
     /*
     Shows a users timeline or if no user is logged in it will
