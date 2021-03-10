@@ -11,7 +11,13 @@ class queriesTest {
 
     @org.junit.jupiter.api.BeforeEach
     void setUp() {
+        String db_connection_string = System.getProperty("db_connection_string");
+        String username = System.getProperty("db_user");
+        String password = System.getProperty("db_password");
         DB.setDATABASE(testDatabaseName);
+        DB.setCONNECTIONSTRING(db_connection_string);
+        DB.setUSER(username);
+        DB.setPW(password);
         Queries.initDb();
         //awaitInitialization();
     }
