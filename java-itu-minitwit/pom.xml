@@ -41,6 +41,29 @@
                     </archive>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <!-- JUnit 5 requires Surefire version 2.22.0 or higher -->
+                <version>2.22.0</version>
+                <configuration>
+                    <systemProperties>
+                        <property>
+                            <name>DB_TEST_CONNECTION_STRING</name>
+                            <value>${DB_TEST_CONNECTION_STRING}</value>
+                        </property>
+                        <property>
+                            <name>DB_USER</name>
+                            <value>${DB_USER}</value>
+                        </property>
+                        <property>
+                            <name>DB_PASSWORD</name>
+                            <value>${DB_PASSWORD}</value>
+                        </property>
+                    </systemProperties>
+                </configuration>
+            </plugin>
+
         </plugins>
     </build>
 
@@ -52,6 +75,12 @@
     </properties>
 
     <dependencies>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-engine</artifactId>
+            <version>5.3.1</version>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>com.sparkjava</groupId>
             <artifactId>spark-core</artifactId>

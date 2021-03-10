@@ -29,9 +29,10 @@ jobs:
           tags: mertz/minitwit:latest
           # DB connection string and credentials for Dockerfile
           build-args: |
-            CONN_STRING=${{ secrets.DB_CONNECTION_STRING }} 
-            DB_USER=${{ secrets.DB_USERNAME }}
-            DB_PW=${{ secrets.DB_PASSWORD }}
+            DB_CONN_STRING=${{ secrets.DB_CONNECTION_STRING }} 
+            DB_USERNAME=${{ secrets.DB_USERNAME }}
+            DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+            DB_TEST_CONN_STRING=${{ secrets.DB_TEST_CONNECTION_STRING }}
 
   deploy:
     needs: build

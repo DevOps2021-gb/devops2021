@@ -15,5 +15,6 @@ jobs:
       uses: actions/setup-java@v1
       with:
         java-version: 11
+
     - name: Build with Maven
-      run: mvn -B package --file java-itu-minitwit/pom.xml
+      run: mvn -B package --file java-itu-minitwit/pom.xml -DDB_USER=${{ secrets.DB_USERNAME }} -DDB_PASSWORD=${{ secrets.DB_PASSWORD}} -DDB_TEST_CONNECTION_STRING=${{ secrets.DB_TEST_CONNECTION_STRING}}
