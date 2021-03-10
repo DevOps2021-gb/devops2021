@@ -113,6 +113,7 @@ public class minitwit {
         post("/fllws/:username",    minitwit::postFollow);
 
         get("/",                    minitwit::timeline);
+        get("/metrics",             minitwit::metrics);
         get("/public",              minitwit::publicTimeline);
         post("/add_message",        minitwit::addMessage);
         post("/login",              minitwit::login);
@@ -336,6 +337,21 @@ public class minitwit {
         response.status(HttpStatus.BAD_REQUEST_400);
         return "";
     }
+
+
+    private static Object metrics(Request request, Response response) {
+        System.out.println(request.body());
+        System.out.println(request.requestMethod());
+        System.out.println(request.queryMap());
+        System.out.println(request.queryParams());
+        System.out.println(request.params());
+        System.out.println(request.headers());
+        //todo test
+        //response.status(HttpStatus.NO_CONTENT_204);
+        return Logger.users;
+    }
+
+
 
     /*
     Shows a users timeline or if no user is logged in it will
