@@ -52,6 +52,8 @@ public class minitwit {
 
     private static void registerHooks() {
         before((request, response) -> {
+            System.out.println("Start request");
+            Logger.processRequest();
             /*
             Make sure we are connected to the database each request and look
             up the current user so that we know he's there.
@@ -71,7 +73,7 @@ public class minitwit {
         });
 
         after((request, response) -> {
-            System.out.println("handled request");
+            System.out.println("done request");
             Logger.processRequest();
             /*
             Closes the database again at the end of the request.

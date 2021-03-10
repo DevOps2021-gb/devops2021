@@ -34,8 +34,8 @@ public class Logger {
     }
     private static void LogUserInformation() {
         processCpuLoad();
-        processUsers();
-        processAvgFollowers();
+        //processUsers();
+        //processAvgFollowers();
     }
 
     public static void processRequest() {
