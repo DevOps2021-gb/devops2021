@@ -1,3 +1,4 @@
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
@@ -16,12 +17,17 @@ public class Logger {
     private static Date logStartTime;
     private static OperatingSystemMXBean operatingSystemMXBean = ManagementFactory.getOperatingSystemMXBean();
 
+
     public static void StartLogging() throws IOException {
         System.out.println("Started logging information");
         MakeLogWriters();
         StartSchedules();
     }
     private static void MakeLogWriters(){
+        File file = new File("Logs/");
+        if (!file.exists()){
+            while (!file.mkdir()){}
+        }
         logStartTime = new Date();
         var dateString = new StringBuilder().append(logStartTime.getYear() - 100).append("-").append(logStartTime.getMonth()).append("-").append(logStartTime.getDay()).toString();
         try {
