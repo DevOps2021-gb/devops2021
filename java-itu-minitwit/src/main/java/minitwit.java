@@ -43,7 +43,7 @@ public class minitwit {
             //add db clear here if working LOCALLY
             Queries.initDb();
 
-            //Logger.StartLogging();
+            Logger.StartSchedules();
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -71,6 +71,8 @@ public class minitwit {
         });
 
         after((request, response) -> {
+            System.out.println("handled request");
+            Logger.processRequest();
             /*
             Closes the database again at the end of the request.
             */
@@ -388,7 +390,7 @@ public class minitwit {
                     put("flash", getSessionFlash(request));
                 }});
         }
-        //Logger.LogResponseTimeFrontPage(System.nanoTime() - startTime);
+        Logger.LogResponseTimeFrontPage(System.nanoTime() - startTime);
         return returnPage;
     }
 
