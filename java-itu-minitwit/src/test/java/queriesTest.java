@@ -7,19 +7,13 @@ import java.sql.SQLException;
 import static spark.Spark.stop;
 
 class queriesTest {
-    String testDatabaseName = "testMinitwit";
-
     @org.junit.jupiter.api.BeforeEach
     void setUp() {
-        String db_connection_string = System.getProperty("db_connection_string");
-        String username = System.getProperty("db_user");
-        String password = System.getProperty("db_password");
-        DB.setDATABASE(testDatabaseName);
-        DB.setCONNECTIONSTRING(db_connection_string);
-        DB.setUSER(username);
-        DB.setPW(password);
+        DB.setDATABASE("testMinitwit");
+        DB.setCONNECTIONSTRING(System.getProperty("DB_TEST_CONNECTION_STRING"));
+        DB.setUSER(System.getProperty("DB_USER"));
+        DB.setPW(System.getProperty("DB_PASSWORD"));
         Queries.initDb();
-        //awaitInitialization();
     }
 
     @org.junit.jupiter.api.AfterEach

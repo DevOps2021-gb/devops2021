@@ -49,16 +49,16 @@
                 <configuration>
                     <systemProperties>
                         <property>
-                            <name>db_connection_string</name>
-                            <value>${db_connection_string}</value>
+                            <name>DB_TEST_CONNECTION_STRING</name>
+                            <value>${DB_TEST_CONNECTION_STRING}</value>
                         </property>
                         <property>
-                            <name>db_user</name>
-                            <value>${db_user}</value>
+                            <name>DB_USER</name>
+                            <value>${DB_USER}</value>
                         </property>
                         <property>
-                            <name>db_password</name>
-                            <value>${db_password}</value>
+                            <name>DB_PASSWORD</name>
+                            <value>${DB_PASSWORD}</value>
                         </property>
                     </systemProperties>
                 </configuration>
