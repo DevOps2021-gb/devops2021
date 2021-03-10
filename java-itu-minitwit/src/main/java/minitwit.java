@@ -117,7 +117,6 @@ public class minitwit {
 
         get("/",                    minitwit::timeline);
         get("/metrics",             minitwit::metrics);
-        get("/metrics_CPU_load",    minitwit::metrics_CPU_load);
         get("/public",              minitwit::publicTimeline);
         post("/add_message",        minitwit::addMessage);
         post("/login",              minitwit::login);
