@@ -3,6 +3,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.lang.management.OperatingSystemMXBean;
+import java.sql.Time;
 import java.util.Date;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -29,7 +30,7 @@ public class Logger {
 
     public static void StartSchedules() {
         ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
-        executorService.scheduleAtFixedRate(()->LogUserInformation(), 0, LOGGING_PERIOD_SECONDS, TimeUnit.SECONDS);
+        executorService.scheduleAtFixedRate(Logger::LogUserInformation, 1, LOGGING_PERIOD_SECONDS , TimeUnit.SECONDS);
     }
     private static void LogUserInformation() {
         processCpuLoad();
@@ -51,7 +52,12 @@ public class Logger {
     public static void processAvgFollowers(){
         int numberOfUsers = Queries.getAllUsers().get().size(); //todo make more efficient
         int numberOfFollowers   = Queries.getAllFollowers().get().size();
-        avgFollowers.set(numberOfFollowers/numberOfUsers);
+
+        //if either are 0, the thread will throw an exception and exit
+        if (numberOfFollowers != 0 && numberOfFollowers != 0) {
+            int num = numberOfFollowers/numberOfUsers;
+            avgFollowers.set(num);
+        }
     }
 
     public static void LogResponseTimeFrontPage(long rt) {
