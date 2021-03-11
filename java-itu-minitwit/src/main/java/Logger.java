@@ -16,15 +16,14 @@ public class Logger {
     private static final long LOGGING_PERIOD_SECONDS = 10;
     private static OperatingSystemMXBean operatingSystemMXBean = ManagementFactory.getOperatingSystemMXBean();
 
-
     static final Gauge cpuLoad = Gauge.build()
             .name("CPU_load").help("CPU load on server.").register();
     static final Counter requests = Counter.build()
             .name("requests_total").help("Total requests.").register();
     static final Gauge users = Gauge.build()
-            .name("users_total").help("Total ammount of users.").register();
+            .name("users_total").help("Total amount of users.").register();
     static final Gauge avgFollowers = Gauge.build()
-            .name("followers_average").help("Average ammount of followers per user.").register();
+            .name("followers_average").help("Average amount of followers per user.").register();
     static final Gauge responseTimePublicTimeLine = Gauge.build()
             .name("response_time_publicTIme").help("response time for public timeLine.").register();
 
@@ -34,8 +33,8 @@ public class Logger {
     }
     private static void LogUserInformation() {
         processCpuLoad();
-        //processUsers();
-        //processAvgFollowers();
+        processUsers();
+        processAvgFollowers();
     }
 
     public static void processRequest() {
