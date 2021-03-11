@@ -44,7 +44,7 @@ public class minitwit {
             registerEndpoints();
 
             //add db clear here if working LOCALLY
-            //Queries.initDb();
+            Queries.initDb();
 
             Logger.StartSchedules();
 
