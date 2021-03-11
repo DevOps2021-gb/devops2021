@@ -1,3 +1,4 @@
+#!/bin/bash
 FROM ubuntu:18.04
 # Get secret arguments
 ARG DB_CONN_STRING
@@ -9,6 +10,11 @@ ENV DB_USERNAME_VAR=${DB_USERNAME}
 ENV DB_PASSWORD_VAR=${DB_PASSWORD}
 ENV DB_TEST_CONN_STRING_VAR=${DB_TEST_CONN_STRING}
 
+RUN echo -e ${DB_USERNAME_VAR}
+RUN echo -e ${DB_PASSWORD_VAR}
+RUN echo -e ${DB_TEST_CONN_STRING_VAR}
+RUN echo -e ${DB_CONN_STRING_VAR}
+
 # Updating packages
 RUN apt-get update --fix-missing
 
@@ -19,7 +25,7 @@ RUN echo "INSTALLING MAVEN"
 RUN apt install maven -y
 WORKDIR "/devops2021/java-itu-minitwit"
 RUN echo "BUILDING PROJECT"
-RUN mvn -B package --file pom.xml -DDB_USER=${ DB_USERNAME_VAR } -DDB_PASSWORD=${ DB_PASSWORD_VAR } -DDB_TEST_CONNECTION_STRING=${ DB_TEST_CONN_STRING_VAR }
+RUN mvn -B package --file pom.xml -DDB_USER=${DB_USERNAME_VAR} -DDB_PASSWORD=${DB_PASSWORD_VAR} -DDB_TEST_CONNECTION_STRING=${DB_TEST_CONN_STRING_VAR}
 WORKDIR "/devops2021/java-itu-minitwit/target"
 
 EXPOSE 4567
