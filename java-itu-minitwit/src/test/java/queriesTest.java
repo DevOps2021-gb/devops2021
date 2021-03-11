@@ -10,9 +10,11 @@ class queriesTest {
     @org.junit.jupiter.api.BeforeEach
     void setUp() {
         DB.setDATABASE("testMinitwit");
-        DB.setCONNECTIONSTRING(System.getProperty("DB_TEST_CONNECTION_STRING"));
-        DB.setUSER(System.getProperty("DB_USER"));
-        DB.setPW(System.getProperty("DB_PASSWORD"));
+        if (System.getProperty("DB_TEST_CONNECTION_STRING") != null) {
+            DB.setCONNECTIONSTRING(System.getProperty("DB_TEST_CONNECTION_STRING"));
+            DB.setUSER(System.getProperty("DB_USER"));
+            DB.setPW(System.getProperty("DB_PASSWORD"));
+        }
         Queries.initDb();
     }
 
