@@ -28,6 +28,29 @@ public class Logger {
     static final Gauge responseTimePublicTimeLine = Gauge.build()
             .name("response_time_publicTIme").help("response time for public timeLine.").register();
 
+
+    public static void StartLogging() throws IOException {
+        System.out.println("Started logging information");
+        MakeLogWriters();
+        StartSchedules();
+    }
+    private static void MakeLogWriters(){
+        File file = new File("Logs/");
+        if (!file.exists()){
+            while (!file.mkdir()){}
+        }
+        logStartTime = new Date();
+        var dateString = new StringBuilder().append(logStartTime.getYear() - 100).append("-").append(logStartTime.getMonth()).append("-").append(logStartTime.getDay()).toString();
+        try {
+            writeLogNumberOfUsers           =  new FileWriter("Logs/numberOfUsers-"+dateString+".txt", true);
+            writeLogAvgNumberOfFollowers    =  new FileWriter("Logs/numberOfFollowers-"+dateString+".txt", true);
+            writeLogCPULoad                 =  new FileWriter("Logs/CPULoadEachMinute-"+dateString+".txt", true);
+            writeLogResponseTimeFrontPage   =  new FileWriter("Logs/responseTimeFrontPage-"+dateString+".txt", true);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+	
     public static void StartSchedules() {
         ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
         executorService.scheduleAtFixedRate(Logger::LogUserInformation, 1, LOGGING_PERIOD_SECONDS , TimeUnit.SECONDS);
