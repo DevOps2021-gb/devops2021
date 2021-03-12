@@ -1,26 +1,13 @@
 version: '3.3'
 
 services:
-    db:
-        image: mysql:5.7
-        networks:
-            - main
-        restart: always
-        environment:
-            MYSQL_ROOT_PASSWORD: root
-            MYSQL_DATABASE: minitwit
-        ports:
-            - "3306:3306"
     minitwit:
-        build:
-            context: ./
-            dockerfile: Dockerfile-localDB
+	image: minitwit
         ports:
             - "4567:4567"
         networks:
             - main
         depends_on:
-            - db
             - grafana
             - prometheus
         restart: always
@@ -37,6 +24,8 @@ services:
 
     grafana:
         image: grafana/grafana:4.5.2
+        volumes:
+        - grafana-storage:/var/lib/grafana
         ports:
         - "3000:3000"  
         networks:
@@ -44,4 +33,7 @@ services:
 networks:
     main:
         driver: bridge
+        
+volumes:
+  grafana-storage:
 
