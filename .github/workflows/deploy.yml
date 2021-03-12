@@ -46,7 +46,7 @@ jobs:
           username: ${{ secrets.SSH_USERNAME }} # user of the server we want to ssh into
      
           script: |
-            docker stop $(docker ps -aq)
-            docker rm $(docker ps -aq)
-            docker rmi $(docker images -q)
-            docker run -d -p 4567:4567 --name minitwit mertz/minitwit:latest
+            docker-compose down
+            rm docker-compose.yml
+            wget https://raw.githubusercontent.com/DevOps2021-gb/devops2021/main/docker-compose.yml
+            docker-compose up -d
