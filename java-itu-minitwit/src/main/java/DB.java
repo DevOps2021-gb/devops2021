@@ -6,7 +6,7 @@ import com.dieselpoint.norm.Database;
 public class DB {
     static Database instance;
     static String DATABASE = "minitwit";
-    static String IP = "db";
+    static String IP = "localhost";
     static int PORT = 3306;
     static String USER = "root";
     static String PW = "root";

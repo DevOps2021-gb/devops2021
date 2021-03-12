@@ -13,8 +13,12 @@ import io.prometheus.client.Counter;
 import io.prometheus.client.Gauge;
 
 public class Logger {
-
-    private static final long LOGGING_PERIOD_SECONDS = 10;
+    private static final long LOGGING_PERIOD_SECONDS = 30;
+    /*private static FileWriter writeLogNumberOfUsers;
+    private static FileWriter writeLogAvgNumberOfFollowers;
+    private static FileWriter writeLogCPULoad;
+    private static FileWriter writeLogResponseTimeFrontPage;*/
+    private static Date logStartTime;
     private static OperatingSystemMXBean operatingSystemMXBean = ManagementFactory.getOperatingSystemMXBean();
 
     static final Gauge cpuLoad = Gauge.build()
@@ -31,10 +35,10 @@ public class Logger {
 
     public static void StartLogging() throws IOException {
         System.out.println("Started logging information");
-        MakeLogWriters();
+        //MakeLogWriters();
         StartSchedules();
     }
-    private static void MakeLogWriters(){
+    /*private static void MakeLogWriters(){
         File file = new File("Logs/");
         if (!file.exists()){
             while (!file.mkdir()){}
@@ -49,8 +53,8 @@ public class Logger {
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }
-	
+    }*/
+
     public static void StartSchedules() {
         ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
         executorService.scheduleAtFixedRate(Logger::LogUserInformation, 1, LOGGING_PERIOD_SECONDS , TimeUnit.SECONDS);

@@ -44,7 +44,6 @@ public class minitwit {
             registerEndpoints();
 
             //add db clear here if working LOCALLY
-            Queries.dropDB();
 
             Logger.StartSchedules();
 
@@ -55,7 +54,6 @@ public class minitwit {
 
     private static void registerHooks() {
         before((request, response) -> {
-            System.out.println("Start request");
             Logger.processRequest();
             /*
             Make sure we are connected to the database each request and look
@@ -76,7 +74,6 @@ public class minitwit {
         });
 
         after((request, response) -> {
-            System.out.println("done request");
             Logger.processRequest();
             /*
             Closes the database again at the end of the request.
