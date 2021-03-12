@@ -16,6 +16,7 @@ class queriesTest {
             DB.setPW(System.getProperty("DB_PASSWORD"));
         }
         Queries.initDb();
+        Queries.dropDB();
     }
 
     @org.junit.jupiter.api.AfterEach

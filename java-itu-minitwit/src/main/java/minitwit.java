@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 import com.hubspot.jinjava.Jinjava;
+import io.prometheus.client.CollectorRegistry;
+import io.prometheus.client.exporter.common.TextFormat;
 import org.eclipse.jetty.http.HttpStatus;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -12,6 +14,7 @@ import spark.Request;
 import spark.Response;
 
 import java.io.IOException;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -42,7 +45,7 @@ public class minitwit {
 
             //add db clear here if working LOCALLY
 
-            //Logger.StartLogging();
+            Logger.StartSchedules();
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -51,6 +54,7 @@ public class minitwit {
 
     private static void registerHooks() {
         before((request, response) -> {
+            Logger.processRequest();
             /*
             Make sure we are connected to the database each request and look
             up the current user so that we know he's there.
@@ -70,6 +74,7 @@ public class minitwit {
         });
 
         after((request, response) -> {
+            Logger.processRequest();
             /*
             Closes the database again at the end of the request.
             */
@@ -108,6 +113,7 @@ public class minitwit {
         post("/fllws/:username",    minitwit::postFollow);
 
         get("/",                    minitwit::timeline);
+        get("/metrics",             minitwit::metrics);
         get("/public",              minitwit::publicTimeline);
         post("/add_message",        minitwit::addMessage);
         post("/login",              minitwit::login);
@@ -119,6 +125,7 @@ public class minitwit {
         get("/:username/unfollow",  minitwit::unfollowUser);
         get("/:username",           minitwit::userTimeline);
     }
+
 
     private static boolean reqFromSimulator(Request request) {
         var fromSimulator = request.headers("Authorization");
@@ -332,6 +339,22 @@ public class minitwit {
         return "";
     }
 
+
+    final private static CollectorRegistry registry = CollectorRegistry.defaultRegistry;
+    private static Object metrics(Request request, Response response) throws IOException {
+        System.out.println(request.body());
+        System.out.println(request.requestMethod());
+        System.out.println(request.queryMap());
+        System.out.println(request.queryParams());
+        System.out.println(request.params());
+        System.out.println(request.headers());
+        //todo test
+        response.type(TextFormat.CONTENT_TYPE_004);
+        final StringWriter writer = new StringWriter();
+        TextFormat.write004(writer, registry.metricFamilySamples());
+        return writer.toString();
+    }
+
     /*
     Shows a users timeline or if no user is logged in it will
     redirect to the public timeline.  This timeline shows the user's
@@ -387,7 +410,7 @@ public class minitwit {
                     put("flash", getSessionFlash(request));
                 }});
         }
-        //Logger.LogResponseTimeFrontPage(System.nanoTime() - startTime);
+        Logger.LogResponseTimeFrontPage(System.nanoTime() - startTime);
         return returnPage;
     }
 
