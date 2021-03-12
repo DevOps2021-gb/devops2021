@@ -2,7 +2,7 @@ version: '3.3'
 
 services:
     minitwit:
-        image: mertz/minitwit
+        image: mertz/minitwit:latest
         ports:
             - "4567:4567"
         networks:
