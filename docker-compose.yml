@@ -3,6 +3,7 @@ version: '3.3'
 services:
     minitwit:
         image: mertz/minitwit:latest
+        container_name: minitwit
         ports:
             - "4567:4567"
         networks:
