@@ -49,4 +49,5 @@ jobs:
             docker-compose down
             rm docker-compose.yml
             wget https://raw.githubusercontent.com/DevOps2021-gb/devops2021/main/docker-compose.yml
+            wget https://raw.githubusercontent.com/DevOps2021-gb/devops2021/main/prometheus.yml
             docker-compose up -d
