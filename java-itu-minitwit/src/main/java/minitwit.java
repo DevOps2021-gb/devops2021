@@ -388,7 +388,7 @@ public class minitwit {
      Displays the latest messages of all users.
     */
     public static Object publicTimeline(Request request, Response response) {
-        var startTime = System.nanoTime();
+        var startTime = System.currentTimeMillis();
         updateLatest(request);
         var loggedInUser = getSessionUserId(request);
         Object returnPage;
@@ -410,7 +410,7 @@ public class minitwit {
                     put("flash", getSessionFlash(request));
                 }});
         }
-        Logger.LogResponseTimeFrontPage(System.nanoTime() - startTime);
+        Logger.LogResponseTimeFrontPage(System.currentTimeMillis() - startTime);
         return returnPage;
     }
 
