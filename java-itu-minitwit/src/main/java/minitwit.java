@@ -74,7 +74,6 @@ public class minitwit {
         });
 
         after((request, response) -> {
-            Logger.processRequest();
             /*
             Closes the database again at the end of the request.
             */
