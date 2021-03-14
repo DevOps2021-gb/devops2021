@@ -47,6 +47,7 @@ jobs:
      
           script: |
             docker-compose down
+            docker rmi mertz/minitwit:latest
             rm docker-compose.yml
             rm prometheus.yml
             wget https://raw.githubusercontent.com/DevOps2021-gb/devops2021/main/docker-compose.yml
