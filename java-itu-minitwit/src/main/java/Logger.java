@@ -70,7 +70,7 @@ public class Logger {
         long numberOfFollowers   = Queries.getCountFollowers().get();
 
         //if either are 0, the thread will throw an exception and exit
-        if (numberOfFollowers != 0 && numberOfFollowers != 0) {
+        if (numberOfFollowers != 0 && numberOfUsers != 0) {
             long num = numberOfFollowers/numberOfUsers;
             avgFollowers.set(num);
         }
