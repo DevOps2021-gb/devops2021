@@ -94,6 +94,11 @@ public class Queries {
         var result = db.sql("select count(*) from follower").first(Long.class);
         return new Success<>(result);
     }
+    public static Result<Long> getCountMessages() {
+        var db = DB.connectDb().get();
+        var result = db.sql("select count(*) from message").first(Long.class);
+        return new Success<>(result);
+    }
 
     public static Result<User> getUserById(int userId) {
         var db = DB.connectDb().get();

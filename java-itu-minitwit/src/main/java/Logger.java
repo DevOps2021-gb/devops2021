@@ -10,12 +10,7 @@ import io.prometheus.client.Counter;
 import io.prometheus.client.Gauge;
 
 public class Logger {
-    private static final long LOGGING_PERIOD_SECONDS = 30;
-    /*private static FileWriter writeLogNumberOfUsers;
-    private static FileWriter writeLogAvgNumberOfFollowers;
-    private static FileWriter writeLogCPULoad;
-    private static FileWriter writeLogResponseTimeFrontPage;*/
-    private static Date logStartTime;
+    private static final long LOGGING_PERIOD_SECONDS = 15;
     private static OperatingSystemMXBean operatingSystemMXBean = ManagementFactory.getOperatingSystemMXBean();
 
     static final Gauge cpuLoad = Gauge.build()
@@ -24,6 +19,10 @@ public class Logger {
             .name("requests_total").help("Total requests.").register();
     static final Gauge users = Gauge.build()
             .name("users_total").help("Total amount of users.").register();
+    static final Gauge followers = Gauge.build()
+            .name("followers_total").help("Total amount of followers.").register();
+    static final Gauge messages = Gauge.build()
+            .name("messages_total").help("Total amount of messages.").register();
     static final Gauge avgFollowers = Gauge.build()
             .name("followers_average").help("Average amount of followers per user.").register();
     static final Gauge responseTimePublicTimeLine = Gauge.build()
@@ -42,6 +41,8 @@ public class Logger {
     private static void LogUserInformation() {
         processCpuLoad();
         processUsers();
+        processFollowers();
+        processMessages();
         processAvgFollowers();
     }
 
@@ -55,6 +56,14 @@ public class Logger {
     public static void processUsers(){
         long numberOfUsers = Queries.getCountUsers().get();
         users.set(numberOfUsers);
+    }
+    public static void processFollowers(){
+        long numberOfFollowers = Queries.getCountFollowers().get();
+        followers.set(numberOfFollowers);
+    }
+    public static void processMessages(){
+        long numberOfMessages = Queries.getCountMessages().get();
+        messages.set(numberOfMessages);
     }
     public static void processAvgFollowers(){
         long numberOfUsers = Queries.getCountUsers().get();
