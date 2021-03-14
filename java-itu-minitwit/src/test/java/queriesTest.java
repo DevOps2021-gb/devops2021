@@ -15,7 +15,6 @@ class queriesTest {
             DB.setUSER(System.getProperty("DB_USER"));
             DB.setPW(System.getProperty("DB_PASSWORD"));
         }
-        Queries.initDb();
         Queries.dropDB();
     }
 
