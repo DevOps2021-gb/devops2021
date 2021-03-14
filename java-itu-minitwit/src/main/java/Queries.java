@@ -84,14 +84,19 @@ public class Queries {
 
         return new Success<>(result);
     }
-    public static Result<List<User>> getAllUsers() {
+    public static Result<Long> getCountUsers() {
         var db = DB.connectDb().get();
-        var result = db.table("user").results(User.class);
+        var result = db.sql("select count(*) from user").first(Long.class);
         return new Success<>(result);
     }
-    public static Result<List<Follower>> getAllFollowers() {
+    public static Result<Long> getCountFollowers() {
         var db = DB.connectDb().get();
-        var result = db.table("follower").results(Follower.class);
+        var result = db.sql("select count(*) from follower").first(Long.class);
+        return new Success<>(result);
+    }
+    public static Result<Long> getCountMessages() {
+        var db = DB.connectDb().get();
+        var result = db.sql("select count(*) from message").first(Long.class);
         return new Success<>(result);
     }
 

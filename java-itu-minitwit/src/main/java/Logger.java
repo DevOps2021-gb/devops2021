@@ -1,9 +1,6 @@
-import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.lang.management.OperatingSystemMXBean;
-import java.sql.Time;
 import java.util.Date;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -13,12 +10,7 @@ import io.prometheus.client.Counter;
 import io.prometheus.client.Gauge;
 
 public class Logger {
-    private static final long LOGGING_PERIOD_SECONDS = 30;
-    /*private static FileWriter writeLogNumberOfUsers;
-    private static FileWriter writeLogAvgNumberOfFollowers;
-    private static FileWriter writeLogCPULoad;
-    private static FileWriter writeLogResponseTimeFrontPage;*/
-    private static Date logStartTime;
+    private static final long LOGGING_PERIOD_SECONDS = 15;
     private static OperatingSystemMXBean operatingSystemMXBean = ManagementFactory.getOperatingSystemMXBean();
 
     static final Gauge cpuLoad = Gauge.build()
@@ -27,6 +19,10 @@ public class Logger {
             .name("requests_total").help("Total requests.").register();
     static final Gauge users = Gauge.build()
             .name("users_total").help("Total amount of users.").register();
+    static final Gauge followers = Gauge.build()
+            .name("followers_total").help("Total amount of followers.").register();
+    static final Gauge messages = Gauge.build()
+            .name("messages_total").help("Total amount of messages.").register();
     static final Gauge avgFollowers = Gauge.build()
             .name("followers_average").help("Average amount of followers per user.").register();
     static final Gauge responseTimePublicTimeLine = Gauge.build()
@@ -35,25 +31,8 @@ public class Logger {
 
     public static void StartLogging() throws IOException {
         System.out.println("Started logging information");
-        //MakeLogWriters();
         StartSchedules();
     }
-    /*private static void MakeLogWriters(){
-        File file = new File("Logs/");
-        if (!file.exists()){
-            while (!file.mkdir()){}
-        }
-        logStartTime = new Date();
-        var dateString = new StringBuilder().append(logStartTime.getYear() - 100).append("-").append(logStartTime.getMonth()).append("-").append(logStartTime.getDay()).toString();
-        try {
-            writeLogNumberOfUsers           =  new FileWriter("Logs/numberOfUsers-"+dateString+".txt", true);
-            writeLogAvgNumberOfFollowers    =  new FileWriter("Logs/numberOfFollowers-"+dateString+".txt", true);
-            writeLogCPULoad                 =  new FileWriter("Logs/CPULoadEachMinute-"+dateString+".txt", true);
-            writeLogResponseTimeFrontPage   =  new FileWriter("Logs/responseTimeFrontPage-"+dateString+".txt", true);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }*/
 
     public static void StartSchedules() {
         ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
@@ -62,6 +41,8 @@ public class Logger {
     private static void LogUserInformation() {
         processCpuLoad();
         processUsers();
+        processFollowers();
+        processMessages();
         processAvgFollowers();
     }
 
@@ -73,16 +54,24 @@ public class Logger {
         cpuLoad.set(cpuLoadLastMinute);
     }
     public static void processUsers(){
-        int numberOfUsers = Queries.getAllUsers().get().size(); //todo make more efficient
+        long numberOfUsers = Queries.getCountUsers().get();
         users.set(numberOfUsers);
     }
+    public static void processFollowers(){
+        long numberOfFollowers = Queries.getCountFollowers().get();
+        followers.set(numberOfFollowers);
+    }
+    public static void processMessages(){
+        long numberOfMessages = Queries.getCountMessages().get();
+        messages.set(numberOfMessages);
+    }
     public static void processAvgFollowers(){
-        int numberOfUsers = Queries.getAllUsers().get().size(); //todo make more efficient
-        int numberOfFollowers   = Queries.getAllFollowers().get().size();
+        long numberOfUsers = Queries.getCountUsers().get();
+        long numberOfFollowers   = Queries.getCountFollowers().get();
 
         //if either are 0, the thread will throw an exception and exit
         if (numberOfFollowers != 0 && numberOfFollowers != 0) {
-            int num = numberOfFollowers/numberOfUsers;
+            long num = numberOfFollowers/numberOfUsers;
             avgFollowers.set(num);
         }
     }
