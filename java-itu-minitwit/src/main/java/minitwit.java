@@ -116,7 +116,7 @@ public class minitwit {
         get("/public",              minitwit::publicTimeline);
         post("/add_message",        minitwit::addMessage);
         post("/login",              minitwit::login);
-        get("/login",               (req, res)-> renderTemplate("login.html", new HashMap<>() {{ put("flash", getSessionFlash(req)); }}));
+        get("/login",               minitwit::loginGet);
         get("/register",            (req, res)-> renderTemplate("register.html"));
         post("/register",           minitwit::register);
         get("/logout",              minitwit::logout);
@@ -372,15 +372,14 @@ public class minitwit {
             return null;
         }
         var user = Queries.getUserById(getSessionUserId(request)).get();
-
-        return renderTemplate("timeline.html", new HashMap<>() {{
-            put("username", user.username);
-            put("user", user.username);
-            put("endpoint","timeline");
-            put("messages", Queries.getPersonalTweetsById(user.id).get());
-            put("title", "My Timeline");
-            put("flash", getSessionFlash(request));
-        }});
+        HashMap<String, Object> context = new HashMap<>();
+        context.put("username", user.username);
+        context.put("user", user.username);
+        context.put("endpoint","timeline");
+        context.put("messages", Queries.getPersonalTweetsById(user.id).get());
+        context.put("title", "My Timeline");
+        context.put("flash", getSessionFlash(request));
+        return renderTemplate("timeline.html", context);
     }
 
     /*
@@ -391,23 +390,21 @@ public class minitwit {
         updateLatest(request);
         var loggedInUser = getSessionUserId(request);
         Object returnPage;
+        HashMap<String, Object> context = new HashMap<>();
         if(loggedInUser != null) {
             var user = Queries.getUserById(loggedInUser);
-            returnPage = renderTemplate("timeline.html", new HashMap<>() {{
-                put("messages", Queries.publicTimeline().get());
-                put("username", user.get().username);
-                put("user", user.get().username);
-                put("endpoint", "publicTimeline");
-                put("title", "Public Timeline");
-            }});
+            context.put("messages", Queries.publicTimeline().get());
+            context.put("username", user.get().username);
+            context.put("user", user.get().username);
+            context.put("endpoint", "publicTimeline");
+            context.put("title", "Public Timeline");
+            returnPage = renderTemplate("timeline.html", context);
         } else {
-            returnPage = renderTemplate("timeline.html", new HashMap<>() {
-                {
-                    put("messages", Queries.publicTimeline().get());
-                    put("endpoint", "publicTimeline");
-                    put("title", "Public Timeline");
-                    put("flash", getSessionFlash(request));
-                }});
+            context.put("messages", Queries.publicTimeline().get());
+            context.put("endpoint", "publicTimeline");
+            context.put("title", "Public Timeline");
+            context.put("flash", getSessionFlash(request));
+            returnPage = renderTemplate("timeline.html", context);
         }
         Logger.LogResponseTimeFrontPage(System.currentTimeMillis() - startTime);
         return returnPage;
@@ -423,36 +420,31 @@ public class minitwit {
 
         //TODO figure out how to avoid this hack
         if (profileUsername.equals("favicon.ico")) return "";
-
+        HashMap<String, Object> context = new HashMap<>();
         if (!userLoggedIn(request)) {
             var profileUser = Queries.getUser(profileUsername);
-            return renderTemplate("timeline.html", new HashMap<>() {{
-                put("endpoint", "userTimeline");
-                put("username", profileUsername);
-                put("title", profileUser.get().username + "'s Timeline");
-                put("profileUserId", profileUser.get().id);
-                put("profileUserUsername", profileUser.get().username);
-                put("messages", Queries.getTweetsByUsername(profileUsername).get());
-            }});
+            context.put("endpoint", "userTimeline");
+            context.put("username", profileUsername);
+            context.put("title", profileUser.get().username + "'s Timeline");
+            context.put("profileUserId", profileUser.get().id);
+            context.put("profileUserUsername", profileUser.get().username);
+            context.put("messages", Queries.getTweetsByUsername(profileUsername).get());
+            return renderTemplate("timeline.html", context);
         } else {
-
             var userId = getSessionUserId(request);
-
             var profileUser = Queries.getUser(profileUsername);
             var loggedInUser = Queries.getUserById(userId);
-
-            return renderTemplate("timeline.html", new HashMap<>() {{
-                put("endpoint", "userTimeline");
-                put("username", loggedInUser.get().username);
-                put("title", profileUser.get().username + "'s Timeline");
-                put("user", loggedInUser.get().id);
-                put("userId", userId);
-                put("profileUserId", profileUser.get().id);
-                put("profileUserUsername", profileUser.get().username);
-                put("followed", Queries.isFollowing(loggedInUser.get().id, profileUser.get().id).get());
-                put("messages", Queries.getTweetsByUsername(profileUsername).get());
-                put("flash", getSessionFlash(request));
-            }});
+            context.put("endpoint", "userTimeline");
+            context.put("username", loggedInUser.get().username);
+            context.put("title", profileUser.get().username + "'s Timeline");
+            context.put("user", loggedInUser.get().id);
+            context.put("userId", userId);
+            context.put("profileUserId", profileUser.get().id);
+            context.put("profileUserUsername", profileUser.get().username);
+            context.put("followed", Queries.isFollowing(loggedInUser.get().id, profileUser.get().id).get());
+            context.put("messages", Queries.getTweetsByUsername(profileUsername).get());
+            context.put("flash", getSessionFlash(request));
+            return renderTemplate("timeline.html", context);
         }
     }
 
@@ -571,12 +563,16 @@ public class minitwit {
             return null;
         } else {
             Failure<Boolean> error = (Failure<Boolean>) loginResult;
-            System.out.println(loginResult);
-
-            return renderTemplate("login.html", new HashMap<>() {{
-                put("error", error.getException().getMessage());
-            }});
+            HashMap<String, Object> context = new HashMap<>();
+            context.put("error", error.getException().getMessage());
+            return renderTemplate("login.html", context);
         }
+    }
+
+    static Object loginGet(Request request, Response response) {
+        HashMap<String, Object> context = new HashMap<>();
+        context.put("flash", getSessionFlash(request));
+        return renderTemplate("login.html", context);
     }
 
     /*
@@ -616,12 +612,11 @@ public class minitwit {
                 response.type("application/json");
                 return "{\"message\":\"404 not found\", \"error_msg\": "+ result.getFailureMessage() + "}";
             } else {
-                return renderTemplate("register.html", new HashMap<>() {{
-                    put("error", result.getFailureMessage());
-                    put("username", username);
-                    put("email", email);
-                }});
-
+                HashMap<String, Object> context = new HashMap<>();
+                context.put("error", result.getFailureMessage());
+                context.put("username", username);
+                context.put("email", email);
+                return renderTemplate("register.html", context);
             }
         }
     }
