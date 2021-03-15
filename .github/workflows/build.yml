@@ -30,4 +30,4 @@ jobs:
       - name: Build and analyze
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: mvn -B verify --file java-itu-minitwit/pom.xml org.sonarsource.scanner.maven:sonar-maven-plugin:sonar
+        run: mvn -B verify --file java-itu-minitwit/pom.xml -Dmaven.test.skip=true org.sonarsource.scanner.maven:sonar-maven-plugin:sonar
