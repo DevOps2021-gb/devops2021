@@ -600,7 +600,7 @@ public class minitwit {
 
         var params = getParamsFromRequest(request, USERNAME, EMAIL, PASSWORD, "password2");
         String username = params.get(USERNAME);
-        String email = params.get(EMAIL).replaceAll("%40", "@");
+        String email = params.get(EMAIL).replace("%40", "@");
         String password1 = params.get(PASSWORD);
         String password2 = params.get("password2");
         if (reqFromSimulator(request) && password1 == null && password2 == null) {
