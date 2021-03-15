@@ -586,6 +586,9 @@ public class minitwit {
         }
     }
 
+    /*
+    Get endpoint for login, needed to show flash message
+     */
     static Object loginGet(Request request, Response response) {
         HashMap<String, Object> context = new HashMap<>();
         context.put(FLASH, getSessionFlash(request));
