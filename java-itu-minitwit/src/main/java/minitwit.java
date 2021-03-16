@@ -15,6 +15,7 @@ import spark.Response;
 
 import java.io.IOException;
 import java.io.StringWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -24,9 +25,6 @@ import static spark.Spark.*;
 
 public class minitwit {
     private static int latest = 147371;
-
-    //configuration
-    static Boolean DEBUG        = true;
 
     // templates
     private static final String TIMELINE_HTML = "timeline.html";
@@ -44,13 +42,17 @@ public class minitwit {
     private static final String ENDPOINT = "endpoint";
     private static final String MESSAGES = "messages";
     private static final String TITLE = "title";
+    private static final String CONTENT = "content";
+
+    // responses
+    private static final String JSON = "application/json";
+    private static final String MESSAGE404 = "{\"message\":\"404 not found\"}";
 
     public static void main(String[] args) {
         try {
             staticFiles.location("/");
 
             if(args.length > 0) {
-                System.out.println("Connecting to remote database");
                 DB.setCONNECTIONSTRING(args[0]);
                 DB.setUSER(args[1]);
                 DB.setPW(args[2]);
@@ -98,18 +100,17 @@ public class minitwit {
         });
 
         notFound((req, res) -> {
-            res.type("application/json");
-            return "{\"message\":\"404 not found\"}";
+            res.type(JSON);
+            return MESSAGE404;
         });
 
         internalServerError((req, res) -> {
-            res.type("application/json");
+            res.type(JSON);
             return "{\"message\":\"500 server error\"}";
         });
     }
 
     private static void logRequest(Request request) {
-        //TODO figure out why this happens
         if (request.url().contains("favicon.ico")) return;
 
         if (request.params().size() == 0) {
@@ -125,7 +126,7 @@ public class minitwit {
         get("/msgs",                minitwit::messages);
         get("/msgs/:username",      minitwit::messagesPerUser);
         post("/msgs/:username",     minitwit::addMessage);
-        get("/fllws/:username",     minitwit::getFollow); //TODO
+        get("/fllws/:username",     minitwit::getFollow);
         post("/fllws/:username",    minitwit::postFollow);
 
         get("/",                    minitwit::timeline);
@@ -150,7 +151,7 @@ public class minitwit {
 
     private static Object notFromSimulatorResponse(Response response) {
         response.status(HttpStatus.FORBIDDEN_403);
-        response.type("application/json");
+        response.type(JSON);
         var error = "You are not authorized to use this resource!";
         return "{\"status\": 403, \"error_msg\": " + error + " }";
     }
@@ -183,7 +184,7 @@ public class minitwit {
     private static Object renderTemplate(String template, HashMap<String, Object> context) {
         try {
             Jinjava jinjava = new Jinjava();
-            return jinjava.render(Resources.toString(Resources.getResource(template), Charsets.UTF_8), context);
+            return jinjava.render(Resources.toString(Resources.getResource(template), StandardCharsets.UTF_8), context);
         } catch (Exception e) {
             e.printStackTrace();
             return new Failure<>(e);
@@ -226,7 +227,7 @@ public class minitwit {
     }
 
     private static Object getLatest(Request request, Response response) {
-        response.type("application/json");
+        response.type(JSON);
         return "{\"latest\":" + latest + "}";
     }
 
@@ -234,7 +235,7 @@ public class minitwit {
         List<JSONObject> msgs = new ArrayList<>();
         for (Tweet t : tweets) {
             HashMap<String, String> msg = new HashMap<>();
-            msg.put("content", t.text);
+            msg.put(CONTENT, t.text);
             msg.put("pub_date", t.pubDate);
             msg.put(USER, t.username);
             msgs.add(new JSONObject(msg));
@@ -245,7 +246,7 @@ public class minitwit {
             return "";
         } else {
             response.status(HttpStatus.OK_200);
-            response.type("application/json");
+            response.type(JSON);
             return json;
         }
     }
@@ -272,8 +273,8 @@ public class minitwit {
 
         if (!userIdResult.isSuccess()) {
             response.status(HttpStatus.NOT_FOUND_404);
-            response.type("application/json");
-            return "{\"message\":\"404 not found\"}";
+            response.type(JSON);
+            return MESSAGE404;
         } else {
             var tweets = Queries.getTweetsByUsername(username).get();
             return tweetsToJSONResponse(tweets, response);
@@ -293,15 +294,15 @@ public class minitwit {
 
         if (!userIdResult.isSuccess()) {
             response.status(HttpStatus.NOT_FOUND_404);
-            response.type("application/json");
-            return "{\"message\":\"404 not found\"}";
+            response.type(JSON);
+            return MESSAGE404;
         }
 
         List<User> following = Queries.getFollowing(userIdResult.get()).get();
         JSONArray json = new JSONArray(following.stream().map(u->u.username));
 
         response.status(HttpStatus.OK_200);
-        response.type("application/json");
+        response.type(JSON);
         return "{\"follows\": " + json + " }";
     }
 
@@ -318,16 +319,16 @@ public class minitwit {
 
         if (!userIdResult.isSuccess()) {
             response.status(HttpStatus.NOT_FOUND_404);
-            response.type("application/json");
-            return "{\"message\":\"404 not found\"}";
+            response.type(JSON);
+            return MESSAGE404;
         }
 
         if (params.containsKey("follow")) {
             var followUser = params.get("follow");
             if (!Queries.getUserId(followUser).isSuccess()) {
                 response.status(HttpStatus.NOT_FOUND_404);
-                response.type("application/json");
-                return "{\"message\":\"404 not found\"}";
+                response.type(JSON);
+                return MESSAGE404;
             }
             var result = Queries.followUser(userIdResult.get(), followUser);
             if (result.isSuccess()) {
@@ -340,8 +341,8 @@ public class minitwit {
             var unfollowUser = params.get("unfollow");
             if (!Queries.getUserId(unfollowUser).isSuccess()) {
                 response.status(HttpStatus.NOT_FOUND_404);
-                response.type("application/json");
-                return "{\"message\":\"404 not found\"}";
+                response.type(JSON);
+                return MESSAGE404;
             }
             var result = Queries.unfollowUser(userIdResult.get(), unfollowUser);
             if (result.isSuccess()) {
@@ -356,14 +357,8 @@ public class minitwit {
     }
 
 
-    final private static CollectorRegistry registry = CollectorRegistry.defaultRegistry;
+    private final static CollectorRegistry registry = CollectorRegistry.defaultRegistry;
     private static Object metrics(Request request, Response response) throws IOException {
-        System.out.println(request.body());
-        System.out.println(request.requestMethod());
-        System.out.println(request.queryMap());
-        System.out.println(request.queryParams());
-        System.out.println(request.params());
-        System.out.println(request.headers());
         //todo test
         response.type(TextFormat.CONTENT_TYPE_004);
         final StringWriter writer = new StringWriter();
@@ -378,7 +373,6 @@ public class minitwit {
      */
     static Object timeline(Request request, Response response) {
         updateLatest(request);
-        System.out.println("We got a visitor from: " + request.ip());
 
         if (!userLoggedIn(request)) {
             return publicTimeline(request, response);
@@ -482,10 +476,8 @@ public class minitwit {
         var rs = Queries.followUser(getSessionUserId(request),profileUsername);
         if (rs.isSuccess()) {
             request.session().attribute(FLASH, "You are now following " + profileUsername);
-            System.out.println("You are now following " + profileUsername);
         }
         else {
-            System.out.println(rs.toString());
             halt(404, rs.toString());
         }
 
@@ -526,9 +518,9 @@ public class minitwit {
     static Object addMessage(Request request, Response response) {
         updateLatest(request);
 
-        var params = getParamsFromRequest(request, USERNAME, "content");
+        var params = getParamsFromRequest(request, USERNAME, CONTENT);
         String username = params.get(USERNAME) != null ? params.get(USERNAME) : params.get(":username");
-        String content = params.get("content");
+        String content = params.get(CONTENT);
 
         Integer userId;
         if(username == null){
