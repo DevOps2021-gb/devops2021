@@ -4,13 +4,15 @@ import RoP.Success;
 import com.dieselpoint.norm.Database;
 
 public class DB {
+    static final int PORT = 3306;
     static Database instance;
-    static String DATABASE = "minitwit";
-    static String IP = "localhost";
-    static int PORT = 3306;
-    static String USER = "root";
-    static String PW = "root";
-    static String CONNECTIONSTRING;
+    static String database = "minitwit";
+    static String ip = "localhost";
+    static String user = "root";
+    static String pw = "root";
+    static String connectionString;
+
+    private DB() {}
 
     /*
         Returns a new connection to the database.
@@ -19,14 +21,14 @@ public class DB {
         if (instance == null) {
             try {
 
-                if(CONNECTIONSTRING != null) {
-                    System.setProperty("norm.jdbcUrl", "jdbc:" + CONNECTIONSTRING);
+                if(connectionString != null) {
+                    System.setProperty("norm.jdbcUrl", "jdbc:" + connectionString);
                 } else {
-                    System.setProperty("norm.jdbcUrl", "jdbc:mysql://" + IP + ":" + PORT + "/" + DATABASE + "?allowPublicKeyRetrieval=true&useSSL=false");
+                    System.setProperty("norm.jdbcUrl", "jdbc:mysql://" + ip + ":" + PORT + "/" + database + "?allowPublicKeyRetrieval=true&useSSL=false");
                 }
 
-                System.setProperty("norm.user", USER);
-                System.setProperty("norm.password", PW);
+                System.setProperty("norm.user", user);
+                System.setProperty("norm.password", pw);
 
                 instance = new Database();
             } catch (Exception e) {
@@ -37,24 +39,24 @@ public class DB {
         return new Success<>(instance);
     }
 
-    public static void setIP(String IP) {
-        DB.IP = IP;
+    public static void setIP(String ip) {
+        DB.ip = ip;
     }
 
-    public static void setCONNECTIONSTRING(String CONNECTIONSTRING) {
-        DB.CONNECTIONSTRING = CONNECTIONSTRING;
+    public static void setCONNECTIONSTRING(String connectionString) {
+        DB.connectionString = connectionString;
     }
 
-    public static void setUSER(String USER) {
-        DB.USER = USER;
+    public static void setUSER(String user) {
+        DB.user = user;
     }
 
-    public static void setPW(String PW) {
-        DB.PW = PW;
+    public static void setPW(String pw) {
+        DB.pw = pw;
     }
 
     public static void setDATABASE(String dbName) {
-        DATABASE = dbName;
+        database = dbName;
     }
 
 }

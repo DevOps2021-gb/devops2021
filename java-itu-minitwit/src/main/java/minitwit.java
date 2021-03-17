@@ -2,7 +2,6 @@ import Model.Tweet;
 import Model.User;
 import RoP.Failure;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 import com.hubspot.jinjava.Jinjava;
 import io.prometheus.client.CollectorRegistry;
@@ -357,7 +356,7 @@ public class minitwit {
     }
 
 
-    private final static CollectorRegistry registry = CollectorRegistry.defaultRegistry;
+    private static final CollectorRegistry registry = CollectorRegistry.defaultRegistry;
     private static Object metrics(Request request, Response response) throws IOException {
         //todo test
         response.type(TextFormat.CONTENT_TYPE_004);
@@ -621,7 +620,7 @@ public class minitwit {
         } else {
             if (reqFromSimulator(request)) {
                 response.status(HttpStatus.BAD_REQUEST_400);
-                response.type("application/json");
+                response.type(JSON);
                 return "{\"message\":\"404 not found\", \"error_msg\": "+ result.getFailureMessage() + "}";
             } else {
                 HashMap<String, Object> context = new HashMap<>();
