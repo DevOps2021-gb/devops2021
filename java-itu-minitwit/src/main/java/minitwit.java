@@ -1,6 +1,7 @@
 import Model.Tweet;
 import Model.User;
 import RoP.Failure;
+import RoP.Result;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.io.Resources;
 import com.hubspot.jinjava.Jinjava;
@@ -19,6 +20,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiFunction;
 
 import static spark.Spark.*;
 
@@ -305,6 +307,21 @@ public class minitwit {
         return "{\"follows\": " + json + " }";
     }
 
+    private static String return404(Response response){
+        response.status(HttpStatus.NOT_FOUND_404);
+        response.type(JSON);
+        return MESSAGE404;
+    }
+    private static Object followOrUnfollow (Map<String, String> params, String requestType, BiFunction<Integer, String, Result<String>> query, Result<Integer> userIdResult, Response response){
+        var followUser = params.get(requestType);
+        if (!Queries.getUserId(followUser).isSuccess()) {
+            return return404(response);
+        }
+        var result = query.apply(userIdResult.get(), followUser);
+        response.status(result.isSuccess()? HttpStatus.NO_CONTENT_204 : HttpStatus.CONFLICT_409);
+        return "";
+    }
+
     private static Object postFollow(Request request, Response response) {
         updateLatest(request);
 
@@ -317,39 +334,13 @@ public class minitwit {
         var userIdResult = Queries.getUserId(username);
 
         if (!userIdResult.isSuccess()) {
-            response.status(HttpStatus.NOT_FOUND_404);
-            response.type(JSON);
-            return MESSAGE404;
+            return return404(response);
         }
 
         if (params.containsKey("follow")) {
-            var followUser = params.get("follow");
-            if (!Queries.getUserId(followUser).isSuccess()) {
-                response.status(HttpStatus.NOT_FOUND_404);
-                response.type(JSON);
-                return MESSAGE404;
-            }
-            var result = Queries.followUser(userIdResult.get(), followUser);
-            if (result.isSuccess()) {
-                response.status(HttpStatus.NO_CONTENT_204);
-            } else {
-                response.status(HttpStatus.CONFLICT_409);
-            }
-            return "";
+            return followOrUnfollow(params, "follow", Queries::followUser, userIdResult, response);
         } else if (params.containsKey("unfollow")) {
-            var unfollowUser = params.get("unfollow");
-            if (!Queries.getUserId(unfollowUser).isSuccess()) {
-                response.status(HttpStatus.NOT_FOUND_404);
-                response.type(JSON);
-                return MESSAGE404;
-            }
-            var result = Queries.unfollowUser(userIdResult.get(), unfollowUser);
-            if (result.isSuccess()) {
-                response.status(HttpStatus.NO_CONTENT_204);
-            } else {
-                response.status(HttpStatus.CONFLICT_409);
-            }
-            return "";
+            return followOrUnfollow(params, "unfollow", Queries::unfollowUser, userIdResult, response);
         }
         response.status(HttpStatus.BAD_REQUEST_400);
         return "";
@@ -358,7 +349,6 @@ public class minitwit {
 
     private static final CollectorRegistry registry = CollectorRegistry.defaultRegistry;
     private static Object metrics(Request request, Response response) throws IOException {
-        //todo test
         response.type(TextFormat.CONTENT_TYPE_004);
         final StringWriter writer = new StringWriter();
         TextFormat.write004(writer, registry.metricFamilySamples());
@@ -401,21 +391,17 @@ public class minitwit {
         var loggedInUser = getSessionUserId(request);
         Object returnPage;
         HashMap<String, Object> context = new HashMap<>();
+        context.put(MESSAGES, Queries.publicTimeline().get());
+        context.put(ENDPOINT, "publicTimeline");
+        context.put(TITLE, "Public Timeline");
         if(loggedInUser != null) {
             var user = Queries.getUserById(loggedInUser);
-            context.put(MESSAGES, Queries.publicTimeline().get());
             context.put(USERNAME, user.get().getUsername());
             context.put(USER, user.get().getUsername());
-            context.put(ENDPOINT, "publicTimeline");
-            context.put(TITLE, "Public Timeline");
-            returnPage = renderTemplate(TIMELINE_HTML, context);
         } else {
-            context.put(MESSAGES, Queries.publicTimeline().get());
-            context.put(ENDPOINT, "publicTimeline");
-            context.put(TITLE, "Public Timeline");
             context.put(FLASH, getSessionFlash(request));
-            returnPage = renderTemplate(TIMELINE_HTML, context);
         }
+        returnPage = renderTemplate(TIMELINE_HTML, context);
         Logger.logResponseTimeFrontPage(System.currentTimeMillis() - startTime);
         return returnPage;
     }
@@ -431,31 +417,24 @@ public class minitwit {
         //TODO figure out how to avoid this hack
         if (profileUsername.equals("favicon.ico")) return "";
         HashMap<String, Object> context = new HashMap<>();
+        context.put(ENDPOINT, "userTimeline");
+        var profileUser = Queries.getUser(profileUsername);
+        context.put(TITLE, profileUser.get().getUsername() + "'s Timeline");
+        context.put("profileUserId", profileUser.get().id);
+        context.put("profileUserUsername", profileUser.get().getUsername());
+        context.put(MESSAGES, Queries.getTweetsByUsername(profileUsername).get());
         if (!userLoggedIn(request)) {
-            var profileUser = Queries.getUser(profileUsername);
-            context.put(ENDPOINT, "userTimeline");
             context.put(USERNAME, profileUsername);
-            context.put(TITLE, profileUser.get().getUsername() + "'s Timeline");
-            context.put("profileUserId", profileUser.get().id);
-            context.put("profileUserUsername", profileUser.get().getUsername());
-            context.put(MESSAGES, Queries.getTweetsByUsername(profileUsername).get());
-            return renderTemplate(TIMELINE_HTML, context);
         } else {
             var userId = getSessionUserId(request);
-            var profileUser = Queries.getUser(profileUsername);
             var loggedInUser = Queries.getUserById(userId);
-            context.put(ENDPOINT, "userTimeline");
             context.put(USERNAME, loggedInUser.get().getUsername());
-            context.put(TITLE, profileUser.get().getUsername() + "'s Timeline");
             context.put(USER, loggedInUser.get().id);
             context.put(USER_ID, userId);
-            context.put("profileUserId", profileUser.get().id);
-            context.put("profileUserUsername", profileUser.get().getUsername());
             context.put("followed", Queries.isFollowing(loggedInUser.get().id, profileUser.get().id).get());
-            context.put(MESSAGES, Queries.getTweetsByUsername(profileUsername).get());
             context.put(FLASH, getSessionFlash(request));
-            return renderTemplate(TIMELINE_HTML, context);
         }
+        return renderTemplate(TIMELINE_HTML, context);
     }
 
     /*

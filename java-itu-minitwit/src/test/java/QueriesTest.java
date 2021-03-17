@@ -2,8 +2,6 @@ import RoP.Result;
 import RoP.Success;
 import org.junit.jupiter.api.Test;
 
-import java.sql.SQLException;
-
 import static spark.Spark.stop;
 
 class QueriesTest {
