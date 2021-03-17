@@ -72,7 +72,6 @@ class QueriesTest {
 
     @Test
     void test_register(){
-        Assert.isTrue(true, "hotfix so sonarcloud doesn't complain");
         Logger.processUsers();
         assert ((int) Logger.getUsers() == 0);
         assert (Queries.getCountUsers().get() == 0);
