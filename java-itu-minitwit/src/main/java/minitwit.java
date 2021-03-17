@@ -436,36 +436,7 @@ public class minitwit {
         return renderTemplate(TIMELINE_HTML, context);
     }
 
-    /*
-    Adds the current user as follower of the given user.
-     */
-    static Object followUser(Request request, Response response) {
-        updateLatest(request);
-
-        var params = getParamsFromRequest(request, USERNAME);
-        String profileUsername = params.get(USERNAME) != null ? params.get(USERNAME) : params.get(":username");
-
-        if (!userLoggedIn(request)) {
-            halt(401, "You need to sign in to follow a user");
-            return null;
-        }
-
-        var rs = Queries.followUser(getSessionUserId(request),profileUsername);
-        if (rs.isSuccess()) {
-            request.session().attribute(FLASH, "You are now following " + profileUsername);
-        }
-        else {
-            halt(404, rs.toString());
-        }
-
-        response.redirect("/" + profileUsername);
-        return null;
-    }
-
-    /*
-    Removes the current user as follower of the given user.
-     */
-    static Object unfollowUser(Request request, Response response) {
+    static Object followOrUnfollow(Request request, Response response, BiFunction<Integer, String, Result<String>> query, String flashMessage){
         updateLatest(request);
 
         var params = getParamsFromRequest(request, USERNAME);
@@ -476,16 +447,30 @@ public class minitwit {
             return null;
         }
 
-        var rs = Queries.unfollowUser(getSessionUserId(request), profileUsername);
+        var rs = query.apply(getSessionUserId(request), profileUsername);
         if (rs.isSuccess()) {
-            request.session().attribute(FLASH, "You are no longer following " + profileUsername);
-            System.out.println("You are no longer following " + profileUsername);
+            request.session().attribute(FLASH, flashMessage + profileUsername);
         }
         else {
-            System.out.println(rs.toString());
             halt(404, rs.toString());
         }
         response.redirect("/" + profileUsername);
+        return null;
+    }
+
+    /*
+    Adds the current user as follower of the given user.
+     */
+    static Object followUser(Request request, Response response) {
+        followOrUnfollow(request, response, Queries::followUser, "You are now following ");
+        return null;
+    }
+
+    /*
+    Removes the current user as follower of the given user.
+     */
+    static Object unfollowUser(Request request, Response response) {
+        followOrUnfollow(request, response, Queries::unfollowUser, "You are no longer following ");
         return null;
     }
 
