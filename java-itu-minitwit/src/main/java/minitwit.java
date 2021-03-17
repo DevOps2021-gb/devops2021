@@ -312,12 +312,11 @@ public class minitwit {
         response.type(JSON);
         return MESSAGE404;
     }
-    private static Object followOrUnfollow (Map<String, String> params, String requestType, BiFunction<Integer, String, Result<String>> query, Result<Integer> userIdResult, Response response){
-        var followUser = params.get(requestType);
-        if (!Queries.getUserId(followUser).isSuccess()) {
+    private static Object followOrUnfollow (String user, BiFunction<Integer, String, Result<String>> query, Result<Integer> userIdResult, Response response){
+        if (!Queries.getUserId(user).isSuccess()) {
             return return404(response);
         }
-        var result = query.apply(userIdResult.get(), followUser);
+        var result = query.apply(userIdResult.get(), user);
         response.status(result.isSuccess()? HttpStatus.NO_CONTENT_204 : HttpStatus.CONFLICT_409);
         return "";
     }
@@ -338,9 +337,9 @@ public class minitwit {
         }
 
         if (params.containsKey("follow")) {
-            return followOrUnfollow(params, "follow", Queries::followUser, userIdResult, response);
+            return followOrUnfollow(params.get("follow"), Queries::followUser, userIdResult, response);
         } else if (params.containsKey("unfollow")) {
-            return followOrUnfollow(params, "unfollow", Queries::unfollowUser, userIdResult, response);
+            return followOrUnfollow(params.get("unfollow"), Queries::unfollowUser, userIdResult, response);
         }
         response.status(HttpStatus.BAD_REQUEST_400);
         return "";
