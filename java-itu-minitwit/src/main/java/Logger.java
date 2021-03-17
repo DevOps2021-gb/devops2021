@@ -22,8 +22,6 @@ public class Logger {
             .name("followers_total").help("Total amount of followers.").register();
     private static final Gauge messages = Gauge.build()
             .name("messages_total").help("Total amount of messages.").register();
-    private static final Gauge avgFollowers = Gauge.build()
-            .name("followers_average").help("Average amount of followers per user.").register();
     private static final Gauge responseTimePublicTimeLine = Gauge.build()
             .name("response_time_publicTIme").help("response time for public timeLine.").register();
 
@@ -37,7 +35,6 @@ public class Logger {
         processUsers();
         processFollowers();
         processMessages();
-        processAvgFollowers();
     }
 
     public static void processRequest() {
@@ -59,18 +56,18 @@ public class Logger {
         long numberOfMessages = Queries.getCountMessages().get();
         messages.set(numberOfMessages);
     }
-    public static void processAvgFollowers(){
-        long numberOfUsers = Queries.getCountUsers().get();
-        long numberOfFollowers   = Queries.getCountFollowers().get();
-
-        //if either are 0, the thread will throw an exception and exit
-        if (numberOfFollowers != 0 && numberOfUsers != 0) {
-            long num = numberOfFollowers/numberOfUsers;
-            avgFollowers.set(num);
-        }
-    }
 
     public static void logResponseTimeFrontPage(long rt) {
         responseTimePublicTimeLine.set(rt);
+    }
+
+    public static double getUsers() {
+        return users.get();
+    }
+    public static double getMessages() {
+        return messages.get();
+    }
+    public static double getFollowers() {
+        return followers.get();
     }
 }

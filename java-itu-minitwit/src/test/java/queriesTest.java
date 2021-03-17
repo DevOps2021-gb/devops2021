@@ -67,8 +67,16 @@ class queriesTest {
 
     @Test
     void test_register(){
+        Logger.processUsers();
+        assert ((int) Logger.getUsers() == 0);
+        assert (Queries.getCountUsers().get() == 0);
+
         var error = register("user1", "q123", null, null);
         assert (error.isSuccess() && error.get().equals("OK"));
+        assert (Queries.getCountUsers().get() == 1);
+        Logger.processUsers();
+        assert ((int) Logger.getUsers() == 1);
+
         error = register("user1", "q123", null, null);
         assert (!error.isSuccess() && error.getFailureMessage().equals("The username is already taken"));
         error = register("", "q123", null, null);
@@ -79,6 +87,9 @@ class queriesTest {
         assert (!error.isSuccess() && error.getFailureMessage().equals("The two passwords do not match"));
         error = register("user2", "1", null, "bad email");
         assert (!error.isSuccess() && error.getFailureMessage().equals("You have to enter a valid email address"));
+        assert (Queries.getCountUsers().get() == 1);
+        Logger.processUsers();
+        assert ((int) Logger.getUsers() == 1);
     }
 
     @Test
@@ -116,11 +127,23 @@ class queriesTest {
 
     @Test
     void test_getPersonalTweetsById() throws SQLException {
+        assert (Queries.getCountMessages().get() == 0);
+        Logger.processMessages();
+        assert ((int) Logger.getMessages() == 0);
+
         var id1 = register_login_getID("foo", "default", null, null);
         add_message("the message by foo", id1.get());
+        assert (Queries.getCountMessages().get() == 1);
+        Logger.processMessages();
+        assert ((int) Logger.getMessages() == 1);
+
+
         logout();
         var id2 = register_login_getID("bar","default", null, null);
         add_message("the message by bar", id2.get());
+        assert (Queries.getCountMessages().get() == 2);
+        Logger.processMessages();
+        assert ((int) Logger.getMessages() == 2);
 
         var rs = Queries.getPersonalTweetsById(id1.get());
         assert (rs.isSuccess());
@@ -186,12 +209,24 @@ class queriesTest {
         var id2 = register_login_getID("bar","1234", null, null);
         var id3 = register_login_getID("brian","q123", null, null);
 
+
+        assert (Queries.getCountFollowers().get() == 0);
+        Logger.processFollowers();
+        assert ((int) Logger.getFollowers() == 0);
+
         var rs1 = Queries.followUser(id1.get(), "bar");
         assert (rs1.isSuccess());
         assert (Queries.isFollowing(id1.get(), id2.get()).get());
+        assert (Queries.getCountFollowers().get() == 1);
+        Logger.processFollowers();
+        assert ((int) Logger.getFollowers() == 1);
+
         var rs2 = Queries.followUser(id1.get(), "brian");
         assert (rs2.isSuccess());
         assert (Queries.isFollowing(id1.get(), id3.get()).get());
+        assert (Queries.getCountFollowers().get() == 2);
+        Logger.processFollowers();
+        assert ((int) Logger.getFollowers() == 2);
 
         var rs = Queries.getFollowing(id1.get());
         assert (rs.isSuccess());
