@@ -5,6 +5,8 @@ import java.util.*;
 
 public class Hashing {
 
+    private Hashing() {}
+
     private static String generateHashString(String input) {
         String hashString = null;
         try {

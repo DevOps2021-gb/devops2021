@@ -15,6 +15,8 @@ public class Queries {
 
     static final int PER_PAGE = 30;
 
+    private Queries() {}
+
     /*
     Creates the database tables.
      */
