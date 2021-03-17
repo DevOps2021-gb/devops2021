@@ -1,11 +1,11 @@
 package Model;
 
 public class Tweet {
-    public String email;
-    public String username;
-    public String text;
-    public String pubDate;
-    public String profilePic;
+    private String email;
+    private String username;
+    private String text;
+    private String pubDate;
+    private String profilePic;
 
     public Tweet(String email, String username, String text, String pubDate, String profilePic) {
         this.email = email;

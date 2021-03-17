@@ -1,4 +1,3 @@
-import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.lang.management.OperatingSystemMXBean;
 import java.util.concurrent.Executors;

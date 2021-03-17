@@ -234,9 +234,9 @@ public class minitwit {
         List<JSONObject> msgs = new ArrayList<>();
         for (Tweet t : tweets) {
             HashMap<String, String> msg = new HashMap<>();
-            msg.put(CONTENT, t.text);
-            msg.put("pub_date", t.pubDate);
-            msg.put(USER, t.username);
+            msg.put(CONTENT, t.getText());
+            msg.put("pub_date", t.getPubDate());
+            msg.put(USER, t.getUsername());
             msgs.add(new JSONObject(msg));
         }
         var json = new JSONArray(msgs);
@@ -298,7 +298,7 @@ public class minitwit {
         }
 
         List<User> following = Queries.getFollowing(userIdResult.get()).get();
-        JSONArray json = new JSONArray(following.stream().map(u->u.username));
+        JSONArray json = new JSONArray(following.stream().map(u->u.getUsername()));
 
         response.status(HttpStatus.OK_200);
         response.type(JSON);
@@ -383,8 +383,8 @@ public class minitwit {
         }
         var user = Queries.getUserById(getSessionUserId(request)).get();
         HashMap<String, Object> context = new HashMap<>();
-        context.put(USERNAME, user.username);
-        context.put(USER, user.username);
+        context.put(USERNAME, user.getUsername());
+        context.put(USER, user.getUsername());
         context.put(ENDPOINT,"timeline");
         context.put(MESSAGES, Queries.getPersonalTweetsById(user.id).get());
         context.put(TITLE, "My Timeline");
@@ -404,8 +404,8 @@ public class minitwit {
         if(loggedInUser != null) {
             var user = Queries.getUserById(loggedInUser);
             context.put(MESSAGES, Queries.publicTimeline().get());
-            context.put(USERNAME, user.get().username);
-            context.put(USER, user.get().username);
+            context.put(USERNAME, user.get().getUsername());
+            context.put(USER, user.get().getUsername());
             context.put(ENDPOINT, "publicTimeline");
             context.put(TITLE, "Public Timeline");
             returnPage = renderTemplate(TIMELINE_HTML, context);
@@ -435,9 +435,9 @@ public class minitwit {
             var profileUser = Queries.getUser(profileUsername);
             context.put(ENDPOINT, "userTimeline");
             context.put(USERNAME, profileUsername);
-            context.put(TITLE, profileUser.get().username + "'s Timeline");
+            context.put(TITLE, profileUser.get().getUsername() + "'s Timeline");
             context.put("profileUserId", profileUser.get().id);
-            context.put("profileUserUsername", profileUser.get().username);
+            context.put("profileUserUsername", profileUser.get().getUsername());
             context.put(MESSAGES, Queries.getTweetsByUsername(profileUsername).get());
             return renderTemplate(TIMELINE_HTML, context);
         } else {
@@ -445,12 +445,12 @@ public class minitwit {
             var profileUser = Queries.getUser(profileUsername);
             var loggedInUser = Queries.getUserById(userId);
             context.put(ENDPOINT, "userTimeline");
-            context.put(USERNAME, loggedInUser.get().username);
-            context.put(TITLE, profileUser.get().username + "'s Timeline");
+            context.put(USERNAME, loggedInUser.get().getUsername());
+            context.put(TITLE, profileUser.get().getUsername() + "'s Timeline");
             context.put(USER, loggedInUser.get().id);
             context.put(USER_ID, userId);
             context.put("profileUserId", profileUser.get().id);
-            context.put("profileUserUsername", profileUser.get().username);
+            context.put("profileUserUsername", profileUser.get().getUsername());
             context.put("followed", Queries.isFollowing(loggedInUser.get().id, profileUser.get().id).get());
             context.put(MESSAGES, Queries.getTweetsByUsername(profileUsername).get());
             context.put(FLASH, getSessionFlash(request));

@@ -267,7 +267,7 @@ public class Queries {
         var user = getUser(username);
         if (!user.isSuccess()) {
             error = "Invalid username";
-        } else if (!Hashing.checkPasswordHash(user.get().pwHash, password)) {
+        } else if (!Hashing.checkPasswordHash(user.get().getPwHash(), password)) {
             error = "Invalid password";
         } else {
             return new Success<>(true);
