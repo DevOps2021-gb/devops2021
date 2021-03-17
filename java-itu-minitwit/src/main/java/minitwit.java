@@ -300,7 +300,7 @@ public class minitwit {
         }
 
         List<User> following = Queries.getFollowing(userIdResult.get()).get();
-        JSONArray json = new JSONArray(following.stream().map(u->u.getUsername()));
+        JSONArray json = new JSONArray(following.stream().map(User::getUsername));
 
         response.status(HttpStatus.OK_200);
         response.type(JSON);
