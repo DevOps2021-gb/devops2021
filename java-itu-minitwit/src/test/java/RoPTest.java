@@ -3,7 +3,7 @@ import RoP.Result;
 import RoP.Success;
 import org.junit.jupiter.api.Test;
 
-public class RoPTest {
+class RoPTest {
 
     @Test
     void test_Success() {
