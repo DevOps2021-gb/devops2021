@@ -47,7 +47,6 @@ public class Queries {
             String date = sdf.format(resultDate);
             return new Success<>(date);
         } catch (Exception e) {
-            e.printStackTrace();
             return new Failure<>(e);
         }
     }
@@ -61,7 +60,6 @@ public class Queries {
 
             return new Success<>(!result.isEmpty());
         } catch (Exception e) {
-            e.printStackTrace();
             return new Failure<>(e);
         }
     }
@@ -138,7 +136,6 @@ public class Queries {
 
                 return new Success<>("OK");
             } catch (Exception e) {
-                e.printStackTrace();
                 return new Failure<>(e);
             }
         }
@@ -162,7 +159,6 @@ public class Queries {
 
                 return new Success<>("OK");
             } catch (Exception e) {
-                e.printStackTrace();
                 return new Failure<>(e);
             }
         }
@@ -179,7 +175,6 @@ public class Queries {
                    "limit ?", whoId, PER_PAGE).results(User.class);
             return new Success<>(result);
         } catch (Exception e) {
-            e.printStackTrace();
             return new Failure<>(e);
         }
     }
@@ -210,7 +205,6 @@ public class Queries {
                 "order by message.pubDate desc limit ?", PER_PAGE).results(HashMap.class);
             return new Success<>(tweetsFromListOfHashMap(result));
         } catch (Exception e) {
-            e.printStackTrace();
             return new Failure<>(e);
         }
     }
@@ -228,7 +222,6 @@ public class Queries {
 
             return new Success<>(tweetsFromListOfHashMap(result));
         } catch (Exception e) {
-            e.printStackTrace();
             return new Failure<>(e);
         }
     }
@@ -247,7 +240,6 @@ public class Queries {
             return new Success<>(tweetsFromListOfHashMap(result));
 
         } catch (Exception e) {
-            e.printStackTrace();
             return new Failure<>(e);
         }
     }
@@ -264,7 +256,6 @@ public class Queries {
 
                 return new Success<>(true);
             } catch (Exception e) {
-                e.printStackTrace();
                 return new Failure<>(e);
             }
         }
@@ -303,7 +294,6 @@ public class Queries {
                 db.insert(new User(username,email, Hashing.generatePasswordHash(password1)));
                 return new Success<>("OK");
             } catch (Exception e) {
-                e.printStackTrace();
                 return new Failure<>(e);
             }
         }
