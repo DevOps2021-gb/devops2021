@@ -63,7 +63,7 @@ public class minitwit {
 
             //add db clear here if working LOCALLY
 
-            Logger.StartSchedules();
+            Logger.startSchedules();
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -416,7 +416,7 @@ public class minitwit {
             context.put(FLASH, getSessionFlash(request));
             returnPage = renderTemplate(TIMELINE_HTML, context);
         }
-        Logger.LogResponseTimeFrontPage(System.currentTimeMillis() - startTime);
+        Logger.logResponseTimeFrontPage(System.currentTimeMillis() - startTime);
         return returnPage;
     }
 
