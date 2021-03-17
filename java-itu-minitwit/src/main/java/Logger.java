@@ -24,6 +24,8 @@ public class Logger {
     private static final Gauge responseTimePublicTimeLine = Gauge.build()
             .name("response_time_publicTIme").help("response time for public timeLine.").register();
 
+    private Logger() {
+    }
 
     public static void startSchedules() {
         ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();

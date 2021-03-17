@@ -5,12 +5,12 @@ import com.dieselpoint.norm.Database;
 
 public class DB {
     static final int PORT = 3306;
-    static Database instance;
-    static String database = "minitwit";
-    static String ip = "localhost";
-    static String user = "root";
-    static String pw = "root";
-    static String connectionString;
+    private static Database instance;
+    private static String database = "minitwit";
+    private static String ip = "localhost";
+    private static String user = "root";
+    private static String pw = "root";
+    private static String connectionString;
 
     private DB() {}
 
