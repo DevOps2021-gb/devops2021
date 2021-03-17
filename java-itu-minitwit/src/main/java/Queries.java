@@ -21,8 +21,7 @@ public class Queries {
     Creates the database tables.
      */
     public static Database initDb()  {
-        var db = DB.connectDb().get();
-        return db;
+        return DB.connectDb().get();
     }
     public static void dropDB(){
         var db = initDb();
@@ -280,7 +279,6 @@ public class Queries {
         } else if (!Hashing.checkPasswordHash(user.get().pwHash, password)) {
             error = "Invalid password";
         } else {
-            System.out.println("You were logged in");
             return new Success<>(true);
         }
 
@@ -303,11 +301,7 @@ public class Queries {
             try {
                 var db = DB.connectDb().get();
                 db.insert(new User(username,email, Hashing.generatePasswordHash(password1)));
-
-                    System.out.println("You were successfully registered and can login now");
-                    return new Success<>("OK");
-
-
+                return new Success<>("OK");
             } catch (Exception e) {
                 e.printStackTrace();
                 return new Failure<>(e);
