@@ -6,7 +6,7 @@ import java.sql.SQLException;
 
 import static spark.Spark.stop;
 
-class queriesTest {
+class QueriesTest {
     @org.junit.jupiter.api.BeforeEach
     void setUp() {
         DB.setDATABASE("testMinitwit");
@@ -42,12 +42,15 @@ class queriesTest {
         register(username, password, null, null);
         return login(username, password);
     }
+    int userId = 1;
     //Helper function to register, login and get the id
     Result<Integer> register_login_getID(String username, String password, String password2, String email) {
         register(username, password, password2, email);
         login(username, password);
         var id = Queries.getUserId(username);
         assert (id.isSuccess());
+        assert (id.get() == userId);
+        userId++;
         return id;
     }
     //Helper function to logout

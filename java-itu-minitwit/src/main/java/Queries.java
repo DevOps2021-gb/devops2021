@@ -55,9 +55,6 @@ public class Queries {
         try {
             var db = DB.connectDb().get();
             var result = db.where("whoId=?", whoId).where("whomId=?", whomId).results(Follower.class);
-
-            //var stmt = conn.prepareStatement("select 1 from follower where follower.whoId = ? and follower.whomId = ?");
-
             return new Success<>(!result.isEmpty());
         } catch (Exception e) {
             return new Failure<>(e);
