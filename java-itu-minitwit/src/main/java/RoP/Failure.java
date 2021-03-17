@@ -1,6 +1,6 @@
 package RoP;
 
-public class Failure<T> extends Result<T> {
+public class Failure<T> implements Result<T> {
 
     final Exception exception;
 
