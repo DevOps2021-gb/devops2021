@@ -1,5 +1,7 @@
 import java.lang.management.ManagementFactory;
 import java.lang.management.OperatingSystemMXBean;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -21,12 +23,23 @@ public class Logger {
             .name("followers_total").help("Total amount of followers.").register();
     private static final Gauge messages = Gauge.build()
             .name("messages_total").help("Total amount of messages.").register();
-    private static final Gauge responseTimePublicTimeLine = Gauge.build()
-            .name("response_time_publicTIme").help("response time for public timeLine.").register();
+    private static final Map<String, Gauge> responseTimeEndPoints=new HashMap<>();
 
     private Logger() {
     }
 
+    private static void setEndpoints(String[] endpoints, String namePrefix, String helpPrefix){
+        for(String key: endpoints){
+            Gauge gauge = Gauge.build()
+                    .name(namePrefix+key.replace('/', '_')).help(helpPrefix+key).register();
+            responseTimeEndPoints.put(key, gauge);
+        }
+    }
+
+    public static void setEndpointsToLog(String[] endpointsGet, String[] endpointsPost) {
+        setEndpoints(endpointsGet, "response_time_get",    "response time for get call: ");
+        setEndpoints(endpointsGet, "response_time_post",   "response time for post call: ");
+    }
     public static void startSchedules() {
         ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
         executorService.scheduleAtFixedRate(Logger::logUserInformation, 1, LOGGING_PERIOD_SECONDS , TimeUnit.SECONDS);
@@ -58,8 +71,8 @@ public class Logger {
         messages.set(numberOfMessages);
     }
 
-    public static void logResponseTimeFrontPage(long rt) {
-        responseTimePublicTimeLine.set(rt);
+    public static void logResponseTimeEndpoint(String endpoint, long rt) {
+        responseTimeEndPoints.get(endpoint).set(rt);
     }
 
     public static double getUsers() {
@@ -71,4 +84,5 @@ public class Logger {
     public static double getFollowers() {
         return followers.get();
     }
+
 }
