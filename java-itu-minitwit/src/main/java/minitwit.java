@@ -51,31 +51,9 @@ public class minitwit {
     private static String[] entryPointsGetOrder     = new String[]{"/latest", "/msgs", "/msgs/:username", "/fllws/:username", "/", "/metrics", "/public", "/login", "/register", "/logout", "/:username/follow", "/:username/unfollow","/:username"};
     private static String[] entryPointsPostOrder    = new String[]{"/msgs/:username","/fllws/:username","/add_message","/login","/register"};
 
-    private static Map<String, BiFunction<Request, Response, Object>> endpointsGet =
-            new HashMap<>(){{
-                put("/latest",              minitwit::getLatest);
-                put("/msgs",                minitwit::messages);
-                put("/msgs/:username",      minitwit::messagesPerUser);
-                put("/fllws/:username",     minitwit::getFollow);
-                put("/",                    minitwit::timeline);
-                put("/metrics",             minitwit::metrics);
-                put("/public",              minitwit::publicTimeline);
-                put("/login",               minitwit::loginGet);
-                put("/register",            (req, res)-> renderTemplate(REGISTER_HTML));
-                put("/logout",              minitwit::logout);
-                put("/:username/follow",    minitwit::followUser);
-                put("/:username/unfollow",  minitwit::unfollowUser);
-                put("/:username",           minitwit::userTimeline);
-            }};
+    private static Map<String, BiFunction<Request, Response, Object>> endpointsGet = new HashMap<>();
 
-    private static Map<String, BiFunction<Request, Response, Object>> endpointsPost =
-            new HashMap<>(){{
-                put("/msgs/:username",      minitwit::addMessage);
-                put("/fllws/:username",     minitwit::postFollow);
-                put("/add_message",         minitwit::addMessage);
-                put("/login",               minitwit::login);
-                put("/register",            minitwit::register);
-            }};
+    private static Map<String, BiFunction<Request, Response, Object>> endpointsPost =new HashMap<>();
 
     public static void main(String[] args) {
         try {
@@ -148,8 +126,30 @@ public class minitwit {
             System.out.println(request.requestMethod() + " " + request.url() + " with args " + request.params());
         }
     }
+    private static void setUpEntryPointsMap(){
+        endpointsGet.put("/latest",              minitwit::getLatest);
+        endpointsGet.put("/msgs",                minitwit::messages);
+        endpointsGet.put("/msgs/:username",      minitwit::messagesPerUser);
+        endpointsGet.put("/fllws/:username",     minitwit::getFollow);
+        endpointsGet.put("/",                    minitwit::timeline);
+        endpointsGet.put("/metrics",             minitwit::metrics);
+        endpointsGet.put("/public",              minitwit::publicTimeline);
+        endpointsGet.put("/login",               minitwit::loginGet);
+        endpointsGet.put("/register",            (req, res)-> renderTemplate(REGISTER_HTML));
+        endpointsGet.put("/logout",              minitwit::logout);
+        endpointsGet.put("/:username/follow",    minitwit::followUser);
+        endpointsGet.put("/:username/unfollow",  minitwit::unfollowUser);
+        endpointsGet.put("/:username",           minitwit::userTimeline);
 
+        endpointsPost.put("/msgs/:username",      minitwit::addMessage);
+        endpointsPost.put("/fllws/:username",     minitwit::postFollow);
+        endpointsPost.put("/add_message",         minitwit::addMessage);
+        endpointsPost.put("/login",               minitwit::login);
+        endpointsPost.put("/register",            minitwit::register);
+
+    }
     private static void registerEndpoints() {
+        setUpEntryPointsMap();
         for(String point : entryPointsGetOrder) {
             get(point, (req, res)-> benchMarkEndpoint(point, endpointsGet.get(point), req, res));
         }
