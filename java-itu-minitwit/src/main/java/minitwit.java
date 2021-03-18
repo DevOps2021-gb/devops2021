@@ -45,10 +45,6 @@ public class minitwit {
     private static final String TITLE = "title";
     private static final String CONTENT = "content";
 
-    // responses
-    private static final String JSON = "application/json";
-    private static final String MESSAGE404 = "{\"message\":\"404 not found\"}";
-
     public static void main(String[] args) {
         try {
             staticFiles.location("/");
@@ -60,7 +56,6 @@ public class minitwit {
             }
 
             registerHooks();
-
             registerEndpoints();
 
             //add db clear here if working LOCALLY
@@ -75,50 +70,26 @@ public class minitwit {
     private static void registerHooks() {
         before((request, response) -> {
             Logger.processRequest();
-            /*
-            Make sure we are connected to the database each request and look
-            up the current user so that we know he's there.
-             */
-
-            logRequest(request);
+            Logger.logRequest(request);
 
             Integer userId = getSessionUserId(request);
-            if (userId == null) {
-                return;
+            if (userId != null) {
+                var user = Queries.getUserById(userId);
+                if (user.isSuccess()) {
+                    request.session().attribute(USER_ID, user.get().id);
+                }
             }
-
-            var user = Queries.getUserById(userId);
-            if (user.isSuccess()) {
-                request.session().attribute(USER_ID, user.get().id);
-            }
-        });
-
-        after((request, response) -> {
-            /*
-            Closes the database again at the end of the request.
-            */
-            //TODO decide how to handle before/after with connection
         });
 
         notFound((req, res) -> {
-            res.type(JSON);
-            return MESSAGE404;
+            res.type(JSON.APPLICATION_JSON);
+            return JSON.MESSAGE404_NOT_FOUND;
         });
 
         internalServerError((req, res) -> {
-            res.type(JSON);
-            return "{\"message\":\"500 server error\"}";
+            res.type(JSON.APPLICATION_JSON);
+            return JSON.MESSAGE500_SERVER_ERROR;
         });
-    }
-
-    private static void logRequest(Request request) {
-        if (request.url().contains("favicon.ico")) return;
-
-        if (request.params().size() == 0) {
-            System.out.println(request.requestMethod() + " " + request.url());
-        } else {
-            System.out.println(request.requestMethod() + " " + request.url() + " with args " + request.params());
-        }
     }
 
     private static void registerEndpoints() {
@@ -144,7 +115,6 @@ public class minitwit {
         get("/:username",           minitwit::userTimeline);
     }
 
-
     private static boolean reqFromSimulator(Request request) {
         var fromSimulator = request.headers("Authorization");
         return fromSimulator != null && fromSimulator.equals("Basic c2ltdWxhdG9yOnN1cGVyX3NhZmUh");
@@ -152,16 +122,15 @@ public class minitwit {
 
     private static Object notFromSimulatorResponse(Response response) {
         response.status(HttpStatus.FORBIDDEN_403);
-        response.type(JSON);
-        var error = "You are not authorized to use this resource!";
-        return "{\"status\": 403, \"error_msg\": " + error + " }";
+        response.type(JSON.APPLICATION_JSON);
+        return JSON.Respond403("You are not authorized to use this resource!");
     }
 
     private static void updateLatest(Request request) {
-        String stringLat = request.queryParams("latest");
-        if (stringLat != null) {
+        String requestLatest = request.queryParams("latest");
+        if (requestLatest != null) {
             try {
-                latest = Integer.parseInt(stringLat);
+                latest = Integer.parseInt(requestLatest);
             } catch (NumberFormatException ne) {
                 // Do nothing
             }
@@ -186,7 +155,7 @@ public class minitwit {
         try {
             Jinjava jinjava = new Jinjava();
             return jinjava.render(Resources.toString(Resources.getResource(template), StandardCharsets.UTF_8), context);
-        } catch (Exception e) {
+        } catch (IOException e) {
             e.printStackTrace();
             return new Failure<>(e);
         }
@@ -197,9 +166,7 @@ public class minitwit {
     }
 
     private static Map<String,String> getParamsFromRequest(Request request, String ... args){
-        Map<String,String> map = new HashMap<>();
-
-        map.putAll(request.params());
+        Map<String, String> map = new HashMap<>(request.params());
 
         for (String arg : args) {
             if (request.queryParams(arg) != null) {
@@ -228,26 +195,26 @@ public class minitwit {
     }
 
     private static Object getLatest(Request request, Response response) {
-        response.type(JSON);
-        return "{\"latest\":" + latest + "}";
+        response.type(JSON.APPLICATION_JSON);
+        return JSON.RespondLatest(latest);
     }
 
     private static Object tweetsToJSONResponse(List<Tweet> tweets, Response response) {
-        List<JSONObject> msgs = new ArrayList<>();
+        List<JSONObject> messages = new ArrayList<>();
         for (Tweet t : tweets) {
             HashMap<String, String> msg = new HashMap<>();
             msg.put(CONTENT, t.getText());
             msg.put("pub_date", t.getPubDate());
             msg.put(USER, t.getUsername());
-            msgs.add(new JSONObject(msg));
+            messages.add(new JSONObject(msg));
         }
-        var json = new JSONArray(msgs);
+        var json = new JSONArray(messages);
         if (json.length() == 0) {
             response.status(HttpStatus.NO_CONTENT_204);
             return "";
         } else {
             response.status(HttpStatus.OK_200);
-            response.type(JSON);
+            response.type(JSON.APPLICATION_JSON);
             return json;
         }
     }
@@ -274,8 +241,8 @@ public class minitwit {
 
         if (!userIdResult.isSuccess()) {
             response.status(HttpStatus.NOT_FOUND_404);
-            response.type(JSON);
-            return MESSAGE404;
+            response.type(JSON.APPLICATION_JSON);
+            return JSON.MESSAGE404_NOT_FOUND;
         } else {
             var tweets = Queries.getTweetsByUsername(username).get();
             return tweetsToJSONResponse(tweets, response);
@@ -295,22 +262,20 @@ public class minitwit {
 
         if (!userIdResult.isSuccess()) {
             response.status(HttpStatus.NOT_FOUND_404);
-            response.type(JSON);
-            return MESSAGE404;
+            response.type(JSON.APPLICATION_JSON);
+            return JSON.MESSAGE404_NOT_FOUND;
         }
-
         List<User> following = Queries.getFollowing(userIdResult.get()).get();
-        JSONArray json = new JSONArray(following.stream().map(User::getUsername));
 
         response.status(HttpStatus.OK_200);
-        response.type(JSON);
-        return "{\"follows\": " + json + " }";
+        response.type(JSON.APPLICATION_JSON);
+        return JSON.RespondFollow(new JSONArray(following.stream().map(User::getUsername)));
     }
 
     private static String return404(Response response){
         response.status(HttpStatus.NOT_FOUND_404);
-        response.type(JSON);
-        return MESSAGE404;
+        response.type(JSON.APPLICATION_JSON);
+        return JSON.MESSAGE404_NOT_FOUND;
     }
     private static Object followOrUnfollow (String user, BiFunction<Integer, String, Result<String>> query, Result<Integer> userIdResult, Response response){
         if (!Queries.getUserId(user).isSuccess()) {
@@ -436,7 +401,7 @@ public class minitwit {
         return renderTemplate(TIMELINE_HTML, context);
     }
 
-    static Object followOrUnfollow(Request request, Response response, BiFunction<Integer, String, Result<String>> query, String flashMessage){
+    static void followOrUnfollow(Request request, Response response, BiFunction<Integer, String, Result<String>> query, String flashMessage){
         updateLatest(request);
 
         var params = getParamsFromRequest(request, USERNAME);
@@ -444,7 +409,6 @@ public class minitwit {
 
         if (!userLoggedIn(request)) {
             halt(401, "You need to sign in to unfollow a user");
-            return null;
         }
 
         var rs = query.apply(getSessionUserId(request), profileUsername);
@@ -455,7 +419,6 @@ public class minitwit {
             halt(404, rs.toString());
         }
         response.redirect("/" + profileUsername);
-        return null;
     }
 
     /*
@@ -583,8 +546,8 @@ public class minitwit {
         } else {
             if (reqFromSimulator(request)) {
                 response.status(HttpStatus.BAD_REQUEST_400);
-                response.type(JSON);
-                return "{\"message\":\"404 not found\", \"error_msg\": "+ result.getFailureMessage() + "}";
+                response.type(JSON.APPLICATION_JSON);
+                return JSON.Respond404(result.getFailureMessage());
             } else {
                 HashMap<String, Object> context = new HashMap<>();
                 context.put(ERROR, result.getFailureMessage());

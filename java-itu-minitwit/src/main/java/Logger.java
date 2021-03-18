@@ -6,6 +6,7 @@ import java.util.concurrent.TimeUnit;
 
 import io.prometheus.client.Counter;
 import io.prometheus.client.Gauge;
+import spark.Request;
 
 public class Logger {
     private static final long LOGGING_PERIOD_SECONDS = 15;
@@ -25,6 +26,16 @@ public class Logger {
             .name("response_time_publicTIme").help("response time for public timeLine.").register();
 
     private Logger() {
+    }
+
+    public static void logRequest(Request request) {
+        if (request.url().contains("favicon.ico")) return;
+
+        if (request.params().size() == 0) {
+            System.out.println(request.requestMethod() + " " + request.url());
+        } else {
+            System.out.println(request.requestMethod() + " " + request.url() + " with args " + request.params());
+        }
     }
 
     public static void startSchedules() {
