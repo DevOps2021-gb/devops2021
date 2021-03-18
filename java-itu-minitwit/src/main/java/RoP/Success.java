@@ -1,6 +1,6 @@
 package RoP;
 
-public class Success<T> extends Result<T> {
+public class Success<T> implements Result<T> {
     private final T value;
 
     public Success(T val) {

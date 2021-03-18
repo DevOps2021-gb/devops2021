@@ -21,8 +21,31 @@ public class User {
     @GeneratedValue
     public int id;
 
-    public String username;
-    public String email;
-    public String pwHash;
+    private String username;
+    private String email;
+    private String pwHash;
 
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getPwHash() {
+        return pwHash;
+    }
+
+    public void setPwHash(String pwHash) {
+        this.pwHash = pwHash;
+    }
 }

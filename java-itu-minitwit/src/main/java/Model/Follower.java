@@ -9,8 +9,8 @@ public class Follower {
     @Id
     @GeneratedValue
     public int id;
-    public int whoId;
-    public int whomId;
+    private int whoId;
+    private int whomId;
 
     // must have 0-arg constructor
     public Follower() {
@@ -22,4 +22,11 @@ public class Follower {
         this.whomId = whomId;
     }
 
+    public int getWhoId() {
+        return whoId;
+    }
+
+    public int getWhomId() {
+        return whomId;
+    }
 }

@@ -1,8 +1,8 @@
 import Model.Tweet;
 import Model.User;
 import RoP.Failure;
+import RoP.Result;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 import com.hubspot.jinjava.Jinjava;
 import io.prometheus.client.CollectorRegistry;
@@ -15,25 +15,45 @@ import spark.Response;
 
 import java.io.IOException;
 import java.io.StringWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiFunction;
 
 import static spark.Spark.*;
 
 public class minitwit {
     private static int latest = 147371;
 
-    //configuration
-    static Boolean DEBUG        = true;
+    // templates
+    private static final String TIMELINE_HTML = "timeline.html";
+    private static final String REGISTER_HTML = "register.html";
+    private static final String LOGIN_HTML = "login.html";
+
+    // context fields
+    private static final String FLASH = "flash";
+    private static final String ERROR = "error";
+    private static final String USER_ID = "userId";
+    private static final String USER = "user";
+    private static final String USERNAME = "username";
+    private static final String EMAIL = "email";
+    private static final String PASSWORD = "password";
+    private static final String ENDPOINT = "endpoint";
+    private static final String MESSAGES = "messages";
+    private static final String TITLE = "title";
+    private static final String CONTENT = "content";
+
+    // responses
+    private static final String JSON = "application/json";
+    private static final String MESSAGE404 = "{\"message\":\"404 not found\"}";
 
     public static void main(String[] args) {
         try {
             staticFiles.location("/");
 
             if(args.length > 0) {
-                System.out.println("Connecting to remote database");
                 DB.setCONNECTIONSTRING(args[0]);
                 DB.setUSER(args[1]);
                 DB.setPW(args[2]);
@@ -45,7 +65,7 @@ public class minitwit {
 
             //add db clear here if working LOCALLY
 
-            Logger.StartSchedules();
+            Logger.startSchedules();
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -69,7 +89,7 @@ public class minitwit {
 
             var user = Queries.getUserById(userId);
             if (user.isSuccess()) {
-                request.session().attribute("userId", user.get().id);
+                request.session().attribute(USER_ID, user.get().id);
             }
         });
 
@@ -81,18 +101,17 @@ public class minitwit {
         });
 
         notFound((req, res) -> {
-            res.type("application/json");
-            return "{\"message\":\"404 not found\"}";
+            res.type(JSON);
+            return MESSAGE404;
         });
 
         internalServerError((req, res) -> {
-            res.type("application/json");
+            res.type(JSON);
             return "{\"message\":\"500 server error\"}";
         });
     }
 
     private static void logRequest(Request request) {
-        //TODO figure out why this happens
         if (request.url().contains("favicon.ico")) return;
 
         if (request.params().size() == 0) {
@@ -108,7 +127,7 @@ public class minitwit {
         get("/msgs",                minitwit::messages);
         get("/msgs/:username",      minitwit::messagesPerUser);
         post("/msgs/:username",     minitwit::addMessage);
-        get("/fllws/:username",     minitwit::getFollow); //TODO
+        get("/fllws/:username",     minitwit::getFollow);
         post("/fllws/:username",    minitwit::postFollow);
 
         get("/",                    minitwit::timeline);
@@ -116,8 +135,8 @@ public class minitwit {
         get("/public",              minitwit::publicTimeline);
         post("/add_message",        minitwit::addMessage);
         post("/login",              minitwit::login);
-        get("/login",               (req, res)-> renderTemplate("login.html", new HashMap<>() {{ put("flash", getSessionFlash(req)); }}));
-        get("/register",            (req, res)-> renderTemplate("register.html"));
+        get("/login",               minitwit::loginGet);
+        get("/register",            (req, res)-> renderTemplate(REGISTER_HTML));
         post("/register",           minitwit::register);
         get("/logout",              minitwit::logout);
         get("/:username/follow",    minitwit::followUser);
@@ -133,7 +152,7 @@ public class minitwit {
 
     private static Object notFromSimulatorResponse(Response response) {
         response.status(HttpStatus.FORBIDDEN_403);
-        response.type("application/json");
+        response.type(JSON);
         var error = "You are not authorized to use this resource!";
         return "{\"status\": 403, \"error_msg\": " + error + " }";
     }
@@ -154,19 +173,19 @@ public class minitwit {
     }
 
     private static Integer getSessionUserId(Request request) {
-        return request.session().attribute("userId");
+        return request.session().attribute(USER_ID);
     }
 
     private static Object getSessionFlash(Request request) {
-        var msg = request.session().attribute("flash");
-        request.session().removeAttribute("flash");
+        var msg = request.session().attribute(FLASH);
+        request.session().removeAttribute(FLASH);
         return msg;
     }
 
     private static Object renderTemplate(String template, HashMap<String, Object> context) {
         try {
             Jinjava jinjava = new Jinjava();
-            return jinjava.render(Resources.toString(Resources.getResource(template), Charsets.UTF_8), context);
+            return jinjava.render(Resources.toString(Resources.getResource(template), StandardCharsets.UTF_8), context);
         } catch (Exception e) {
             e.printStackTrace();
             return new Failure<>(e);
@@ -209,7 +228,7 @@ public class minitwit {
     }
 
     private static Object getLatest(Request request, Response response) {
-        response.type("application/json");
+        response.type(JSON);
         return "{\"latest\":" + latest + "}";
     }
 
@@ -217,9 +236,9 @@ public class minitwit {
         List<JSONObject> msgs = new ArrayList<>();
         for (Tweet t : tweets) {
             HashMap<String, String> msg = new HashMap<>();
-            msg.put("content", t.text);
-            msg.put("pub_date", t.pubDate);
-            msg.put("user", t.username);
+            msg.put(CONTENT, t.getText());
+            msg.put("pub_date", t.getPubDate());
+            msg.put(USER, t.getUsername());
             msgs.add(new JSONObject(msg));
         }
         var json = new JSONArray(msgs);
@@ -228,7 +247,7 @@ public class minitwit {
             return "";
         } else {
             response.status(HttpStatus.OK_200);
-            response.type("application/json");
+            response.type(JSON);
             return json;
         }
     }
@@ -255,8 +274,8 @@ public class minitwit {
 
         if (!userIdResult.isSuccess()) {
             response.status(HttpStatus.NOT_FOUND_404);
-            response.type("application/json");
-            return "{\"message\":\"404 not found\"}";
+            response.type(JSON);
+            return MESSAGE404;
         } else {
             var tweets = Queries.getTweetsByUsername(username).get();
             return tweetsToJSONResponse(tweets, response);
@@ -276,16 +295,30 @@ public class minitwit {
 
         if (!userIdResult.isSuccess()) {
             response.status(HttpStatus.NOT_FOUND_404);
-            response.type("application/json");
-            return "{\"message\":\"404 not found\"}";
+            response.type(JSON);
+            return MESSAGE404;
         }
 
         List<User> following = Queries.getFollowing(userIdResult.get()).get();
-        JSONArray json = new JSONArray(following.stream().map(u->u.username));
+        JSONArray json = new JSONArray(following.stream().map(User::getUsername));
 
         response.status(HttpStatus.OK_200);
-        response.type("application/json");
+        response.type(JSON);
         return "{\"follows\": " + json + " }";
+    }
+
+    private static String return404(Response response){
+        response.status(HttpStatus.NOT_FOUND_404);
+        response.type(JSON);
+        return MESSAGE404;
+    }
+    private static Object followOrUnfollow (String user, BiFunction<Integer, String, Result<String>> query, Result<Integer> userIdResult, Response response){
+        if (!Queries.getUserId(user).isSuccess()) {
+            return return404(response);
+        }
+        var result = query.apply(userIdResult.get(), user);
+        response.status(result.isSuccess()? HttpStatus.NO_CONTENT_204 : HttpStatus.CONFLICT_409);
+        return "";
     }
 
     private static Object postFollow(Request request, Response response) {
@@ -300,54 +333,21 @@ public class minitwit {
         var userIdResult = Queries.getUserId(username);
 
         if (!userIdResult.isSuccess()) {
-            response.status(HttpStatus.NOT_FOUND_404);
-            response.type("application/json");
-            return "{\"message\":\"404 not found\"}";
+            return return404(response);
         }
 
         if (params.containsKey("follow")) {
-            var followUser = params.get("follow");
-            if (!Queries.getUserId(followUser).isSuccess()) {
-                response.status(HttpStatus.NOT_FOUND_404);
-                response.type("application/json");
-                return "{\"message\":\"404 not found\"}";
-            }
-            var result = Queries.followUser(userIdResult.get(), followUser);
-            if (result.isSuccess()) {
-                response.status(HttpStatus.NO_CONTENT_204);
-            } else {
-                response.status(HttpStatus.CONFLICT_409);
-            }
-            return "";
+            return followOrUnfollow(params.get("follow"), Queries::followUser, userIdResult, response);
         } else if (params.containsKey("unfollow")) {
-            var unfollowUser = params.get("unfollow");
-            if (!Queries.getUserId(unfollowUser).isSuccess()) {
-                response.status(HttpStatus.NOT_FOUND_404);
-                response.type("application/json");
-                return "{\"message\":\"404 not found\"}";
-            }
-            var result = Queries.unfollowUser(userIdResult.get(), unfollowUser);
-            if (result.isSuccess()) {
-                response.status(HttpStatus.NO_CONTENT_204);
-            } else {
-                response.status(HttpStatus.CONFLICT_409);
-            }
-            return "";
+            return followOrUnfollow(params.get("unfollow"), Queries::unfollowUser, userIdResult, response);
         }
         response.status(HttpStatus.BAD_REQUEST_400);
         return "";
     }
 
 
-    final private static CollectorRegistry registry = CollectorRegistry.defaultRegistry;
+    private static final CollectorRegistry registry = CollectorRegistry.defaultRegistry;
     private static Object metrics(Request request, Response response) throws IOException {
-        System.out.println(request.body());
-        System.out.println(request.requestMethod());
-        System.out.println(request.queryMap());
-        System.out.println(request.queryParams());
-        System.out.println(request.params());
-        System.out.println(request.headers());
-        //todo test
         response.type(TextFormat.CONTENT_TYPE_004);
         final StringWriter writer = new StringWriter();
         TextFormat.write004(writer, registry.metricFamilySamples());
@@ -361,7 +361,6 @@ public class minitwit {
      */
     static Object timeline(Request request, Response response) {
         updateLatest(request);
-        System.out.println("We got a visitor from: " + request.ip());
 
         if (!userLoggedIn(request)) {
             return publicTimeline(request, response);
@@ -372,15 +371,14 @@ public class minitwit {
             return null;
         }
         var user = Queries.getUserById(getSessionUserId(request)).get();
-
-        return renderTemplate("timeline.html", new HashMap<>() {{
-            put("username", user.username);
-            put("user", user.username);
-            put("endpoint","timeline");
-            put("messages", Queries.getPersonalTweetsById(user.id).get());
-            put("title", "My Timeline");
-            put("flash", getSessionFlash(request));
-        }});
+        HashMap<String, Object> context = new HashMap<>();
+        context.put(USERNAME, user.getUsername());
+        context.put(USER, user.getUsername());
+        context.put(ENDPOINT,"timeline");
+        context.put(MESSAGES, Queries.getPersonalTweetsById(user.id).get());
+        context.put(TITLE, "My Timeline");
+        context.put(FLASH, getSessionFlash(request));
+        return renderTemplate(TIMELINE_HTML, context);
     }
 
     /*
@@ -391,25 +389,19 @@ public class minitwit {
         updateLatest(request);
         var loggedInUser = getSessionUserId(request);
         Object returnPage;
+        HashMap<String, Object> context = new HashMap<>();
+        context.put(MESSAGES, Queries.publicTimeline().get());
+        context.put(ENDPOINT, "publicTimeline");
+        context.put(TITLE, "Public Timeline");
         if(loggedInUser != null) {
             var user = Queries.getUserById(loggedInUser);
-            returnPage = renderTemplate("timeline.html", new HashMap<>() {{
-                put("messages", Queries.publicTimeline().get());
-                put("username", user.get().username);
-                put("user", user.get().username);
-                put("endpoint", "publicTimeline");
-                put("title", "Public Timeline");
-            }});
+            context.put(USERNAME, user.get().getUsername());
+            context.put(USER, user.get().getUsername());
         } else {
-            returnPage = renderTemplate("timeline.html", new HashMap<>() {
-                {
-                    put("messages", Queries.publicTimeline().get());
-                    put("endpoint", "publicTimeline");
-                    put("title", "Public Timeline");
-                    put("flash", getSessionFlash(request));
-                }});
+            context.put(FLASH, getSessionFlash(request));
         }
-        Logger.LogResponseTimeFrontPage(System.currentTimeMillis() - startTime);
+        returnPage = renderTemplate(TIMELINE_HTML, context);
+        Logger.logResponseTimeFrontPage(System.currentTimeMillis() - startTime);
         return returnPage;
     }
 
@@ -423,64 +415,54 @@ public class minitwit {
 
         //TODO figure out how to avoid this hack
         if (profileUsername.equals("favicon.ico")) return "";
+        HashMap<String, Object> context = new HashMap<>();
+        context.put(ENDPOINT, "userTimeline");
+        var profileUser = Queries.getUser(profileUsername);
+        context.put(TITLE, profileUser.get().getUsername() + "'s Timeline");
+        context.put("profileUserId", profileUser.get().id);
+        context.put("profileUserUsername", profileUser.get().getUsername());
+        context.put(MESSAGES, Queries.getTweetsByUsername(profileUsername).get());
+        if (!userLoggedIn(request)) {
+            context.put(USERNAME, profileUsername);
+        } else {
+            var userId = getSessionUserId(request);
+            var loggedInUser = Queries.getUserById(userId);
+            context.put(USERNAME, loggedInUser.get().getUsername());
+            context.put(USER, loggedInUser.get().id);
+            context.put(USER_ID, userId);
+            context.put("followed", Queries.isFollowing(loggedInUser.get().id, profileUser.get().id).get());
+            context.put(FLASH, getSessionFlash(request));
+        }
+        return renderTemplate(TIMELINE_HTML, context);
+    }
+
+    static Object followOrUnfollow(Request request, Response response, BiFunction<Integer, String, Result<String>> query, String flashMessage){
+        updateLatest(request);
+
+        var params = getParamsFromRequest(request, USERNAME);
+        String profileUsername = params.get(USERNAME) != null ? params.get(USERNAME) : params.get(":username");
 
         if (!userLoggedIn(request)) {
-            var profileUser = Queries.getUser(profileUsername);
-            return renderTemplate("timeline.html", new HashMap<>() {{
-                put("endpoint", "userTimeline");
-                put("username", profileUsername);
-                put("title", profileUser.get().username + "'s Timeline");
-                put("profileUserId", profileUser.get().id);
-                put("profileUserUsername", profileUser.get().username);
-                put("messages", Queries.getTweetsByUsername(profileUsername).get());
-            }});
-        } else {
-
-            var userId = getSessionUserId(request);
-
-            var profileUser = Queries.getUser(profileUsername);
-            var loggedInUser = Queries.getUserById(userId);
-
-            return renderTemplate("timeline.html", new HashMap<>() {{
-                put("endpoint", "userTimeline");
-                put("username", loggedInUser.get().username);
-                put("title", profileUser.get().username + "'s Timeline");
-                put("user", loggedInUser.get().id);
-                put("userId", userId);
-                put("profileUserId", profileUser.get().id);
-                put("profileUserUsername", profileUser.get().username);
-                put("followed", Queries.isFollowing(loggedInUser.get().id, profileUser.get().id).get());
-                put("messages", Queries.getTweetsByUsername(profileUsername).get());
-                put("flash", getSessionFlash(request));
-            }});
+            halt(401, "You need to sign in to unfollow a user");
+            return null;
         }
+
+        var rs = query.apply(getSessionUserId(request), profileUsername);
+        if (rs.isSuccess()) {
+            request.session().attribute(FLASH, flashMessage + profileUsername);
+        }
+        else {
+            halt(404, rs.toString());
+        }
+        response.redirect("/" + profileUsername);
+        return null;
     }
 
     /*
     Adds the current user as follower of the given user.
      */
     static Object followUser(Request request, Response response) {
-        updateLatest(request);
-
-        var params = getParamsFromRequest(request, "username");
-        String profileUsername = params.get("username") != null ? params.get("username") : params.get(":username");
-
-        if (!userLoggedIn(request)) {
-            halt(401, "You need to sign in to follow a user");
-            return null;
-        }
-
-        var rs = Queries.followUser(getSessionUserId(request),profileUsername);
-        if (rs.isSuccess()) {
-            request.session().attribute("flash", "You are now following " + profileUsername);
-            System.out.println("You are now following " + profileUsername);
-        }
-        else {
-            System.out.println(rs.toString());
-            halt(404, rs.toString());
-        }
-
-        response.redirect("/" + profileUsername);
+        followOrUnfollow(request, response, Queries::followUser, "You are now following ");
         return null;
     }
 
@@ -488,26 +470,7 @@ public class minitwit {
     Removes the current user as follower of the given user.
      */
     static Object unfollowUser(Request request, Response response) {
-        updateLatest(request);
-
-        var params = getParamsFromRequest(request, "username");
-        String profileUsername = params.get("username") != null ? params.get("username") : params.get(":username");
-
-        if (!userLoggedIn(request)) {
-            halt(401, "You need to sign in to unfollow a user");
-            return null;
-        }
-
-        var rs = Queries.unfollowUser(getSessionUserId(request), profileUsername);
-        if (rs.isSuccess()) {
-            request.session().attribute("flash", "You are no longer following " + profileUsername);
-            System.out.println("You are no longer following " + profileUsername);
-        }
-        else {
-            System.out.println(rs.toString());
-            halt(404, rs.toString());
-        }
-        response.redirect("/" + profileUsername);
+        followOrUnfollow(request, response, Queries::unfollowUser, "You are no longer following ");
         return null;
     }
 
@@ -517,9 +480,9 @@ public class minitwit {
     static Object addMessage(Request request, Response response) {
         updateLatest(request);
 
-        var params = getParamsFromRequest(request, "username", "content");
-        String username = params.get("username") != null ? params.get("username") : params.get(":username");
-        String content = params.get("content");
+        var params = getParamsFromRequest(request, USERNAME, CONTENT);
+        String username = params.get(USERNAME) != null ? params.get(USERNAME) : params.get(":username");
+        String content = params.get(CONTENT);
 
         Integer userId;
         if(username == null){
@@ -540,7 +503,7 @@ public class minitwit {
                 return "";
             } else {
                 System.out.println("Your message was recorded");
-                request.session().attribute("flash", "Your message was recorded");
+                request.session().attribute(FLASH, "Your message was recorded");
             }
         }
         response.redirect("/");
@@ -553,9 +516,9 @@ public class minitwit {
     static Object login(Request request, Response response) {
         updateLatest(request);
 
-        var params = getParamsFromRequest(request, "username", "password");
-        String username = params.get("username");
-        String password = params.get("password");
+        var params = getParamsFromRequest(request, USERNAME, PASSWORD);
+        String username = params.get(USERNAME);
+        String password = params.get(PASSWORD);
 
         if (userLoggedIn(request)) {
             response.redirect("/");
@@ -565,18 +528,25 @@ public class minitwit {
         var loginResult = Queries.queryLogin(username, password);
 
         if (loginResult.isSuccess()) {
-            request.session().attribute("userId", Queries.getUserId(username).get());
-            request.session().attribute("flash", "You were logged in");
+            request.session().attribute(USER_ID, Queries.getUserId(username).get());
+            request.session().attribute(FLASH, "You were logged in");
             response.redirect("/");
             return null;
         } else {
             Failure<Boolean> error = (Failure<Boolean>) loginResult;
-            System.out.println(loginResult);
-
-            return renderTemplate("login.html", new HashMap<>() {{
-                put("error", error.getException().getMessage());
-            }});
+            HashMap<String, Object> context = new HashMap<>();
+            context.put(ERROR, error.getException().getMessage());
+            return renderTemplate(LOGIN_HTML, context);
         }
+    }
+
+    /*
+    Get endpoint for login, needed to show flash message
+     */
+    static Object loginGet(Request request, Response response) {
+        HashMap<String, Object> context = new HashMap<>();
+        context.put(FLASH, getSessionFlash(request));
+        return renderTemplate(LOGIN_HTML, context);
     }
 
     /*
@@ -585,10 +555,10 @@ public class minitwit {
     static Object register(Request request, Response response) {
         updateLatest(request);
 
-        var params = getParamsFromRequest(request, "username", "email", "password", "password2");
-        String username = params.get("username");
-        String email = params.get("email").replaceAll("%40", "@");
-        String password1 = params.get("password");
+        var params = getParamsFromRequest(request, USERNAME, EMAIL, PASSWORD, "password2");
+        String username = params.get(USERNAME);
+        String email = params.get(EMAIL).replace("%40", "@");
+        String password1 = params.get(PASSWORD);
         String password2 = params.get("password2");
         if (reqFromSimulator(request) && password1 == null && password2 == null) {
             password1 = params.get("pwd");
@@ -596,7 +566,7 @@ public class minitwit {
         }
 
         if (userLoggedIn(request)) {
-            return renderTemplate("timeline.html");
+            return renderTemplate(TIMELINE_HTML);
         }
 
         var result = Queries.register(username, email, password1, password2);
@@ -606,22 +576,21 @@ public class minitwit {
                 response.status(HttpStatus.NO_CONTENT_204);
                 return "";
             } else {
-                request.session().attribute("flash", "You were successfully registered and can login now");
+                request.session().attribute(FLASH, "You were successfully registered and can login now");
                 response.redirect("/login");
                 return null;
             }
         } else {
             if (reqFromSimulator(request)) {
                 response.status(HttpStatus.BAD_REQUEST_400);
-                response.type("application/json");
+                response.type(JSON);
                 return "{\"message\":\"404 not found\", \"error_msg\": "+ result.getFailureMessage() + "}";
             } else {
-                return renderTemplate("register.html", new HashMap<>() {{
-                    put("error", result.getFailureMessage());
-                    put("username", username);
-                    put("email", email);
-                }});
-
+                HashMap<String, Object> context = new HashMap<>();
+                context.put(ERROR, result.getFailureMessage());
+                context.put(USERNAME, username);
+                context.put(EMAIL, email);
+                return renderTemplate(REGISTER_HTML, context);
             }
         }
     }
@@ -631,8 +600,8 @@ public class minitwit {
      */
     static Object logout(Request request, Response response) {
         System.out.println("You were logged out");
-        request.session().removeAttribute("userId");
-        request.session().attribute("flash", "You were logged out");
+        request.session().removeAttribute(USER_ID);
+        request.session().attribute(FLASH, "You were logged out");
         response.redirect("/public");
         return null;
     }
