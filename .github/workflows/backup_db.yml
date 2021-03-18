@@ -1,0 +1,28 @@
+name: backup db
+on:
+  push:
+    branches:
+    - feature/CI/BackupDB
+  schedule:
+    - cron: "0 10 * * 1" # Every Monday at 10 AM UTC
+jobs:
+  backup:
+    name: backup
+    runs-on: ubuntu-latest
+    steps:
+    - name: Backup MySQL DB
+      uses: valerianpereira/backup-action@master
+      with:
+        type: db
+        db_type: mysql
+        db_host: ${{ secrets.DB_HOST }}
+        db_user: ${{ secrets.DB_USERNAME }}
+        db_pass: ${{ secrets.DB_PASSWORD }}
+        db_port: 25060
+        db_name: minitwit
+    
+    - name: Push Backups to Artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: mysql-backups
+        path: /db_backups
