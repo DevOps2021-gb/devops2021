@@ -37,8 +37,8 @@ public class Logger {
     }
 
     public static void setEndpointsToLog(String[] endpointsGet, String[] endpointsPost) {
-        setEndpoints(endpointsGet, "response_time_get",    "response time for get call: ");
-        setEndpoints(endpointsGet, "response_time_post",   "response time for post call: ");
+        setEndpoints(endpointsGet,  "response_time_get",    "response time for get call: ");
+        setEndpoints(endpointsPost, "response_time_post",   "response time for post call: ");
     }
     public static void startSchedules() {
         ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
