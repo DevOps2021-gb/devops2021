@@ -9,10 +9,10 @@ public class Message {
     @Id
     @GeneratedValue
     public int id;
-    public int authorId;
-    public String text;
-    public long pubDate;
-    public int flagged;
+    private int authorId;
+    private String text;
+    private long pubDate;
+    private int flagged;
 
     // must have 0-arg constructor
     public Message() {}
@@ -24,4 +24,19 @@ public class Message {
         this.flagged = flagged;
     }
 
+    public int getAuthorId() {
+        return authorId;
+    }
+
+    public String getText() {
+        return text;
+    }
+
+    public long getPubDate() {
+        return pubDate;
+    }
+
+    public int getFlagged() {
+        return flagged;
+    }
 }

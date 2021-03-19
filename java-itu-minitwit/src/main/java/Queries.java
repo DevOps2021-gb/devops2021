@@ -15,12 +15,13 @@ public class Queries {
 
     static final int PER_PAGE = 30;
 
+    private Queries() {}
+
     /*
     Creates the database tables.
      */
     public static Database initDb()  {
-        var db = DB.connectDb().get();
-        return db;
+        return DB.connectDb().get();
     }
     public static void dropDB(){
         var db = initDb();
@@ -46,7 +47,6 @@ public class Queries {
             String date = sdf.format(resultDate);
             return new Success<>(date);
         } catch (Exception e) {
-            e.printStackTrace();
             return new Failure<>(e);
         }
     }
@@ -55,12 +55,8 @@ public class Queries {
         try {
             var db = DB.connectDb().get();
             var result = db.where("whoId=?", whoId).where("whomId=?", whomId).results(Follower.class);
-
-            //var stmt = conn.prepareStatement("select 1 from follower where follower.whoId = ? and follower.whomId = ?");
-
             return new Success<>(!result.isEmpty());
         } catch (Exception e) {
-            e.printStackTrace();
             return new Failure<>(e);
         }
     }
@@ -137,7 +133,6 @@ public class Queries {
 
                 return new Success<>("OK");
             } catch (Exception e) {
-                e.printStackTrace();
                 return new Failure<>(e);
             }
         }
@@ -161,7 +156,6 @@ public class Queries {
 
                 return new Success<>("OK");
             } catch (Exception e) {
-                e.printStackTrace();
                 return new Failure<>(e);
             }
         }
@@ -178,7 +172,6 @@ public class Queries {
                    "limit ?", whoId, PER_PAGE).results(User.class);
             return new Success<>(result);
         } catch (Exception e) {
-            e.printStackTrace();
             return new Failure<>(e);
         }
     }
@@ -196,59 +189,35 @@ public class Queries {
         return tweets;
     }
 
+    private static Result<List<Tweet>> getTweetsFromMessageUser(String condition, Object... args){
+        try{
+            var db = DB.connectDb().get();
+            List<HashMap> result = db.sql(
+                    "select message.*, user.* from message, user " +
+                            "where message.flagged = 0 and message.authorId = user.id " +
+                            condition +" "+
+                            "order by message.pubDate desc limit "+PER_PAGE, args).results(HashMap.class);
+            return new Success<>(tweetsFromListOfHashMap(result));
+        } catch (Exception e) {
+            return new Failure<>(e);
+        }
+    }
+
+
     /*
     Displays the latest messages of all users.
     */
     public static Result<List<Tweet>> publicTimeline() {
-        try{
-            var db = DB.connectDb().get();
-
-            List<HashMap> result = db.sql(
-                    "select message.*, user.* from message, user " +
-                "where message.flagged = 0 and message.authorId = user.id " +
-                "order by message.pubDate desc limit ?", PER_PAGE).results(HashMap.class);
-            return new Success<>(tweetsFromListOfHashMap(result));
-        } catch (Exception e) {
-            e.printStackTrace();
-            return new Failure<>(e);
-        }
+        return getTweetsFromMessageUser("");
     }
 
     public static Result<List<Tweet>> getTweetsByUsername(String username) {
-        try{
-            var userId = getUserId(username);
-            var db = DB.connectDb().get();
-
-            List<HashMap> result = db.sql(
-                    "select message.*, user.* from message, user " +
-                "where message.flagged = 0 and message.authorId = user.id " +
-                "and user.id = ? " +
-                "order by message.pubDate desc limit ?", userId.get(), PER_PAGE).results(HashMap.class);
-
-            return new Success<>(tweetsFromListOfHashMap(result));
-        } catch (Exception e) {
-            e.printStackTrace();
-            return new Failure<>(e);
-        }
+        var userId = getUserId(username);
+        return getTweetsFromMessageUser("and user.id = ? ", userId.get());
     }
 
     public static Result<List<Tweet>> getPersonalTweetsById(int userId) {
-        try{
-            var db = DB.connectDb().get();
-
-            List<HashMap> result = db.sql(
-                    "select message.*, user.* from message, user " +
-                    "where message.flagged = 0 and message.authorId = user.id and (" +
-                        "user.id = ? or " +
-                        "user.id in (select whomId from follower where whoId = ?)) " +
-                    "order by message.pubDate desc limit ?", userId, userId, PER_PAGE).results(HashMap.class);
-
-            return new Success<>(tweetsFromListOfHashMap(result));
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            return new Failure<>(e);
-        }
+        return getTweetsFromMessageUser("and (user.id = ? or user.id in (select whomId from follower where whoId = ?)) ", userId, userId);
     }
 
     /*
@@ -263,7 +232,6 @@ public class Queries {
 
                 return new Success<>(true);
             } catch (Exception e) {
-                e.printStackTrace();
                 return new Failure<>(e);
             }
         }
@@ -275,10 +243,9 @@ public class Queries {
         var user = getUser(username);
         if (!user.isSuccess()) {
             error = "Invalid username";
-        } else if (!Hashing.checkPasswordHash(user.get().pwHash, password)) {
+        } else if (!Hashing.checkPasswordHash(user.get().getPwHash(), password)) {
             error = "Invalid password";
         } else {
-            System.out.println("You were logged in");
             return new Success<>(true);
         }
 
@@ -301,13 +268,8 @@ public class Queries {
             try {
                 var db = DB.connectDb().get();
                 db.insert(new User(username,email, Hashing.generatePasswordHash(password1)));
-
-                    System.out.println("You were successfully registered and can login now");
-                    return new Success<>("OK");
-
-
+                return new Success<>("OK");
             } catch (Exception e) {
-                e.printStackTrace();
                 return new Failure<>(e);
             }
         }

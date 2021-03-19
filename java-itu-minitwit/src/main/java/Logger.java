@@ -1,49 +1,57 @@
-import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.lang.management.OperatingSystemMXBean;
-import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.function.BiFunction;
 
 import io.prometheus.client.Counter;
 import io.prometheus.client.Gauge;
+import spark.Request;
+import spark.Response;
 
 public class Logger {
     private static final long LOGGING_PERIOD_SECONDS = 15;
     private static OperatingSystemMXBean operatingSystemMXBean = ManagementFactory.getOperatingSystemMXBean();
 
-    static final Gauge cpuLoad = Gauge.build()
+    private static final Gauge cpuLoad = Gauge.build()
             .name("CPU_load").help("CPU load on server.").register();
-    static final Counter requests = Counter.build()
+    private static final Counter requests = Counter.build()
             .name("requests_total").help("Total requests.").register();
-    static final Gauge users = Gauge.build()
+    private static final Gauge users = Gauge.build()
             .name("users_total").help("Total amount of users.").register();
-    static final Gauge followers = Gauge.build()
+    private static final Gauge followers = Gauge.build()
             .name("followers_total").help("Total amount of followers.").register();
-    static final Gauge messages = Gauge.build()
+    private static final Gauge messages = Gauge.build()
             .name("messages_total").help("Total amount of messages.").register();
-    static final Gauge avgFollowers = Gauge.build()
-            .name("followers_average").help("Average amount of followers per user.").register();
-    static final Gauge responseTimePublicTimeLine = Gauge.build()
-            .name("response_time_publicTIme").help("response time for public timeLine.").register();
+    private static final Map<String, Gauge> responseTimeEndPoints=new HashMap<>();
 
-
-    public static void StartLogging() throws IOException {
-        System.out.println("Started logging information");
-        StartSchedules();
+    private Logger() {
     }
 
-    public static void StartSchedules() {
+    private static void setEndpoints(String[] endpoints, String namePrefix, String helpPrefix){
+        for(String key: endpoints){
+            Gauge gauge = Gauge.build()
+                    .name(namePrefix+key.replace('/', '_')).help(helpPrefix+key).register();
+            responseTimeEndPoints.put(key, gauge);
+        }
+    }
+
+    public static void setEndpointsToLog(String[] endpointsGet, String[] endpointsPost) {
+        setEndpoints(endpointsGet,  "response_time_get",    "response time for get call: ");
+        setEndpoints(endpointsPost, "response_time_post",   "response time for post call: ");
+    }
+    public static void startSchedules() {
         ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
-        executorService.scheduleAtFixedRate(Logger::LogUserInformation, 1, LOGGING_PERIOD_SECONDS , TimeUnit.SECONDS);
+        executorService.scheduleAtFixedRate(Logger::logUserInformation, 1, LOGGING_PERIOD_SECONDS , TimeUnit.SECONDS);
     }
-    private static void LogUserInformation() {
+    private static void logUserInformation() {
         processCpuLoad();
         processUsers();
         processFollowers();
         processMessages();
-        processAvgFollowers();
     }
 
     public static void processRequest() {
@@ -65,18 +73,26 @@ public class Logger {
         long numberOfMessages = Queries.getCountMessages().get();
         messages.set(numberOfMessages);
     }
-    public static void processAvgFollowers(){
-        long numberOfUsers = Queries.getCountUsers().get();
-        long numberOfFollowers   = Queries.getCountFollowers().get();
 
-        //if either are 0, the thread will throw an exception and exit
-        if (numberOfFollowers != 0 && numberOfUsers != 0) {
-            long num = numberOfFollowers/numberOfUsers;
-            avgFollowers.set(num);
-        }
+    public static void logResponseTimeEndpoint(String endpoint, long rt) {
+        responseTimeEndPoints.get(endpoint).set(rt);
     }
 
-    public static void LogResponseTimeFrontPage(long rt) {
-        responseTimePublicTimeLine.set(rt);
+    public static double getUsers() {
+        return users.get();
     }
+    public static double getMessages() {
+        return messages.get();
+    }
+    public static double getFollowers() {
+        return followers.get();
+    }
+
+    public static Object benchMarkEndpoint(String endPointName, BiFunction<Request, Response, Object> endpoint, Request req, Response res){
+        var startTime = System.currentTimeMillis();
+        Object result = endpoint.apply(req, res);
+        Logger.logResponseTimeEndpoint(endPointName,System.currentTimeMillis() - startTime);
+        return result;
+    }
+
 }

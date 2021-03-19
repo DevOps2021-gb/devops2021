@@ -1,12 +1,11 @@
 import RoP.Result;
 import RoP.Success;
 import org.junit.jupiter.api.Test;
-
-import java.sql.SQLException;
+import spark.utils.Assert;
 
 import static spark.Spark.stop;
 
-class queriesTest {
+class QueriesTest {
     @org.junit.jupiter.api.BeforeEach
     void setUp() {
         DB.setDATABASE("testMinitwit");
@@ -42,12 +41,15 @@ class queriesTest {
         register(username, password, null, null);
         return login(username, password);
     }
+    int userId = 1;
     //Helper function to register, login and get the id
     Result<Integer> register_login_getID(String username, String password, String password2, String email) {
         register(username, password, password2, email);
         login(username, password);
         var id = Queries.getUserId(username);
         assert (id.isSuccess());
+        assert (id.get() == userId);
+        userId++;
         return id;
     }
     //Helper function to logout
@@ -60,6 +62,9 @@ class queriesTest {
     void add_message(String text, int loggedInUserId) {
         var rs = Queries.addMessage(text, loggedInUserId);
         assert (rs.get());
+        try {
+            Thread.sleep(100);      //hotfix: added to ensure order of messages
+        } catch (InterruptedException e) { }
     }
 
     //Tests
@@ -67,8 +72,16 @@ class queriesTest {
 
     @Test
     void test_register(){
+        Logger.processUsers();
+        assert ((int) Logger.getUsers() == 0);
+        assert (Queries.getCountUsers().get() == 0);
+
         var error = register("user1", "q123", null, null);
         assert (error.isSuccess() && error.get().equals("OK"));
+        assert (Queries.getCountUsers().get() == 1);
+        Logger.processUsers();
+        assert ((int) Logger.getUsers() == 1);
+
         error = register("user1", "q123", null, null);
         assert (!error.isSuccess() && error.getFailureMessage().equals("The username is already taken"));
         error = register("", "q123", null, null);
@@ -79,6 +92,9 @@ class queriesTest {
         assert (!error.isSuccess() && error.getFailureMessage().equals("The two passwords do not match"));
         error = register("user2", "1", null, "bad email");
         assert (!error.isSuccess() && error.getFailureMessage().equals("You have to enter a valid email address"));
+        assert (Queries.getCountUsers().get() == 1);
+        Logger.processUsers();
+        assert ((int) Logger.getUsers() == 1);
     }
 
     @Test
@@ -95,7 +111,7 @@ class queriesTest {
     }
 
     @Test
-    void test_publicTimeline() throws SQLException {
+    void test_publicTimeline() {
         var id1 = register_login_getID("foo", "default", null, null);
 
         String text1 = "test message 1", text2 = "<test message 2>";
@@ -105,40 +121,52 @@ class queriesTest {
         assert (rs.isSuccess());
         var tweet1 = rs.get().get(1);
         var tweet2 = rs.get().get(0);
-        assert (tweet1.email.equals("foo@example.com"));
-        assert (tweet1.username.equals("foo"));
-        assert (tweet1.text.equals(text1));
+        assert (tweet1.getEmail().equals("foo@example.com"));
+        assert (tweet1.getUsername().equals("foo"));
+        assert (tweet1.getText().equals(text1));
 
-        assert (tweet2.email.equals("foo@example.com"));
-        assert (tweet2.username.equals("foo"));
-        assert (tweet2.text.equals(text2));//todo store as: "&lt;test message 2&gt;"
+        assert (tweet2.getEmail().equals("foo@example.com"));
+        assert (tweet2.getUsername().equals("foo"));
+        assert (tweet2.getText().equals(text2));//todo store as: "&lt;test message 2&gt;"
     }
 
     @Test
-    void test_getPersonalTweetsById() throws SQLException {
+    void test_getPersonalTweetsById() {
+        assert (Queries.getCountMessages().get() == 0);
+        Logger.processMessages();
+        assert ((int) Logger.getMessages() == 0);
+
         var id1 = register_login_getID("foo", "default", null, null);
         add_message("the message by foo", id1.get());
+        assert (Queries.getCountMessages().get() == 1);
+        Logger.processMessages();
+        assert ((int) Logger.getMessages() == 1);
+
+
         logout();
         var id2 = register_login_getID("bar","default", null, null);
         add_message("the message by bar", id2.get());
+        assert (Queries.getCountMessages().get() == 2);
+        Logger.processMessages();
+        assert ((int) Logger.getMessages() == 2);
 
         var rs = Queries.getPersonalTweetsById(id1.get());
         assert (rs.isSuccess());
         var tweet1 = rs.get().get(0);
-        assert (tweet1.email.equals("foo@example.com"));
-        assert (tweet1.username.equals("foo"));
-        assert (tweet1.text).equals("the message by foo");
+        assert (tweet1.getEmail().equals("foo@example.com"));
+        assert (tweet1.getUsername().equals("foo"));
+        assert (tweet1.getText()).equals("the message by foo");
 
         rs = Queries.getPersonalTweetsById(id2.get());
         assert (rs.isSuccess());
         var tweet2 = rs.get().get(0);
-        assert (tweet2.email.equals("bar@example.com"));
-        assert (tweet2.username.equals("bar"));
-        assert (tweet2.text.equals("the message by bar"));
+        assert (tweet2.getEmail().equals("bar@example.com"));
+        assert (tweet2.getUsername().equals("bar"));
+        assert (tweet2.getText().equals("the message by bar"));
     }
 
     @Test
-    void test_getTweetsByUsername() throws SQLException {
+    void test_getTweetsByUsername() {
         var id1 = register_login_getID("foo", "default", null, null);
         add_message("the message by foo", id1.get());
         logout();
@@ -148,16 +176,16 @@ class queriesTest {
         var rs = Queries.getTweetsByUsername("foo");
         assert (rs.isSuccess());
         var tweet1 = rs.get().get(0);
-        assert (tweet1.email.equals("foo@example.com"));
-        assert (tweet1.username.equals("foo"));
-        assert (tweet1.text.equals("the message by foo"));
+        assert (tweet1.getEmail().equals("foo@example.com"));
+        assert (tweet1.getUsername().equals("foo"));
+        assert (tweet1.getText().equals("the message by foo"));
 
         rs = Queries.getTweetsByUsername("bar");
         assert (rs.isSuccess());
         var tweet2 = rs.get().get(0);
-        assert (tweet2.email.equals("bar@example.com"));
-        assert (tweet2.username.equals("bar"));
-        assert (tweet2.text.equals("the message by bar"));
+        assert (tweet2.getEmail().equals("bar@example.com"));
+        assert (tweet2.getUsername().equals("bar"));
+        assert (tweet2.getText().equals("the message by bar"));
     }
 
     @Test
@@ -169,38 +197,50 @@ class queriesTest {
 
         assert (id1.get().equals(id1_rs.get()));
         assert (user1_1.get().id == id1.get());
-        assert (user1_1.get().username.equals("foo"));
-        assert (user1_1.get().pwHash.equals(Hashing.generatePasswordHash("default")));
-        assert (user1_1.get().email.equals("myEmail@itu.dk"));
+        assert (user1_1.get().getUsername().equals("foo"));
+        assert (user1_1.get().getPwHash().equals(Hashing.generatePasswordHash("default")));
+        assert (user1_1.get().getEmail().equals("myEmail@itu.dk"));
         assert (
                 user1_1.get().id == user1_2.get().id &&
-                user1_1.get().username.equals(user1_2.get().username) &&
-                user1_1.get().pwHash.equals(user1_2.get().pwHash) &&
-                user1_1.get().email.equals(user1_2.get().email));
+                user1_1.get().getUsername().equals(user1_2.get().getUsername()) &&
+                user1_1.get().getPwHash().equals(user1_2.get().getPwHash()) &&
+                user1_1.get().getEmail().equals(user1_2.get().getEmail()));
     }
 
 
     @Test
-    void test_getFollowing() throws SQLException {
+    void test_getFollowing() {
         var id1 = register_login_getID("foo", "default", null, null);
         var id2 = register_login_getID("bar","1234", null, null);
         var id3 = register_login_getID("brian","q123", null, null);
 
+
+        assert (Queries.getCountFollowers().get() == 0);
+        Logger.processFollowers();
+        assert ((int) Logger.getFollowers() == 0);
+
         var rs1 = Queries.followUser(id1.get(), "bar");
         assert (rs1.isSuccess());
         assert (Queries.isFollowing(id1.get(), id2.get()).get());
+        assert (Queries.getCountFollowers().get() == 1);
+        Logger.processFollowers();
+        assert ((int) Logger.getFollowers() == 1);
+
         var rs2 = Queries.followUser(id1.get(), "brian");
         assert (rs2.isSuccess());
         assert (Queries.isFollowing(id1.get(), id3.get()).get());
+        assert (Queries.getCountFollowers().get() == 2);
+        Logger.processFollowers();
+        assert ((int) Logger.getFollowers() == 2);
 
         var rs = Queries.getFollowing(id1.get());
         assert (rs.isSuccess());
-        assert (rs.get().get(0).username.equals("bar"));
-        assert (rs.get().get(1).username.equals("brian"));
+        assert (rs.get().get(0).getUsername().equals("bar"));
+        assert (rs.get().get(1).getUsername().equals("brian"));
     }
 
     @Test
-    void test_unfollowUser() throws SQLException {
+    void test_unfollowUser() {
         var id1 = register_login_getID("foo", "default", null, null);
         add_message("the message by foo", id1.get());
         var id2 = register_login_getID("bar","1234", null, null);
@@ -231,7 +271,7 @@ class queriesTest {
 
 
     @Test
-    void test_following_PersonalTweets() throws SQLException {
+    void test_following_PersonalTweets() {
         var id1 = register_login_getID("foo", "default", null, null);
         add_message("the message by foo", id1.get());
         var id2 = register_login_getID("bar","1234", null, null);
@@ -244,7 +284,7 @@ class queriesTest {
         var rTweets = Queries.getPersonalTweetsById(id1.get());
         assert (rTweets.isSuccess());
         assert (rTweets.get().size()==1);
-        assert (rTweets.get().get(0).username.equals("foo")   && rTweets.get().get(0).text.equals("the message by foo"));
+        assert (rTweets.get().get(0).getUsername().equals("foo")   && rTweets.get().get(0).getText().equals("the message by foo"));
 
         var rs1 = Queries.followUser(id1.get(), "bar");
         var rs2 = Queries.followUser(id1.get(), "brian");
@@ -252,10 +292,10 @@ class queriesTest {
 
         rTweets = Queries.getPersonalTweetsById(id1.get());
         assert (rTweets.isSuccess());
-        assert (rTweets.get().get(0).username.equals("brian") && rTweets.get().get(0).text.equals("the message by Biran v2"));
-        assert (rTweets.get().get(1).username.equals("brian") && rTweets.get().get(1).text.equals("the message by Biran v1"));
-        assert (rTweets.get().get(2).username.equals("bar")   && rTweets.get().get(2).text.equals("the message by bar"));
-        assert (rTweets.get().get(3).username.equals("foo")   && rTweets.get().get(3).text.equals("the message by foo"));
+        assert (rTweets.get().get(0).getUsername().equals("brian") && rTweets.get().get(0).getText().equals("the message by Biran v2"));
+        assert (rTweets.get().get(1).getUsername().equals("brian") && rTweets.get().get(1).getText().equals("the message by Biran v1"));
+        assert (rTweets.get().get(2).getUsername().equals("bar")   && rTweets.get().get(2).getText().equals("the message by bar"));
+        assert (rTweets.get().get(3).getUsername().equals("foo")   && rTweets.get().get(3).getText().equals("the message by foo"));
     }
 
     //todo: queryLogin
