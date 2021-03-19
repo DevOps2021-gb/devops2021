@@ -1,6 +1,6 @@
 global:
-  scrape_interval:     15s # By default, scrape targets every 15 seconds.
-  evaluation_interval: 15s # Evaluate rules every 15 seconds.
+  scrape_interval:     30s # By default, scrape targets every 15 seconds.
+  evaluation_interval: 30s # Evaluate rules every 15 seconds.
 
   # Attach these extra labels to all timeseries collected by this Prometheus instance.
   external_labels:
@@ -13,7 +13,7 @@ scrape_configs:
   - job_name: 'prometheus'
 
     # Override the global default and scrape targets from this job every 5 seconds.
-    scrape_interval: 5s
+    scrape_interval: 25s
 
     static_configs:
       - targets: ['prometheus:9090']
@@ -21,7 +21,7 @@ scrape_configs:
   - job_name:       'itu-minittwit-app'
 
     # Override the global default and scrape targets from this job every 5 seconds.
-    scrape_interval: 5s
+    scrape_interval: 40s
 
     static_configs:
       - targets: ['minitwit:4567']

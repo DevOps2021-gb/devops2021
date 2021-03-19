@@ -16,13 +16,11 @@ import spark.Response;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.BiFunction;
 
 import static spark.Spark.*;
+import static spark.Spark.get;
 
 public class minitwit {
     private static int latest = 147371;
@@ -44,6 +42,14 @@ public class minitwit {
     private static final String MESSAGES = "messages";
     private static final String TITLE = "title";
     private static final String CONTENT = "content";
+
+    //endpoints
+    private static String[] entryPointsGetOrder     = new String[]{"/latest", "/msgs", "/msgs/:username", "/fllws/:username", "/", "/metrics", "/public", "/login", "/register", "/logout", "/:username/follow", "/:username/unfollow","/:username"};
+    private static String[] entryPointsPostOrder    = new String[]{"/msgs/:username","/fllws/:username","/add_message","/login","/register"};
+
+    private static Map<String, BiFunction<Request, Response, Object>> endpointsGet = new HashMap<>();
+
+    private static Map<String, BiFunction<Request, Response, Object>> endpointsPost =new HashMap<>();
 
     public static void main(String[] args) {
         try {
@@ -92,27 +98,38 @@ public class minitwit {
         });
     }
 
-    private static void registerEndpoints() {
-        // Simulator endpoints
-        get("/latest",              minitwit::getLatest);
-        get("/msgs",                minitwit::messages);
-        get("/msgs/:username",      minitwit::messagesPerUser);
-        post("/msgs/:username",     minitwit::addMessage);
-        get("/fllws/:username",     minitwit::getFollow);
-        post("/fllws/:username",    minitwit::postFollow);
+    private static void setUpEntryPointsMap(){
+        endpointsGet.put("/latest",              minitwit::getLatest);
+        endpointsGet.put("/msgs",                minitwit::messages);
+        endpointsGet.put("/msgs/:username",      minitwit::messagesPerUser);
+        endpointsGet.put("/fllws/:username",     minitwit::getFollow);
+        endpointsGet.put("/",                    minitwit::timeline);
+        endpointsGet.put("/metrics",             minitwit::metrics);
+        endpointsGet.put("/public",              minitwit::publicTimeline);
+        endpointsGet.put("/login",               minitwit::loginGet);
+        endpointsGet.put("/register",            (req, res)-> renderTemplate(REGISTER_HTML));
+        endpointsGet.put("/logout",              minitwit::logout);
+        endpointsGet.put("/:username/follow",    minitwit::followUser);
+        endpointsGet.put("/:username/unfollow",  minitwit::unfollowUser);
+        endpointsGet.put("/:username",           minitwit::userTimeline);
 
-        get("/",                    minitwit::timeline);
-        get("/metrics",             minitwit::metrics);
-        get("/public",              minitwit::publicTimeline);
-        post("/add_message",        minitwit::addMessage);
-        post("/login",              minitwit::login);
-        get("/login",               minitwit::loginGet);
-        get("/register",            (req, res)-> renderTemplate(REGISTER_HTML));
-        post("/register",           minitwit::register);
-        get("/logout",              minitwit::logout);
-        get("/:username/follow",    minitwit::followUser);
-        get("/:username/unfollow",  minitwit::unfollowUser);
-        get("/:username",           minitwit::userTimeline);
+        endpointsPost.put("/msgs/:username",      minitwit::addMessage);
+        endpointsPost.put("/fllws/:username",     minitwit::postFollow);
+        endpointsPost.put("/add_message",         minitwit::addMessage);
+        endpointsPost.put("/login",               minitwit::login);
+        endpointsPost.put("/register",            minitwit::register);
+
+    }
+
+    private static void registerEndpoints() {
+        setUpEntryPointsMap();
+        for(String point : entryPointsGetOrder) {
+            get(point, (req, res)-> Logger.benchMarkEndpoint(point, endpointsGet.get(point), req, res));
+        }
+        for(String point : entryPointsPostOrder) {
+            post(point, (req, res)-> Logger.benchMarkEndpoint(point, endpointsPost.get(point), req, res));
+        }
+        Logger.setEndpointsToLog(entryPointsGetOrder, entryPointsPostOrder);
     }
 
     private static boolean reqFromSimulator(Request request) {
@@ -312,10 +329,12 @@ public class minitwit {
 
 
     private static final CollectorRegistry registry = CollectorRegistry.defaultRegistry;
-    private static Object metrics(Request request, Response response) throws IOException {
+    private static Object metrics(Request request, Response response) {
         response.type(TextFormat.CONTENT_TYPE_004);
         final StringWriter writer = new StringWriter();
-        TextFormat.write004(writer, registry.metricFamilySamples());
+        try {
+            TextFormat.write004(writer, registry.metricFamilySamples());
+        } catch (IOException e) {}
         return writer.toString();
     }
 
@@ -350,7 +369,6 @@ public class minitwit {
      Displays the latest messages of all users.
     */
     public static Object publicTimeline(Request request, Response response) {
-        var startTime = System.currentTimeMillis();
         updateLatest(request);
         var loggedInUser = getSessionUserId(request);
         Object returnPage;
@@ -366,7 +384,6 @@ public class minitwit {
             context.put(FLASH, getSessionFlash(request));
         }
         returnPage = renderTemplate(TIMELINE_HTML, context);
-        Logger.logResponseTimeFrontPage(System.currentTimeMillis() - startTime);
         return returnPage;
     }
 

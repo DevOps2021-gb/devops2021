@@ -1,12 +1,16 @@
 import java.lang.management.ManagementFactory;
 import java.lang.management.OperatingSystemMXBean;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.function.BiFunction;
 
 import io.prometheus.client.Counter;
 import io.prometheus.client.Gauge;
 import spark.Request;
+import spark.Response;
 
 public class Logger {
     private static final long LOGGING_PERIOD_SECONDS = 15;
@@ -22,8 +26,7 @@ public class Logger {
             .name("followers_total").help("Total amount of followers.").register();
     private static final Gauge messages = Gauge.build()
             .name("messages_total").help("Total amount of messages.").register();
-    private static final Gauge responseTimePublicTimeLine = Gauge.build()
-            .name("response_time_publicTIme").help("response time for public timeLine.").register();
+    private static final Map<String, Gauge> responseTimeEndPoints=new HashMap<>();
 
     private Logger() {
     }
@@ -36,6 +39,19 @@ public class Logger {
         } else {
             System.out.println(request.requestMethod() + " " + request.url() + " with args " + request.params());
         }
+    }
+
+    private static void setEndpoints(String[] endpoints, String namePrefix, String helpPrefix){
+        for(String key: endpoints){
+            Gauge gauge = Gauge.build()
+                    .name(namePrefix+key.replace('/', '_')).help(helpPrefix+key).register();
+            responseTimeEndPoints.put(key, gauge);
+        }
+    }
+
+    public static void setEndpointsToLog(String[] endpointsGet, String[] endpointsPost) {
+        setEndpoints(endpointsGet,  "response_time_get",    "response time for get call: ");
+        setEndpoints(endpointsPost, "response_time_post",   "response time for post call: ");
     }
 
     public static void startSchedules() {
@@ -69,8 +85,8 @@ public class Logger {
         messages.set(numberOfMessages);
     }
 
-    public static void logResponseTimeFrontPage(long rt) {
-        responseTimePublicTimeLine.set(rt);
+    public static void logResponseTimeEndpoint(String endpoint, long rt) {
+        responseTimeEndPoints.get(endpoint).set(rt);
     }
 
     public static double getUsers() {
@@ -82,4 +98,12 @@ public class Logger {
     public static double getFollowers() {
         return followers.get();
     }
+
+    public static Object benchMarkEndpoint(String endPointName, BiFunction<Request, Response, Object> endpoint, Request req, Response res){
+        var startTime = System.currentTimeMillis();
+        Object result = endpoint.apply(req, res);
+        Logger.logResponseTimeEndpoint(endPointName,System.currentTimeMillis() - startTime);
+        return result;
+    }
+
 }
