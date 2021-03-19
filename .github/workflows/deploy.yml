@@ -55,6 +55,7 @@ jobs:
             docker-compose up -d --build
   pre-release:
     #https://github.com/marketplace/actions/automatic-releases
+    needs: deploy
     name: "Pre Release"
     runs-on: ubuntu-latest
     steps:
