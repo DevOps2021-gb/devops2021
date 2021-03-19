@@ -151,18 +151,12 @@ public class minitwit {
     private static void registerEndpoints() {
         setUpEntryPointsMap();
         for(String point : entryPointsGetOrder) {
-            get(point, (req, res)-> benchMarkEndpoint(point, endpointsGet.get(point), req, res));
+            get(point, (req, res)-> Logger.benchMarkEndpoint(point, endpointsGet.get(point), req, res));
         }
         for(String point : entryPointsPostOrder) {
-            post(point, (req, res)-> benchMarkEndpoint(point, endpointsPost.get(point), req, res));
+            post(point, (req, res)-> Logger.benchMarkEndpoint(point, endpointsPost.get(point), req, res));
         }
         Logger.setEndpointsToLog(entryPointsGetOrder, entryPointsPostOrder);
-    }
-    private static Object benchMarkEndpoint(String endPointName, BiFunction<Request, Response, Object> endpoint, Request req, Response res){
-        var startTime = System.currentTimeMillis();
-        Object result = endpoint.apply(req, res);
-        Logger.logResponseTimeEndpoint(endPointName,System.currentTimeMillis() - startTime);
-        return result;
     }
 
     private static boolean reqFromSimulator(Request request) {

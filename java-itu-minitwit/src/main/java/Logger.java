@@ -5,9 +5,12 @@ import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.function.BiFunction;
 
 import io.prometheus.client.Counter;
 import io.prometheus.client.Gauge;
+import spark.Request;
+import spark.Response;
 
 public class Logger {
     private static final long LOGGING_PERIOD_SECONDS = 15;
@@ -83,6 +86,13 @@ public class Logger {
     }
     public static double getFollowers() {
         return followers.get();
+    }
+
+    public static Object benchMarkEndpoint(String endPointName, BiFunction<Request, Response, Object> endpoint, Request req, Response res){
+        var startTime = System.currentTimeMillis();
+        Object result = endpoint.apply(req, res);
+        Logger.logResponseTimeEndpoint(endPointName,System.currentTimeMillis() - startTime);
+        return result;
     }
 
 }
