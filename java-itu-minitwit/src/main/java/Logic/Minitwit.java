@@ -416,7 +416,7 @@ public class Minitwit {
         }
     }
 
-    static Result<String> validateUserCredentialsAndRegister(String username, String email, String password1, String password2) {
+    public static Result<String> validateUserCredentialsAndRegister(String username, String email, String password1, String password2) {
         String error;
         if (username == null || username.equals("")) {
             error = "You have to enter a username";
