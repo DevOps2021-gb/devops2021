@@ -1,3 +1,4 @@
+package Utilities;
 
 import java.security.*;
 import java.nio.charset.StandardCharsets;
@@ -37,5 +38,14 @@ public class Hashing {
             sb.append(hexString);
         }
         return sb.toString();
+    }
+
+    /*
+    Return the gravatar image for the given email address.
+    */
+    public static String gravatarUrl(String email) {
+        String encodedEmail = new String(email.trim().toLowerCase().getBytes(StandardCharsets.UTF_8), StandardCharsets.UTF_8);
+        String hashHex = Hashing.generateHashHex(encodedEmail);
+        return String.format("http://www.gravatar.com/avatar/%s?d=identicon&s=%d", hashHex, 50);
     }
 }

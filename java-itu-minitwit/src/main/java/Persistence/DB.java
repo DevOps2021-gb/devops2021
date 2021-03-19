@@ -1,3 +1,5 @@
+package Persistence;
+
 import RoP.Failure;
 import RoP.Result;
 import RoP.Success;

@@ -1,3 +1,6 @@
+package Persistence;
+
+import Logic.Minitwit;
 import Model.Follower;
 import Model.Message;
 import Model.Tweet;
@@ -5,21 +8,16 @@ import Model.User;
 import RoP.Failure;
 import RoP.Result;
 import RoP.Success;
+import Utilities.Hashing;
 import com.dieselpoint.norm.Database;
 
-import java.nio.charset.StandardCharsets;
-import java.text.SimpleDateFormat;
 import java.util.*;
 
-public class Queries {
-
+public class Repositories {
     static final int PER_PAGE = 30;
 
-    private Queries() {}
+    private Repositories() {}
 
-    /*
-    Creates the database tables.
-     */
     public static Database initDb()  {
         return DB.connectDb().get();
     }
@@ -35,20 +33,6 @@ public class Queries {
         db.createTable(Follower.class);
         db.sql("ALTER TABLE follower ADD FOREIGN KEY (whoId) REFERENCES user(id)").execute();
         db.sql("ALTER TABLE follower ADD FOREIGN KEY (whomId) REFERENCES user(id)").execute();
-    }
-
-    /*
-    Format a timestamp for display.
-    */
-    static Result<String> formatDatetime(String timestamp) {
-        try {
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd '@' HH:mm");
-            Date resultDate = new Date(Long.parseLong(timestamp));
-            String date = sdf.format(resultDate);
-            return new Success<>(date);
-        } catch (Exception e) {
-            return new Failure<>(e);
-        }
     }
 
     public static Result<Boolean> isFollowing(int whoId, int whomId) {
@@ -80,17 +64,17 @@ public class Queries {
 
         return new Success<>(result);
     }
-    public static Result<Long> getCountUsers() {
+    public static Result<Long> countUsers() {
         var db = DB.connectDb().get();
         var result = db.sql("select count(*) from user").first(Long.class);
         return new Success<>(result);
     }
-    public static Result<Long> getCountFollowers() {
+    public static Result<Long> countFollowers() {
         var db = DB.connectDb().get();
         var result = db.sql("select count(*) from follower").first(Long.class);
         return new Success<>(result);
     }
-    public static Result<Long> getCountMessages() {
+    public static Result<Long> countMessages() {
         var db = DB.connectDb().get();
         var result = db.sql("select count(*) from message").first(Long.class);
         return new Success<>(result);
@@ -105,20 +89,7 @@ public class Queries {
         return new Success<>(result);
     }
 
-
-    /*
-    Return the gravatar image for the given email address.
-    */
-    static String gravatarUrl(String email) {
-        String encodedEmail = new String(email.trim().toLowerCase().getBytes(StandardCharsets.UTF_8), StandardCharsets.UTF_8);
-        String hashHex = Hashing.generateHashHex(encodedEmail);
-        return String.format("http://www.gravatar.com/avatar/%s?d=identicon&s=%d", hashHex, 50);
-    }
-
-    /*
-    Current user follow username
-    */
-    static Result<String> followUser(int whoId, String whomUsername) {
+    public static Result<String> followUser(int whoId, String whomUsername) {
         Result<User> whoUser = getUserById(whoId);
         Result<Integer> whomId = getUserId(whomUsername);
 
@@ -138,10 +109,7 @@ public class Queries {
         }
     }
 
-    /*
-    Current user unfollow user
-    */
-    static Result<String> unfollowUser(int whoId, String whomUsername) {
+    public static Result<String> unfollowUser(int whoId, String whomUsername) {
         Result<User> whoUser = getUserById(whoId);
         Result<Integer> whomId = getUserId(whomUsername);
 
@@ -161,7 +129,7 @@ public class Queries {
         }
     }
 
-    static Result<List<User>> getFollowing(int whoId) {
+    public static Result<List<User>> getFollowing(int whoId) {
         try{
             var db = DB.connectDb().get();
 
@@ -176,19 +144,6 @@ public class Queries {
         }
     }
 
-    public static List<Tweet> tweetsFromListOfHashMap(List<HashMap> result){
-        List<Tweet> tweets = new ArrayList<>();
-        for (HashMap hm: result) {
-            String email        = (String) hm.get("email");
-            String username     = (String) hm.get("username");
-            String text         = (String) hm.get("text");
-            String pubDate      = formatDatetime((long) hm.get("pubDate") + "").get();
-            String profilePic   = gravatarUrl(email);
-            tweets.add(new Tweet(email, username, text, pubDate, profilePic));
-        }
-        return tweets;
-    }
-
     private static Result<List<Tweet>> getTweetsFromMessageUser(String condition, Object... args){
         try{
             var db = DB.connectDb().get();
@@ -197,12 +152,11 @@ public class Queries {
                             "where message.flagged = 0 and message.authorId = user.id " +
                             condition +" "+
                             "order by message.pubDate desc limit "+PER_PAGE, args).results(HashMap.class);
-            return new Success<>(tweetsFromListOfHashMap(result));
+            return new Success<>(Minitwit.tweetsFromListOfHashMap(result));
         } catch (Exception e) {
             return new Failure<>(e);
         }
     }
-
 
     /*
     Displays the latest messages of all users.
@@ -238,7 +192,17 @@ public class Queries {
         return new Failure<>("You need to add text to the message");
     }
 
-    static Result<Boolean> queryLogin(String username, String password) {
+    public static Result<String> InsertUser(String username, String email, String password1) {
+        try {
+            var db = DB.connectDb().get();
+            db.insert(new User(username, email, Hashing.generatePasswordHash(password1)));
+            return new Success<>("OK");
+        } catch (Exception e) {
+            return new Failure<>(e);
+        }
+    }
+
+    public static Result<Boolean> queryLogin(String username, String password) {
         String error;
         var user = getUser(username);
         if (!user.isSuccess()) {
@@ -249,30 +213,6 @@ public class Queries {
             return new Success<>(true);
         }
 
-        return new Failure<>(error);
-    }
-
-    static Result<String> register(String username, String email, String password1, String password2) {
-        String error;
-        if (username == null || username.equals("")) {
-            error = "You have to enter a username";
-        } else if (email == null || !email.contains("@")) {
-            error = "You have to enter a valid email address";
-        } else if (password1 == null || password1.equals("")) {
-            error = "You have to enter a password";
-        } else if (!password1.equals(password2)) {
-            error = "The two passwords do not match";
-        } else if (getUserId(username).isSuccess()) {
-            error = "The username is already taken";
-        } else {
-            try {
-                var db = DB.connectDb().get();
-                db.insert(new User(username,email, Hashing.generatePasswordHash(password1)));
-                return new Success<>("OK");
-            } catch (Exception e) {
-                return new Failure<>(e);
-            }
-        }
         return new Failure<>(error);
     }
 }

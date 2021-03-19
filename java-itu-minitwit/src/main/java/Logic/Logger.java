@@ -1,3 +1,5 @@
+package Logic;
+
 import java.lang.management.ManagementFactory;
 import java.lang.management.OperatingSystemMXBean;
 import java.util.HashMap;
@@ -7,6 +9,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiFunction;
 
+import Persistence.Repositories;
 import io.prometheus.client.Counter;
 import io.prometheus.client.Gauge;
 import spark.Request;
@@ -73,15 +76,15 @@ public class Logger {
         cpuLoad.set(cpuLoadLastMinute);
     }
     public static void processUsers(){
-        long numberOfUsers = Queries.getCountUsers().get();
+        long numberOfUsers = Repositories.countUsers().get();
         users.set(numberOfUsers);
     }
     public static void processFollowers(){
-        long numberOfFollowers = Queries.getCountFollowers().get();
+        long numberOfFollowers = Repositories.countFollowers().get();
         followers.set(numberOfFollowers);
     }
     public static void processMessages(){
-        long numberOfMessages = Queries.getCountMessages().get();
+        long numberOfMessages = Repositories.countMessages().get();
         messages.set(numberOfMessages);
     }
 
