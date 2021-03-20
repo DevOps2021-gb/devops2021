@@ -1,8 +1,8 @@
 package services;
 
-import utilities.Statics;
 import io.prometheus.client.CollectorRegistry;
 import io.prometheus.client.exporter.common.TextFormat;
+import model.User;
 import spark.Request;
 import spark.Response;
 
@@ -19,7 +19,7 @@ public class MetricsService {
         try {
             TextFormat.write004(writer, CollectorRegistry.defaultRegistry.metricFamilySamples());
         } catch (IOException e) {
-            e.printStackTrace();
+            LogService.logError(e);
         }
         return writer.toString();
     }
@@ -28,9 +28,9 @@ public class MetricsService {
         String requestLatest = request.queryParams("latest");
         if (requestLatest != null) {
             try {
-                Statics.latest = Integer.parseInt(requestLatest);
+                UserService.latest = Integer.parseInt(requestLatest);
             } catch (NumberFormatException e) {
-                e.printStackTrace();
+                LogService.logError(e);
             }
         }
     }

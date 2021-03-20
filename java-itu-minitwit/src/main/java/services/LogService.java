@@ -36,6 +36,11 @@ public class LogService {
     private LogService() {
     }
 
+    public static void logError(Exception error) {
+        System.out.println(error.getMessage());
+        error.printStackTrace();
+    }
+
     public static void logRequest(Request request) {
         if (request.url().contains("favicon.ico")) return;
 

@@ -6,7 +6,6 @@ import persistence.UserRepository;
 import utilities.Formatting;
 import utilities.Hashing;
 import utilities.JSON;
-import utilities.Statics;
 import org.eclipse.jetty.http.HttpStatus;
 import spark.Request;
 import spark.Response;
@@ -41,7 +40,7 @@ public class MessageService {
 
     public static Object getLatest(Response response) {
         response.type(JSON.APPLICATION_JSON);
-        return JSON.respondLatest(Statics.latest);
+        return JSON.respondLatest(UserService.latest);
     }
 
     public static Object getMessages(Request request, Response response) {

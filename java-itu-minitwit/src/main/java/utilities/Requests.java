@@ -1,5 +1,6 @@
 package utilities;
 
+import services.LogService;
 import services.MessageService;
 import errorhandling.Failure;
 import errorhandling.Result;
@@ -59,7 +60,7 @@ public class Requests {
                     Map<String, String> temp = mapper.readValue(request.body(), Map.class);
                     map.putAll(temp);
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    LogService.logError(e);
                 }
             }
             else {

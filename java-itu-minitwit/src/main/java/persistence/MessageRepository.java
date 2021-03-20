@@ -54,7 +54,7 @@ Displays the latest messages of all users.
     private static Result<List<Tweet>> getTweetsFromMessageUser(String condition, Object... args){
         try{
             var db = DB.connectDb().get();
-            List<HashMap> result = db.sql(
+            var result = db.sql(
                     "select message.*, user.* from message, user " +
                             "where message.flagged = 0 and message.authorId = user.id " +
                             condition +" "+

@@ -3,6 +3,7 @@ package utilities;
 import errorhandling.Failure;
 import errorhandling.Result;
 import errorhandling.Success;
+import services.LogService;
 
 import java.security.*;
 import java.nio.charset.StandardCharsets;
@@ -19,7 +20,7 @@ public class Hashing {
             String hashString = Base64.getEncoder().encodeToString(hashBytes);
             return new Success<>(hashString);
         } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
+            LogService.logError(e);
             return new Failure<>(e);
         }
     }

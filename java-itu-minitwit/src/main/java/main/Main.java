@@ -25,7 +25,7 @@ public class Main {
             LogService.startSchedules();
 
         } catch (Exception e) {
-            e.printStackTrace();
+            LogService.logError(e);
         }
     }
 }
