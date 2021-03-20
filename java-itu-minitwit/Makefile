@@ -1,5 +1,5 @@
 init:
-	python -c"from Logic.minitwit import init_db; init_db()"
+	python -c"from logic.minitwit import init_db; init_db()"
 
 build:
 	gcc flag_tool.c -l sqlite3 -o flag_tool

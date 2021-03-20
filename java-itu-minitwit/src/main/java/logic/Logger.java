@@ -1,4 +1,4 @@
-package Logic;
+package logic;
 
 import java.lang.management.ManagementFactory;
 import java.lang.management.OperatingSystemMXBean;

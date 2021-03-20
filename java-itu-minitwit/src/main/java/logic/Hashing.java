@@ -1,4 +1,4 @@
-package Logic;
+package logic;
 
 import java.security.*;
 import java.nio.charset.StandardCharsets;

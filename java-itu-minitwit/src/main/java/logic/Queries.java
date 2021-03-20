@@ -1,12 +1,12 @@
-package Logic;
+package logic;
 
-import Model.Follower;
-import Model.Message;
-import Model.Tweet;
-import Model.User;
-import RoP.Failure;
-import RoP.Result;
-import RoP.Success;
+import model.Follower;
+import model.Message;
+import model.Tweet;
+import model.User;
+import rop.Failure;
+import rop.Result;
+import rop.Success;
 import com.dieselpoint.norm.Database;
 
 import java.nio.charset.StandardCharsets;
