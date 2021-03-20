@@ -71,11 +71,11 @@
                 <configuration>
                     <license>file:${basedir}/QULICE_LICENSE.txt</license>
                     <excludes>
-                        <exclude>checkstyle:ParameterNumberCheck</exclude>
-                        <exclude>checkstyle:JavadocVariableCheck</exclude>
-                        <exclude>checkstyle:LineLengthCheck</exclude>
-                        <exclude>checkstyle:IllegalTokenCheck</exclude>
-                        <exclude>checkstyle:EmptyLinesCheck</exclude>
+                        <exclude>checkstyle:.ParameterNumberCheck</exclude>
+                        <exclude>checkstyle:.JavadocVariableCheck</exclude>
+                        <exclude>checkstyle:.LineLengthCheck</exclude>
+                        <exclude>checkstyle:.IllegalTokenCheck</exclude>
+                        <exclude>checkstyle:.EmptyLinesCheck</exclude>
                     </excludes>
                 </configuration>
                 <executions>
