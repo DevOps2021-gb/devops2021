@@ -86,9 +86,9 @@
                         <!-- don't allow unsafe reflective access: -->
                         <bundledSignature>jdk-reflection</bundledSignature>
                     </bundledSignatures>
-                    <signaturesFiles>
+                    <!--signaturesFiles> unsure what this was for, so commented it out to see
                         <signaturesFile>./rel/path/to/signatures.txt</signaturesFile>
-                    </signaturesFiles>
+                    </signaturesFiles-->
                 </configuration>
                 <executions>
                     <execution>
