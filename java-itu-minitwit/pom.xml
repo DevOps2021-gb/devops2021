@@ -76,6 +76,8 @@
                         <exclude>checkstyle:LineLengthCheck</exclude>
                         <exclude>checkstyle:IllegalTokenCheck</exclude>
                         <exclude>checkstyle:EmptyLinesCheck</exclude>
+                        <exclude>checkstyle:MagicNumberCheck</exclude>
+                        <exclude>checkstyle:FinalLocalVariableCheck</exclude>
                     </excludes>
                 </configuration>
                 <executions>
