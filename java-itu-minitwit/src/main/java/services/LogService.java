@@ -1,4 +1,4 @@
-package logic;
+package services;
 
 import java.lang.management.ManagementFactory;
 import java.lang.management.OperatingSystemMXBean;
@@ -8,14 +8,17 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiFunction;
+import persistence.FollowerRepository;
+import persistence.MessageRepository;
+import persistence.UserRepository;
 import io.prometheus.client.Counter;
 import io.prometheus.client.Gauge;
 import spark.Request;
 import spark.Response;
 
-public class Logger {
+public class LogService {
     private static final long LOGGING_PERIOD_SECONDS = 15;
-    private static OperatingSystemMXBean operatingSystemMXBean = ManagementFactory.getOperatingSystemMXBean();
+    private static final OperatingSystemMXBean operatingSystemMXBean = ManagementFactory.getOperatingSystemMXBean();
     private static final Gauge cpuLoad = Gauge.build()
         .name("CPU_load").help("CPU load on server.").register();
     private static final Counter requests = Counter.build()
@@ -28,7 +31,21 @@ public class Logger {
         .name("messages_total").help("Total amount of messages.").register();
     private static final Map<String, Gauge> responseTimeEndPoints = new HashMap<>();
 
-    private Logger() {
+    private LogService() {
+    }
+
+    public static void logError(Exception e) {
+        System.out.println(e.getMessage());
+    }
+
+    public static void logRequest(Request request) {
+        if (request.url().contains("favicon.ico")) return;
+
+        if (request.params().size() == 0) {
+            System.out.println(request.requestMethod() + " " + request.url());
+        } else {
+            System.out.println(request.requestMethod() + " " + request.url() + " with args " + request.params());
+        }
     }
 
     private static void setEndpoints(String[] endpoints, String namePrefix, String helpPrefix) {
@@ -45,9 +62,10 @@ public class Logger {
         setEndpoints(endpointsGet,  "response_time_get",    "response time for get call: ");
         setEndpoints(endpointsPost, "response_time_post",   "response time for post call: ");
     }
+
     public static void startSchedules() {
         ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
-        executorService.scheduleAtFixedRate(Logger::logUserInformation, 1, LOGGING_PERIOD_SECONDS, TimeUnit.SECONDS);
+        executorService.scheduleAtFixedRate(LogService::logUserInformation, 1, LOGGING_PERIOD_SECONDS , TimeUnit.SECONDS);
     }
     private static void logUserInformation() {
         processCpuLoad();
@@ -64,15 +82,15 @@ public class Logger {
         cpuLoad.set(cpuLoadLastMinute);
     }
     public static void processUsers() {
-        long numberOfUsers = Queries.getCountUsers().get();
+        long numberOfUsers = UserRepository.countUsers().get();
         users.set(numberOfUsers);
     }
     public static void processFollowers() {
-        long numberOfFollowers = Queries.getCountFollowers().get();
+        long numberOfFollowers = FollowerRepository.countFollowers().get();
         followers.set(numberOfFollowers);
     }
     public static void processMessages() {
-        long numberOfMessages = Queries.getCountMessages().get();
+        long numberOfMessages = MessageRepository.countMessages().get();
         messages.set(numberOfMessages);
     }
 
@@ -93,7 +111,7 @@ public class Logger {
     public static Object benchMarkEndpoint(String endPointName, BiFunction<Request, Response, Object> endpoint, Request req, Response res) {
         var startTime = System.currentTimeMillis();
         Object result = endpoint.apply(req, res);
-        Logger.logResponseTimeEndpoint(endPointName, System.currentTimeMillis() - startTime);
+        LogService.logResponseTimeEndpoint(endPointName, System.currentTimeMillis() - startTime);
         return result;
     }
 

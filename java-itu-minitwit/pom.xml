@@ -37,7 +37,7 @@
                         <manifest>
                             <addClasspath>true</addClasspath>
                             <classpathPrefix>lib/</classpathPrefix>
-                            <mainClass>logic.minitwit</mainClass>
+                            <mainClass>Minitwit</mainClass>
                         </manifest>
                     </archive>
                 </configuration>

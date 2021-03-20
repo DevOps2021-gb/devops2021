@@ -1,4 +1,4 @@
-package rop;
+package errorhandling;
 
 public class Success<T> implements Result<T> {
     private final T value;
