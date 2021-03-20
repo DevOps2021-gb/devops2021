@@ -37,13 +37,13 @@ abstract class DatabaseTestBase {
     }
 
     Result<Boolean> registerAndLogin(String username, String password) {
-        register(username, password, null);
+        this.register(username, password, null);
         return login(username, password);
     }
 
     Result<Integer> registerLoginGetID(String username, String password, String email) {
-        register(username, password, email);
-        login(username, password);
+        this.register(username, password, email);
+        this.login(username, password);
         var id = UserRepository.getUserId(username);
         assert (id.isSuccess());
         assert (id.get() == userId);
@@ -60,7 +60,8 @@ abstract class DatabaseTestBase {
         var rs = MessageRepository.addMessage(text, loggedInUserId);
         assert (rs.get());
         try {
-            Thread.sleep(100);      //hotfix: added to ensure order of messages
+            //hotfix: added to ensure order of messages
+            Thread.sleep(100);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

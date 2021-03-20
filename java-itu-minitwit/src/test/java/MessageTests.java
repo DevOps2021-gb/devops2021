@@ -6,10 +6,10 @@ import org.junit.jupiter.api.Test;
 class MessageTests extends DatabaseTestBase {
     @Test
     void testGetTweetsByUsername() {
-        var id1 = registerLoginGetID("foo", "default",  null);
+        var id1 = this.registerLoginGetID("foo", "default",  null);
         addMessage("the message by foo", id1.get());
         logout();
-        var id2 = registerLoginGetID("bar","default",  null);
+        var id2 = this.registerLoginGetID("bar","default",  null);
         addMessage("the message by bar", id2.get());
         var rs = MessageRepository.getTweetsByUsername("foo");
         assert (rs.isSuccess());
@@ -30,14 +30,14 @@ class MessageTests extends DatabaseTestBase {
         assert (MessageRepository.countMessages().get() == 0);
         LogService.processMessages();
         assert ((int) LogService.getMessages() == 0);
-        var id1 = registerLoginGetID("foo", "default",  null);
-        addMessage("the message by foo", id1.get());
+        var id1 = this.registerLoginGetID("foo", "default",  null);
+        this.addMessage("the message by foo", id1.get());
         assert (MessageRepository.countMessages().get() == 1);
         LogService.processMessages();
         assert ((int) LogService.getMessages() == 1);
         logout();
-        var id2 = registerLoginGetID("bar","default",  null);
-        addMessage("the message by bar", id2.get());
+        var id2 = this.registerLoginGetID("bar","default",  null);
+        this.addMessage("the message by bar", id2.get());
         assert (MessageRepository.countMessages().get() == 2);
         LogService.processMessages();
         assert ((int) LogService.getMessages() == 2);

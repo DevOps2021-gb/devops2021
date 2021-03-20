@@ -7,9 +7,9 @@ import org.junit.jupiter.api.Test;
 class FollowerTests extends DatabaseTestBase{
     @Test
     void testGetFollowing() {
-        var id1 = registerLoginGetID("foo", "default",  null);
-        var id2 = registerLoginGetID("bar","1234",  null);
-        var id3 = registerLoginGetID("brian","q123",  null);
+        var id1 = this.registerLoginGetID("foo", "default",  null);
+        var id2 = this.registerLoginGetID("bar","1234",  null);
+        var id3 = this.registerLoginGetID("brian","q123",  null);
 
 
         assert (FollowerRepository.countFollowers().get() == 0);
@@ -38,12 +38,12 @@ class FollowerTests extends DatabaseTestBase{
 
     @Test
     void testUnfollowUser() {
-        var id1 = registerLoginGetID("foo", "default", null);
-        addMessage("the message by foo", id1.get());
-        var id2 = registerLoginGetID("bar","1234", null);
-        addMessage("the message by bar", id2.get());
-        var id3 = registerLoginGetID("brian","q123", null);
-        addMessage("the message by bar", id2.get());
+        var id1 = this.registerLoginGetID("foo", "default", null);
+        this.addMessage("the message by foo", id1.get());
+        var id2 = this.registerLoginGetID("bar","1234", null);
+        this.addMessage("the message by bar", id2.get());
+        var id3 = this.registerLoginGetID("brian","q123", null);
+        this.addMessage("the message by bar", id2.get());
 
         var rs1 = FollowerRepository.followUser(id1.get(), "bar");
         assert (rs1.isSuccess());
@@ -69,24 +69,20 @@ class FollowerTests extends DatabaseTestBase{
 
     @Test
     void testFollowingPersonalTweets() {
-        var id1 = registerLoginGetID("foo", "default", null);
-        addMessage("the message by foo", id1.get());
-        var id2 = registerLoginGetID("bar","1234", null);
-        addMessage("the message by bar", id2.get());
-        var id3 = registerLoginGetID("brian","q123", null);
-        addMessage("the message by Biran v1", id3.get());
-        addMessage("the message by Biran v2", id3.get());
-
-
+        var id1 = this.registerLoginGetID("foo", "default", null);
+        this.addMessage("the message by foo", id1.get());
+        var id2 = this.registerLoginGetID("bar","1234", null);
+        this.addMessage("the message by bar", id2.get());
+        var id3 = this.registerLoginGetID("brian","q123", null);
+        this.addMessage("the message by Biran v1", id3.get());
+        this.addMessage("the message by Biran v2", id3.get());
         var rTweets = MessageRepository.getPersonalTweetsById(id1.get());
         assert (rTweets.isSuccess());
         assert (rTweets.get().size()==1);
         assert (rTweets.get().get(0).getUsername().equals("foo")   && rTweets.get().get(0).getText().equals("the message by foo"));
-
         var rs1 = FollowerRepository.followUser(id1.get(), "bar");
         var rs2 = FollowerRepository.followUser(id1.get(), "brian");
         assert (rs1.isSuccess() && rs2.isSuccess());
-
         rTweets = MessageRepository.getPersonalTweetsById(id1.get());
         assert (rTweets.isSuccess());
         assert (rTweets.get().get(0).getUsername().equals("brian") && rTweets.get().get(0).getText().equals("the message by Biran v2"));

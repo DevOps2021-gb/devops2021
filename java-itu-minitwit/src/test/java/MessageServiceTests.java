@@ -44,7 +44,7 @@ class MessageServiceTests extends DatabaseTestBase {
 
     @Test
     void testLoginLogout() {
-        var result = registerAndLogin("user1", "default");
+        var result = this.registerAndLogin("user1", "default");
         assert (result.isSuccess() && result.get());
         result = logout();
         assert (result.isSuccess() && result.get()); //TODO will always succeed as is now
@@ -56,10 +56,10 @@ class MessageServiceTests extends DatabaseTestBase {
 
     @Test
     void testPublicTimeline() {
-        var id1 = registerLoginGetID("foo", "default", null);
+        var id1 = this.registerLoginGetID("foo", "default", null);
         String text1 = "test message 1", text2 = "<test message 2>";
-        addMessage(text1, id1.get());
-        addMessage(text2, id1.get());
+        this.addMessage(text1, id1.get());
+        this.addMessage(text2, id1.get());
         var rs = MessageRepository.publicTimeline();
         assert (rs.isSuccess());
         var tweet1 = rs.get().get(1);
