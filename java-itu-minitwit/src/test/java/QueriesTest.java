@@ -28,12 +28,10 @@ class QueriesTest {
     //Helper functions
 
     //Helper function to register a user
-    Result<String> register(String username, String password, String password2_, String email_) {
-        var password2 = password2_;
-        var email     = email_;
-        if (password2 == null) { password2 = password; }
-        if (email == null)     { email = new StringBuilder(username).append("@example.com").toString(); }
-        return Queries.register(username, email, password, password2);
+    Result<String> register(String username, String password, String passwordBackupNullable, String emailNullable) {
+        var passwordBackup = passwordBackupNullable != null? passwordBackupNullable : password;
+        var email     = emailNullable != null? emailNullable : new StringBuilder(username).append("@example.com").toString();
+        return Queries.register(username, email, password, passwordBackup);
     }
 
     //Helper function to login

@@ -81,8 +81,12 @@
                         <exclude>checkstyle:MultilineJavadocTagsCheck</exclude>
                         <exclude>checkstyle:JavadocTagsCheck</exclude>
                         <exclude>checkstyle:JavadocPackageCheck</exclude>
+                        <exclude>checkstyle:PackageDeclarationCheck</exclude>
                         <exclude>checkstyle:JavadocTypeCheck</exclude>
                         <exclude>checkstyle:LocalFinalVariableNameCheck</exclude>
+                        <exclude>checkstyle:ImportOrderCheck</exclude>
+                        <exclude>checkstyle:AvoidStaticImportCheck</exclude>
+                        <exclude>checkstyle:FinalParametersCheck</exclude>
                     </excludes>
                 </configuration>
                 <executions>
