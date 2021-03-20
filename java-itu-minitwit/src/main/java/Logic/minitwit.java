@@ -1,3 +1,5 @@
+package Logic;
+
 import Model.Tweet;
 import Model.User;
 import RoP.Failure;

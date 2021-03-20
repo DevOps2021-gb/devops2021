@@ -1,3 +1,5 @@
+package Logic;
+
 import Model.Follower;
 import Model.Message;
 import Model.Tweet;

@@ -9,10 +9,10 @@ if [ "$1" = "init" ]; then
     python -c"from minitwit import init_db;init_db()"
 elif [ "$1" = "start" ]; then
     echo "Starting minitwit..."
-    nohup 'which python' minitwit.py > /tmp/out.log 2>&1 &
+    nohup 'which python' Logic.minitwit.py > /tmp/out.log 2>&1 &
 elif [ "$1" = "stop" ]; then
     echo "Stopping minitwit..."
-    pkill -f minitwit
+    pkill -f Logic.minitwit
 elif [ "$1" = "inspectdb" ]; then
     ./flag_tool -i | less
 elif [ "$1" = "flag" ]; then
