@@ -7,24 +7,23 @@ import org.junit.jupiter.api.Test;
 class RoPTest {
 
     @Test
-    void test_Success() {
-        Result<Integer> v = new Success<>(2);
-        assert v.isSuccess();
-        assert v.get() == 2;
+    void testSuccess() {
+        final Result<Integer> success = new Success<>(2);
+        assert success.isSuccess();
+        assert success.get() == 2;
     }
 
     @Test
-    void test_Failure() {
-        var v1 = new Failure<Integer>(new IndexOutOfBoundsException("test"));
-        assert !v1.isSuccess();
-        assert v1.getException().getClass() == IndexOutOfBoundsException.class;
-        assert v1.getFailureMessage().equals("test");
-
-
-        var v2 = new Failure<Integer>("test");
-        assert !v2.isSuccess();
-        assert v2.getException().getClass() == Exception.class;
-        assert v2.getFailureMessage().equals("test");
+    void testFailure() {
+        final var failure1 = new Failure<Integer>(new IndexOutOfBoundsException("test"));
+        assert !failure1.isSuccess();
+        assert failure1.getException().getClass() == IndexOutOfBoundsException.class;
+        assert failure1.getFailureMessage().equals("test");
+        //Different constructor:
+        final var failure2 = new Failure<Integer>("test");
+        assert !failure2.isSuccess();
+        assert failure2.getException().getClass() == Exception.class;
+        assert failure2.getFailureMessage().equals("test");
     }
 
 }
