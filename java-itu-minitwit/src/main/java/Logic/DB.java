@@ -20,7 +20,7 @@ public final class DB {
         Returns a new connection to the database.
     */
     public static Result<Database> connectDb() {
-        Result result = new Success<>(instance);
+        Result<Database> result = new Success<>(instance);
         if (instance == null) {
             try {
                 String normjdbc = "norm.jdbcUrl";
@@ -35,6 +35,7 @@ public final class DB {
                 System.setProperty("norm.password", pw);
 
                 instance = new Database();
+                result = new Success<>(instance);
             } catch (Exception e) {
                 result = new Failure<>("could not establish connection to Logic.DB");
             }
