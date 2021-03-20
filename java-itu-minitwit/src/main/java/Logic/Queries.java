@@ -111,7 +111,7 @@ public class Queries {
     /*
     Return the gravatar image for the given email address.
     */
-    static String gravatarUrl(String email) {
+    public static String gravatarUrl(String email) {
         String encodedEmail = new String(email.trim().toLowerCase().getBytes(StandardCharsets.UTF_8), StandardCharsets.UTF_8);
         String hashHex = Hashing.generateHashHex(encodedEmail);
         return String.format("http://www.gravatar.com/avatar/%s?d=identicon&s=%d", hashHex, 50);
@@ -120,7 +120,7 @@ public class Queries {
     /*
     Current user follow username
     */
-    static Result<String> followUser(int whoId, String whomUsername) {
+    public static Result<String> followUser(int whoId, String whomUsername) {
         Result<User> whoUser = getUserById(whoId);
         Result<Integer> whomId = getUserId(whomUsername);
 
@@ -143,7 +143,7 @@ public class Queries {
     /*
     Current user unfollow user
     */
-    static Result<String> unfollowUser(int whoId, String whomUsername) {
+    public static Result<String> unfollowUser(int whoId, String whomUsername) {
         Result<User> whoUser = getUserById(whoId);
         Result<Integer> whomId = getUserId(whomUsername);
 
@@ -163,7 +163,7 @@ public class Queries {
         }
     }
 
-    static Result<List<User>> getFollowing(int whoId) {
+    public static Result<List<User>> getFollowing(int whoId) {
         try{
             var db = DB.connectDb().get();
 
@@ -240,7 +240,7 @@ public class Queries {
         return new Failure<>("You need to add text to the message");
     }
 
-    static Result<Boolean> queryLogin(String username, String password) {
+    public static Result<Boolean> queryLogin(String username, String password) {
         String error;
         var user = getUser(username);
         if (!user.isSuccess()) {
@@ -254,7 +254,7 @@ public class Queries {
         return new Failure<>(error);
     }
 
-    static Result<String> register(String username, String email, String password1, String password2) {
+    public static Result<String> register(String username, String email, String password1, String password2) {
         String error;
         if (username == null || username.equals("")) {
             error = "You have to enter a username";
