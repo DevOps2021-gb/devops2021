@@ -25,6 +25,9 @@ public class Queries {
     public static Database initDb()  {
         return DB.connectDb().get();
     }
+    public static Database getDB()  {
+        return DB.connectDb().get();
+    }
     public static void dropDB(){
         var db = initDb();
         db.sql("drop table if exists follower").execute();
@@ -55,7 +58,7 @@ public class Queries {
 
     public static Result<Boolean> isFollowing(int whoId, int whomId) {
         try {
-            var db = DB.connectDb().get();
+            var db = getDB();
             var result = db.where("whoId=?", whoId).where("whomId=?", whomId).results(Follower.class);
             return new Success<>(!result.isEmpty());
         } catch (Exception e) {
@@ -75,7 +78,7 @@ public class Queries {
     }
 
     public static Result<User> getUser(String username) {
-        var db = DB.connectDb().get();
+        var db = getDB();
         var result = db.table("user").where("username=?", username).first(User.class);
 
         if (result == null) return new Failure<>("No user found for " + username);
@@ -83,23 +86,23 @@ public class Queries {
         return new Success<>(result);
     }
     public static Result<Long> getCountUsers() {
-        var db = DB.connectDb().get();
+        var db = getDB();
         var result = db.sql("select count(*) from user").first(Long.class);
         return new Success<>(result);
     }
     public static Result<Long> getCountFollowers() {
-        var db = DB.connectDb().get();
+        var db = getDB();
         var result = db.sql("select count(*) from follower").first(Long.class);
         return new Success<>(result);
     }
     public static Result<Long> getCountMessages() {
-        var db = DB.connectDb().get();
+        var db = getDB();
         var result = db.sql("select count(*) from message").first(Long.class);
         return new Success<>(result);
     }
 
     public static Result<User> getUserById(int userId) {
-        var db = DB.connectDb().get();
+        var db = getDB();
         var result = db.where("id=?", userId).first(User.class);
 
         if (result == null) return new Failure<>("No user found for id " + userId);
@@ -130,7 +133,7 @@ public class Queries {
             return new Failure<>(whomId.toString());
         } else {
             try {
-                var db = DB.connectDb().get();
+                var db = getDB();
                 db.insert(new Follower(whoId, whomId.get()));
 
                 return new Success<>("OK");
@@ -153,7 +156,7 @@ public class Queries {
             return new Failure<>(whomId.toString());
         } else {
             try {
-                var db = DB.connectDb().get();
+                var db = getDB();
                 db.table("follower").where("whoId=?", whoId).where("whomId=?", whomId.get()).delete();
 
                 return new Success<>("OK");
@@ -165,7 +168,7 @@ public class Queries {
 
     public static Result<List<User>> getFollowing(int whoId) {
         try{
-            var db = DB.connectDb().get();
+            var db = getDB();
 
             List<User> result = db.sql(
             "select user.* from user " +
@@ -193,7 +196,7 @@ public class Queries {
 
     private static Result<List<Tweet>> getTweetsFromMessageUser(String condition, Object... args){
         try{
-            var db = DB.connectDb().get();
+            var db = getDB();
             List<HashMap> result = db.sql(
                     "select message.*, user.* from message, user " +
                             "where message.flagged = 0 and message.authorId = user.id " +
@@ -229,7 +232,7 @@ public class Queries {
         if (!text.equals("")) {
             try{
                 long timestamp = new Date().getTime();
-                var db = DB.connectDb().get();
+                var db = getDB();
                 db.insert(new Message(loggedInUserId, text, timestamp, 0));
 
                 return new Success<>(true);
@@ -268,7 +271,7 @@ public class Queries {
             error = "The username is already taken";
         } else {
             try {
-                var db = DB.connectDb().get();
+                var db = getDB();
                 db.insert(new User(username,email, Hashing.generatePasswordHash(password1)));
                 return new Success<>("OK");
             } catch (Exception e) {
