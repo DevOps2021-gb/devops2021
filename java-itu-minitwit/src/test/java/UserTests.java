@@ -10,16 +10,15 @@ class UserTests extends DatabaseTestBase {
         var user1 = UserRepository.getUser("foo");
         var id1Rs = UserRepository.getUserId("foo");
         var user12 = UserRepository.getUserById(id1.get());
-
-        assert (id1.get().equals(id1Rs.get()));
-        assert (user1.get().id == id1.get());
-        assert (user1.get().getUsername().equals("foo"));
-        assert (user1.get().getPwHash().equals(Hashing.generatePasswordHash("default").get()));
-        assert (user1.get().getEmail().equals("myEmail@itu.dk"));
-        assert (
-            user1.get().id == user12.get().id &&
-                user1.get().getUsername().equals(user12.get().getUsername()) &&
-                user1.get().getPwHash().equals(user12.get().getPwHash()) &&
-                user1.get().getEmail().equals(user12.get().getEmail()));
+        assert id1.get().equals(id1Rs.get());
+        assert user1.get().id == id1.get();
+        assert user1.get().getUsername().equals("foo");
+        assert user1.get().getPwHash().equals(Hashing.generatePasswordHash("default").get());
+        assert user1.get().getEmail().equals("myEmail@itu.dk");
+        assert
+            user1.get().id == user12.get().id
+                && user1.get().getUsername().equals(user12.get().getUsername())
+                && user1.get().getPwHash().equals(user12.get().getPwHash())
+                && user1.get().getEmail().equals(user12.get().getEmail());
     }
 }
