@@ -1,4 +1,4 @@
-import Logic.Logger;
+import Service.LogService;
 import Persistence.MessageRepository;
 import org.junit.jupiter.api.Test;
 
@@ -29,22 +29,22 @@ public class MessageTests extends DatabaseTestBase {
     @Test
     void test_getPersonalTweetsById() {
         assert (MessageRepository.countMessages().get() == 0);
-        Logger.processMessages();
-        assert ((int) Logger.getMessages() == 0);
+        LogService.processMessages();
+        assert ((int) LogService.getMessages() == 0);
 
         var id1 = register_login_getID("foo", "default",  null);
         add_message("the message by foo", id1.get());
         assert (MessageRepository.countMessages().get() == 1);
-        Logger.processMessages();
-        assert ((int) Logger.getMessages() == 1);
+        LogService.processMessages();
+        assert ((int) LogService.getMessages() == 1);
 
 
         logout();
         var id2 = register_login_getID("bar","default",  null);
         add_message("the message by bar", id2.get());
         assert (MessageRepository.countMessages().get() == 2);
-        Logger.processMessages();
-        assert ((int) Logger.getMessages() == 2);
+        LogService.processMessages();
+        assert ((int) LogService.getMessages() == 2);
 
         var rs = MessageRepository.getPersonalTweetsById(id1.get());
         assert (rs.isSuccess());

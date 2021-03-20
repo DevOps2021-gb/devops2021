@@ -1,6 +1,6 @@
 package Utilities;
 
-import Logic.Minitwit;
+import Service.MessageService;
 import Model.Tweet;
 import org.eclipse.jetty.http.HttpStatus;
 import org.json.JSONArray;
@@ -46,9 +46,9 @@ public class JSON {
         List<JSONObject> messages = new ArrayList<>();
         for (Tweet t : tweets) {
             HashMap<String, String> msg = new HashMap<>();
-            msg.put(Minitwit.CONTENT, t.getText());
+            msg.put(MessageService.CONTENT, t.getText());
             msg.put("pub_date", t.getPubDate());
-            msg.put(Minitwit.USER, t.getUsername());
+            msg.put(MessageService.USER, t.getUsername());
             messages.add(new JSONObject(msg));
         }
         var json = new JSONArray(messages);

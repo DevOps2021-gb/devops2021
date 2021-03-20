@@ -1,4 +1,4 @@
-import Logic.Logger;
+import Service.LogService;
 import Persistence.FollowerRepository;
 import Persistence.MessageRepository;
 import org.junit.jupiter.api.Test;
@@ -12,22 +12,22 @@ class FollowerTests extends DatabaseTestBase{
 
 
         assert (FollowerRepository.countFollowers().get() == 0);
-        Logger.processFollowers();
-        assert ((int) Logger.getFollowers() == 0);
+        LogService.processFollowers();
+        assert ((int) LogService.getFollowers() == 0);
 
         var rs1 = FollowerRepository.followUser(id1.get(), "bar");
         assert (rs1.isSuccess());
         assert (FollowerRepository.isFollowing(id1.get(), id2.get()).get());
         assert (FollowerRepository.countFollowers().get() == 1);
-        Logger.processFollowers();
-        assert ((int) Logger.getFollowers() == 1);
+        LogService.processFollowers();
+        assert ((int) LogService.getFollowers() == 1);
 
         var rs2 = FollowerRepository.followUser(id1.get(), "brian");
         assert (rs2.isSuccess());
         assert (FollowerRepository.isFollowing(id1.get(), id3.get()).get());
         assert (FollowerRepository.countFollowers().get() == 2);
-        Logger.processFollowers();
-        assert ((int) Logger.getFollowers() == 2);
+        LogService.processFollowers();
+        assert ((int) LogService.getFollowers() == 2);
 
         var rs = FollowerRepository.getFollowing(id1.get());
         assert (rs.isSuccess());

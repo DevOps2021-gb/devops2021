@@ -19,25 +19,28 @@ public class DB {
 
     private DB() {}
 
+    private static void setSystemProperties() {
+        if(connectionString != null) {
+            System.setProperty("norm.jdbcUrl", "jdbc:" + connectionString);
+        } else {
+            System.setProperty("norm.jdbcUrl", "jdbc:mysql://" + ip + ":" + PORT + "/" + database + "?allowPublicKeyRetrieval=true&useSSL=false");
+        }
+
+        System.setProperty("norm.user", user);
+        System.setProperty("norm.password", pw);
+    }
+
     /*
         Returns a new connection to the database.
     */
     public static Result<Database> connectDb() {
         if (instance == null) {
             try {
-
-                if(connectionString != null) {
-                    System.setProperty("norm.jdbcUrl", "jdbc:" + connectionString);
-                } else {
-                    System.setProperty("norm.jdbcUrl", "jdbc:mysql://" + ip + ":" + PORT + "/" + database + "?allowPublicKeyRetrieval=true&useSSL=false");
-                }
-
-                System.setProperty("norm.user", user);
-                System.setProperty("norm.password", pw);
+                setSystemProperties();
 
                 instance = new Database();
             } catch (Exception e) {
-                return new Failure<>("could not establish connection to DB");
+                return new Failure<>(e);
             }
         }
 

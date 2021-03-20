@@ -1,7 +1,6 @@
 package Controller;
 
-import Logic.Logger;
-import Logic.Minitwit;
+import Service.*;
 import Persistence.UserRepository;
 import Utilities.JSON;
 import Utilities.Requests;
@@ -30,7 +29,7 @@ public class Endpoints {
         endpointsGet.put("/metrics",             Endpoints::metrics);
         endpointsGet.put("/public",              Endpoints::publicTimeline);
         endpointsGet.put("/login",               Endpoints::loginGet);
-        endpointsGet.put("/register",            (req, res)-> Presentation.renderTemplate(Minitwit.REGISTER_HTML));
+        endpointsGet.put("/register",            (req, res)-> Presentation.renderTemplate(MessageService.REGISTER_HTML));
         endpointsGet.put("/logout",              Endpoints::logout);
         endpointsGet.put("/:username/follow",    Endpoints::followUser);
         endpointsGet.put("/:username/unfollow",  Endpoints::unfollowUser);
@@ -44,94 +43,94 @@ public class Endpoints {
     }
 
     public static Object getLatest(Request request, Response response) {
-        return Minitwit.getLatest(response);
+        return MessageService.getLatest(response);
     }
 
     public static Object messages(Request request, Response response) {
-        return Minitwit.messages(request, response);
+        return MessageService.messages(request, response);
     }
 
     public static Object messagesPerUser(Request request, Response response) {
-        return Minitwit.messagesPerUser(request, response);
+        return MessageService.messagesPerUser(request, response);
     }
 
     public static Object getFollow(Request request, Response response) {
-        return Minitwit.getFollow(request, response);
+        return UserService.getFollow(request, response);
     }
 
     public static Object timeline(Request request, Response response) {
-        return Minitwit.timeline(request, response);
+        return TimelineService.timeline(request, response);
     }
 
     public static Object metrics(Request request, Response response) {
-        return Minitwit.metrics(response);
+        return MetricsService.metrics(response);
     }
 
     public static Object publicTimeline(Request request, Response response) {
-        return Minitwit.publicTimeline(request);
+        return TimelineService.publicTimeline(request);
     }
 
     public static Object loginGet(Request request, Response response) {
-        return Minitwit.loginGet(request);
+        return UserService.loginGet(request);
     }
 
     public static Object logout(Request request, Response response) {
-        Minitwit.logout(request, response);
+        UserService.logout(request, response);
         return null;
     }
 
     public static Object followUser(Request request, Response response) {
-        Minitwit.followUser(request, response);
+        UserService.followUser(request, response);
         return null;
     }
 
     public static Object unfollowUser(Request request, Response response) {
-        Minitwit.unfollowUser(request, response);
+        UserService.unfollowUser(request, response);
         return null;
     }
 
     public static Object userTimeline(Request request, Response response) {
-        return Minitwit.userTimeline(request);
+        return TimelineService.userTimeline(request);
     }
 
     public static Object addMessage(Request request, Response response) {
-        Minitwit.addMessage(request, response);
+        MessageService.addMessage(request, response);
         return null;
     }
 
     public static Object postFollow(Request request, Response response) {
-        return Minitwit.postFollow(request, response);
+        return UserService.postFollow(request, response);
     }
 
     public static Object login(Request request, Response response) {
-        return Minitwit.login(request, response);
+        return UserService.login(request, response);
     }
 
     public static Object register(Request request, Response response) {
-        return Minitwit.register(request, response);
+        return UserService.register(request, response);
     }
 
     public static void registerEndpoints() {
         setUpEntryPointsMap();
         for(String point : entryPointsGetOrder) {
-            Spark.get(point, (req, res)-> Logger.benchMarkEndpoint(point, endpointsGet.get(point), req, res));
+            Spark.get(point, (req, res)-> LogService.benchMarkEndpoint(point, endpointsGet.get(point), req, res));
         }
         for(String point : entryPointsPostOrder) {
-            Spark.post(point, (req, res)-> Logger.benchMarkEndpoint(point, endpointsPost.get(point), req, res));
+            Spark.post(point, (req, res)-> LogService.benchMarkEndpoint(point, endpointsPost.get(point), req, res));
         }
-        Logger.setEndpointsToLog(entryPointsGetOrder, entryPointsPostOrder);
+        LogService.setEndpointsToLog(entryPointsGetOrder, entryPointsPostOrder);
     }
 
     public static void registerHooks() {
         Spark.before((request, response) -> {
-            Logger.processRequest();
-            Logger.logRequest(request);
+            LogService.processRequest();
+            LogService.logRequest(request);
 
             Integer userId = Requests.getSessionUserId(request);
             if (userId != null) {
                 var user = UserRepository.getUserById(userId);
                 if (user.isSuccess()) {
-                    request.session().attribute(Minitwit.USER_ID, user.get().id);
+                    request.session().attribute(MessageService.USER_ID, user.get().id);
                 }
             }
         });

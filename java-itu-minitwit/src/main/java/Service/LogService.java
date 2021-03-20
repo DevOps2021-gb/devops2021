@@ -1,4 +1,4 @@
-package Logic;
+package Service;
 
 import java.lang.management.ManagementFactory;
 import java.lang.management.OperatingSystemMXBean;
@@ -17,7 +17,7 @@ import io.prometheus.client.Gauge;
 import spark.Request;
 import spark.Response;
 
-public class Logger {
+public class LogService {
     private static final long LOGGING_PERIOD_SECONDS = 15;
     private static final OperatingSystemMXBean operatingSystemMXBean = ManagementFactory.getOperatingSystemMXBean();
 
@@ -33,7 +33,7 @@ public class Logger {
             .name("messages_total").help("Total amount of messages.").register();
     private static final Map<String, Gauge> responseTimeEndPoints=new HashMap<>();
 
-    private Logger() {
+    private LogService() {
     }
 
     public static void logRequest(Request request) {
@@ -61,7 +61,7 @@ public class Logger {
 
     public static void startSchedules() {
         ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
-        executorService.scheduleAtFixedRate(Logger::logUserInformation, 1, LOGGING_PERIOD_SECONDS , TimeUnit.SECONDS);
+        executorService.scheduleAtFixedRate(LogService::logUserInformation, 1, LOGGING_PERIOD_SECONDS , TimeUnit.SECONDS);
     }
     private static void logUserInformation() {
         processCpuLoad();
@@ -107,7 +107,7 @@ public class Logger {
     public static Object benchMarkEndpoint(String endPointName, BiFunction<Request, Response, Object> endpoint, Request req, Response res){
         var startTime = System.currentTimeMillis();
         Object result = endpoint.apply(req, res);
-        Logger.logResponseTimeEndpoint(endPointName,System.currentTimeMillis() - startTime);
+        LogService.logResponseTimeEndpoint(endPointName,System.currentTimeMillis() - startTime);
         return result;
     }
 

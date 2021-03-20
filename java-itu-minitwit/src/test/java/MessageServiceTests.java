@@ -1,43 +1,44 @@
-import Logic.Logger;
-import Logic.Minitwit;
+import Service.LogService;
+import Service.MessageService;
 import Persistence.MessageRepository;
 import Persistence.UserRepository;
+import Service.UserService;
 import org.junit.jupiter.api.Test;
 
-public class MinitwitTests extends DatabaseTestBase {
+public class MessageServiceTests extends DatabaseTestBase {
     @Test
     void validateUserCredentials_given_already_existing_user_returns_user_already_exists() {
         var result = UserRepository.AddUser("user1", "test@test.dk", "q123");
         assert (result.isSuccess() && result.get().equals("OK"));
         assert (UserRepository.countUsers().get() == 1);
-        Logger.processUsers();
-        assert ((int) Logger.getUsers() == 1);
+        LogService.processUsers();
+        assert ((int) LogService.getUsers() == 1);
 
-        result = Minitwit.validateUserCredentials("user1", "test@test.dk", "q123", "q123");
+        result = UserService.validateUserCredentials("user1", "test@test.dk", "q123", "q123");
         assert (!result.isSuccess() && result.getFailureMessage().equals("The username is already taken"));
     }
 
     @Test
     void validateUserCredentials_given_no_username_returns_missing_username() {
-        var error = Minitwit.validateUserCredentials("", "q123", null, null);
+        var error = UserService.validateUserCredentials("", "q123", null, null);
         assert (!error.isSuccess() && error.getFailureMessage().equals("You have to enter a username"));
     }
 
     @Test
     void validateUserCredentials_given_no_password_returns_missing_password() {
-        var error = Minitwit.validateUserCredentials("user2", "test@test.dk", "", null);
+        var error = UserService.validateUserCredentials("user2", "test@test.dk", "", null);
         assert (!error.isSuccess() && error.getFailureMessage().equals("You have to enter a password"));
     }
 
     @Test
     void validateUserCredentials_given_non_matching_passwords_returns_non_matching_passwords() {
-        var error = Minitwit.validateUserCredentials("user2", "test@test.dk", "2", "1");
+        var error = UserService.validateUserCredentials("user2", "test@test.dk", "2", "1");
         assert (!error.isSuccess() && error.getFailureMessage().equals("The two passwords do not match"));
     }
 
     @Test
     void validateUserCredentials_given_invalid_email_returns_invalid_email() {
-        var error = Minitwit.validateUserCredentials("user2", "1", null, "bad email");
+        var error = UserService.validateUserCredentials("user2", "1", null, "bad email");
         assert (!error.isSuccess() && error.getFailureMessage().equals("You have to enter a valid email address"));
     }
 

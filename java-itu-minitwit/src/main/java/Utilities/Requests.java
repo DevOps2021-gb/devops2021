@@ -1,6 +1,6 @@
 package Utilities;
 
-import Logic.Minitwit;
+import Service.MessageService;
 import RoP.Failure;
 import RoP.Result;
 import RoP.Success;
@@ -30,15 +30,16 @@ public class Requests {
     }
 
     public static Integer getSessionUserId(Request request) {
-        return request.session().attribute(Minitwit.USER_ID);
+        return request.session().attribute(MessageService.USER_ID);
     }
 
     public static Object getSessionFlash(Request request) {
-        var msg = request.session().attribute(Minitwit.FLASH);
-        request.session().removeAttribute(Minitwit.FLASH);
+        var msg = request.session().attribute(MessageService.FLASH);
+        request.session().removeAttribute(MessageService.FLASH);
         return msg;
     }
 
+    //TODO refactor this: Method getParamsFromRequest has a Cognitive Complexity of 13 (exceeds 5 allowed). Consider refactoring
     public static Map<String,String> getParamsFromRequest(Request request, String ... args){
         Map<String, String> map = new HashMap<>(request.params());
 

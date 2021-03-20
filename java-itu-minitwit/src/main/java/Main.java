@@ -1,5 +1,5 @@
 import Controller.Endpoints;
-import Logic.Logger;
+import Service.LogService;
 import Persistence.DB;
 
 import static spark.Spark.staticFiles;
@@ -20,7 +20,7 @@ public class Main {
 
             //add db clear here if working LOCALLY
 
-            Logger.startSchedules();
+            LogService.startSchedules();
 
         } catch (Exception e) {
             e.printStackTrace();

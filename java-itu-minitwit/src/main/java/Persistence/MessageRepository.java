@@ -1,6 +1,6 @@
 package Persistence;
 
-import Logic.Minitwit;
+import Service.MessageService;
 import Model.Message;
 import Model.Tweet;
 import RoP.Failure;
@@ -56,7 +56,7 @@ Displays the latest messages of all users.
                             "where message.flagged = 0 and message.authorId = user.id " +
                             condition +" "+
                             "order by message.pubDate desc limit "+PER_PAGE, args).results(HashMap.class);
-            return new Success<>(Minitwit.tweetsFromListOfHashMap(result));
+            return new Success<>(MessageService.tweetsFromListOfHashMap(result));
         } catch (Exception e) {
             return new Failure<>(e);
         }
