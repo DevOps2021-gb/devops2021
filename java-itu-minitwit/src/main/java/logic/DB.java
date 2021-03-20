@@ -1,8 +1,8 @@
-package Logic;
+package logic;
 
-import RoP.Failure;
-import RoP.Result;
-import RoP.Success;
+import rop.Failure;
+import rop.Result;
+import rop.Success;
 import com.dieselpoint.norm.Database;
 
 public final class DB {

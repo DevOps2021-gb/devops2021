@@ -1,4 +1,4 @@
-package RoP;
+package rop;
 
 public interface Result<T>
 {

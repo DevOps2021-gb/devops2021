@@ -1,9 +1,9 @@
-package Logic;
+package logic;
 
-import Model.Tweet;
-import Model.User;
-import RoP.Failure;
-import RoP.Result;
+import model.Tweet;
+import model.User;
+import rop.Failure;
+import rop.Result;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.io.Resources;
 import com.hubspot.jinjava.Jinjava;

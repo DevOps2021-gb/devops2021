@@ -1,7 +1,7 @@
 
-import RoP.Failure;
-import RoP.Result;
-import RoP.Success;
+import rop.Failure;
+import rop.Result;
+import rop.Success;
 import org.junit.jupiter.api.Test;
 
 class RoPTest {

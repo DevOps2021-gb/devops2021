@@ -1,9 +1,11 @@
-import Logic.DB;
-import Logic.Hashing;
-import Logic.Logger;
-import Logic.Queries;
-import RoP.Result;
-import RoP.Success;
+
+import logic.DB;
+import logic.Hashing;
+import logic.Logger;
+import logic.Queries;
+import rop.Result;
+import rop.Success;
+
 import org.junit.jupiter.api.Test;
 import static spark.Spark.stop;
 

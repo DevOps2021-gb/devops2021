@@ -1,4 +1,4 @@
-package RoP;
+package rop;
 
 public class Failure<T> implements Result<T> {
 
