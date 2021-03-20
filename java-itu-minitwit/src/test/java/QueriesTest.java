@@ -5,7 +5,6 @@ import logic.Logger;
 import logic.Queries;
 import rop.Result;
 import rop.Success;
-
 import org.junit.jupiter.api.Test;
 import static spark.Spark.stop;
 

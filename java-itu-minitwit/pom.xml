@@ -78,6 +78,11 @@
                         <exclude>checkstyle:EmptyLinesCheck</exclude>
                         <exclude>checkstyle:MagicNumberCheck</exclude>
                         <exclude>checkstyle:FinalLocalVariableCheck</exclude>
+                        <exclude>checkstyle:MultilineJavadocTagsCheck</exclude>
+                        <exclude>checkstyle:JavadocTagsCheck</exclude>
+                        <exclude>checkstyle:JavadocPackageCheck</exclude>
+                        <exclude>checkstyle:JavadocTypeCheck</exclude>
+                        <exclude>checkstyle:LocalFinalVariableNameCheck</exclude>
                     </excludes>
                 </configuration>
                 <executions>
