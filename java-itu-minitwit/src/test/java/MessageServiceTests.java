@@ -9,49 +9,49 @@ class MessageServiceTests extends DatabaseTestBase {
     @Test
     void validateUserCredentialsGivenAlreadyExistingUserReturnsUserAlreadyExists() {
         var result = UserRepository.addUser("user1", "test@test.dk", "q123");
-        assert (result.isSuccess() && result.get().equals("OK"));
-        assert (UserRepository.countUsers().get() == 1);
+        assert result.isSuccess() && result.get().equals("OK");
+        assert UserRepository.countUsers().get() == 1;
         LogService.processUsers();
-        assert ((int) LogService.getUsers() == 1);
+        assert (int) LogService.getUsers() == 1;
 
         result = UserService.validateUserCredentials("user1", "test@test.dk", "q123", "q123");
-        assert (!result.isSuccess() && result.getFailureMessage().equals("The username is already taken"));
+        assert !result.isSuccess() && result.getFailureMessage().equals("The username is already taken");
     }
 
     @Test
     void validateUserCredentialsGivenNoUsernameReturnsMissingUsername() {
         var error = UserService.validateUserCredentials("", "q123", null, null);
-        assert (!error.isSuccess() && error.getFailureMessage().equals("You have to enter a username"));
+        assert !error.isSuccess() && error.getFailureMessage().equals("You have to enter a username");
     }
 
     @Test
     void validateUserCredentialsGivenNoPasswordReturnsMissingPassword() {
         var error = UserService.validateUserCredentials("user2", "test@test.dk", "", null);
-        assert (!error.isSuccess() && error.getFailureMessage().equals("You have to enter a password"));
+        assert !error.isSuccess() && error.getFailureMessage().equals("You have to enter a password");
     }
 
     @Test
     void validateUserCredentialsGivenNonMatchingPasswordsReturnsNonMatchingPasswords() {
         var error = UserService.validateUserCredentials("user2", "test@test.dk", "2", "1");
-        assert (!error.isSuccess() && error.getFailureMessage().equals("The two passwords do not match"));
+        assert !error.isSuccess() && error.getFailureMessage().equals("The two passwords do not match");
     }
 
     @Test
     void validateUserCredentialsGivenInvalidEmailReturnsInvalidEmail() {
         var error = UserService.validateUserCredentials("user2", "1", null, "bad email");
-        assert (!error.isSuccess() && error.getFailureMessage().equals("You have to enter a valid email address"));
+        assert !error.isSuccess() && error.getFailureMessage().equals("You have to enter a valid email address");
     }
 
     @Test
     void testLoginLogout() {
         var result = this.registerAndLogin("user1", "default");
-        assert (result.isSuccess() && result.get());
+        assert result.isSuccess() && result.get();
         result = this.logout();
-        assert (result.isSuccess() && result.get()); //TODO will always succeed as is now
+        assert result.isSuccess() && result.get(); //TODO will always succeed as is now
         result = login("user2", "wrongpassword");
-        assert (!result.isSuccess() && result.getFailureMessage().equals("Invalid username"));
+        assert !result.isSuccess() && result.getFailureMessage().equals("Invalid username");
         result = login("user1", "wrongpassword");
-        assert (!result.isSuccess() && result.getFailureMessage().equals("Invalid password"));
+        assert !result.isSuccess() && result.getFailureMessage().equals("Invalid password");
     }
 
     @Test
@@ -64,11 +64,12 @@ class MessageServiceTests extends DatabaseTestBase {
         assert (rs.isSuccess());
         var tweet1 = rs.get().get(1);
         var tweet2 = rs.get().get(0);
-        assert (tweet1.getEmail().equals("foo@example.com"));
-        assert (tweet1.getUsername().equals("foo"));
-        assert (tweet1.getText().equals(text1));
-        assert (tweet2.getEmail().equals("foo@example.com"));
-        assert (tweet2.getUsername().equals("foo"));
-        assert (tweet2.getText().equals(text2));//todo store as: "&lt;test message 2&gt;"
+        assert tweet1.getEmail().equals("foo@example.com");
+        assert tweet1.getUsername().equals("foo");
+        assert tweet1.getText().equals(text1);
+        assert tweet2.getEmail().equals("foo@example.com");
+        assert tweet2.getUsername().equals("foo");
+        //todo store as: "&lt;test message 2&gt;"
+        assert tweet2.getText().equals(text2);
     }
 }
