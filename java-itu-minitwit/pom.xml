@@ -75,7 +75,7 @@
                         <exclude>checkstyle:.JavadocVariableCheck</exclude>
                         <exclude>checkstyle:.LineLengthCheck</exclude>
                         <exclude>checkstyle:.IllegalTokenCheck</exclude>
-                        <exclude>checkstyle:.EmptyLinesCheck</exclude>
+                        <exclude>checkstyle:.emptylinescheck</exclude>
                         <exclude>checkstyle:.MagicNumberCheck</exclude>
                         <exclude>checkstyle:.FinalLocalVariableCheck</exclude>
                         <exclude>checkstyle:.MultilineJavadocTagsCheck</exclude>
