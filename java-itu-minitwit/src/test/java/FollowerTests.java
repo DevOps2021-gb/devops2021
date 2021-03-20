@@ -1,6 +1,6 @@
-import Service.LogService;
-import Persistence.FollowerRepository;
-import Persistence.MessageRepository;
+import services.LogService;
+import persistence.FollowerRepository;
+import persistence.MessageRepository;
 import org.junit.jupiter.api.Test;
 
 class FollowerTests extends DatabaseTestBase{

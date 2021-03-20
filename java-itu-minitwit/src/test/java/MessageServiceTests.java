@@ -1,14 +1,13 @@
-import Service.LogService;
-import Service.MessageService;
-import Persistence.MessageRepository;
-import Persistence.UserRepository;
-import Service.UserService;
+import services.LogService;
+import persistence.MessageRepository;
+import persistence.UserRepository;
+import services.UserService;
 import org.junit.jupiter.api.Test;
 
-public class MessageServiceTests extends DatabaseTestBase {
+class MessageServiceTests extends DatabaseTestBase {
     @Test
     void validateUserCredentials_given_already_existing_user_returns_user_already_exists() {
-        var result = UserRepository.AddUser("user1", "test@test.dk", "q123");
+        var result = UserRepository.addUser("user1", "test@test.dk", "q123");
         assert (result.isSuccess() && result.get().equals("OK"));
         assert (UserRepository.countUsers().get() == 1);
         LogService.processUsers();

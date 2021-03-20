@@ -1,8 +1,8 @@
-import Persistence.UserRepository;
-import Utilities.Hashing;
+import persistence.UserRepository;
+import utilities.Hashing;
 import org.junit.jupiter.api.Test;
 
-public class UserTests extends DatabaseTestBase {
+class UserTests extends DatabaseTestBase {
     @Test
     void test_queryGetUser() {
         var id1 = register_login_getID("foo", "default",  "myEmail@itu.dk");
@@ -13,7 +13,7 @@ public class UserTests extends DatabaseTestBase {
         assert (id1.get().equals(id1_rs.get()));
         assert (user1_1.get().id == id1.get());
         assert (user1_1.get().getUsername().equals("foo"));
-        assert (user1_1.get().getPwHash().equals(Hashing.generatePasswordHash("default")));
+        assert (user1_1.get().getPwHash().equals(Hashing.generatePasswordHash("default").get()));
         assert (user1_1.get().getEmail().equals("myEmail@itu.dk"));
         assert (
                 user1_1.get().id == user1_2.get().id &&

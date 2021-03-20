@@ -1,13 +1,13 @@
-import Persistence.DB;
-import Persistence.MessageRepository;
-import Persistence.UserRepository;
-import RoP.Result;
-import RoP.Success;
+import persistence.DB;
+import persistence.MessageRepository;
+import persistence.UserRepository;
+import errorhandling.Result;
+import errorhandling.Success;
 import org.junit.jupiter.api.BeforeEach;
 
 import static spark.Spark.stop;
 
-public abstract class DatabaseTestBase {
+abstract class DatabaseTestBase {
     int userId = 1;
 
     @BeforeEach
@@ -28,7 +28,7 @@ public abstract class DatabaseTestBase {
 
     Result<String> register(String username, String password, String email){
         if (email==null)     email = username + "@example.com";
-        return UserRepository.AddUser(username, email, password);
+        return UserRepository.addUser(username, email, password);
     }
 
     Result<Boolean> login(String username, String password) {

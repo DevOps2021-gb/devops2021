@@ -1,8 +1,8 @@
-import Service.LogService;
-import Persistence.MessageRepository;
+import services.LogService;
+import persistence.MessageRepository;
 import org.junit.jupiter.api.Test;
 
-public class MessageTests extends DatabaseTestBase {
+class MessageTests extends DatabaseTestBase {
     @Test
     void test_getTweetsByUsername() {
         var id1 = register_login_getID("foo", "default",  null);
