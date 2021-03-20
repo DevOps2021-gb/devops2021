@@ -15,14 +15,14 @@ class RoPTest {
 
     @Test
     void testFailure() {
-        final var failure1 = new Failure<Integer>(new IndexOutOfBoundsException("test"));
-        assert !failure1.isSuccess();
-        assert failure1.getException().getClass() == IndexOutOfBoundsException.class;
-        assert failure1.getFailureMessage().equals("test");
-        final var failure2 = new Failure<Integer>("test");
-        assert !failure2.isSuccess();
-        assert failure2.getException().getClass() == Exception.class;
-        assert failure2.getFailureMessage().equals("test");
+        final var failureFromException = new Failure<Integer>(new IndexOutOfBoundsException("test"));
+        assert !failureFromException.isSuccess();
+        assert failureFromException.getException().getClass() == IndexOutOfBoundsException.class;
+        assert failureFromException.getFailureMessage().equals("test");
+        final var failureFromMessage = new Failure<Integer>("test");
+        assert !failureFromMessage.isSuccess();
+        assert failureFromMessage.getException().getClass() == Exception.class;
+        assert failureFromMessage.getFailureMessage().equals("test");
     }
 
 }

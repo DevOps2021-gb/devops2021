@@ -87,6 +87,9 @@
                         <exclude>checkstyle:ImportOrderCheck</exclude>
                         <exclude>checkstyle:AvoidStaticImportCheck</exclude>
                         <exclude>checkstyle:FinalParametersCheck</exclude>
+                        <exclude>checkstyle:AvoidInlineConditionalsCheck</exclude>
+                        <exclude>checkstyle:LocalVariableNameCheck</exclude>
+                        <exclude>checkstyle:MultipleVariableDeclarationsCheck</exclude>
                     </excludes>
                 </configuration>
                 <executions>
