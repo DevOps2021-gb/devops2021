@@ -1,3 +1,4 @@
+
 import services.LogService;
 import persistence.FollowerRepository;
 import persistence.MessageRepository;
@@ -5,10 +6,10 @@ import org.junit.jupiter.api.Test;
 
 class FollowerTests extends DatabaseTestBase{
     @Test
-    void test_getFollowing() {
-        var id1 = register_login_getID("foo", "default",  null);
-        var id2 = register_login_getID("bar","1234",  null);
-        var id3 = register_login_getID("brian","q123",  null);
+    void testGetFollowing() {
+        var id1 = registerLoginGetID("foo", "default",  null);
+        var id2 = registerLoginGetID("bar","1234",  null);
+        var id3 = registerLoginGetID("brian","q123",  null);
 
 
         assert (FollowerRepository.countFollowers().get() == 0);
@@ -36,13 +37,13 @@ class FollowerTests extends DatabaseTestBase{
     }
 
     @Test
-    void test_unfollowUser() {
-        var id1 = register_login_getID("foo", "default", null);
-        add_message("the message by foo", id1.get());
-        var id2 = register_login_getID("bar","1234", null);
-        add_message("the message by bar", id2.get());
-        var id3 = register_login_getID("brian","q123", null);
-        add_message("the message by bar", id2.get());
+    void testUnfollowUser() {
+        var id1 = registerLoginGetID("foo", "default", null);
+        addMessage("the message by foo", id1.get());
+        var id2 = registerLoginGetID("bar","1234", null);
+        addMessage("the message by bar", id2.get());
+        var id3 = registerLoginGetID("brian","q123", null);
+        addMessage("the message by bar", id2.get());
 
         var rs1 = FollowerRepository.followUser(id1.get(), "bar");
         assert (rs1.isSuccess());
@@ -67,14 +68,14 @@ class FollowerTests extends DatabaseTestBase{
 
 
     @Test
-    void test_following_PersonalTweets() {
-        var id1 = register_login_getID("foo", "default", null);
-        add_message("the message by foo", id1.get());
-        var id2 = register_login_getID("bar","1234", null);
-        add_message("the message by bar", id2.get());
-        var id3 = register_login_getID("brian","q123", null);
-        add_message("the message by Biran v1", id3.get());
-        add_message("the message by Biran v2", id3.get());
+    void testFollowingPersonalTweets() {
+        var id1 = registerLoginGetID("foo", "default", null);
+        addMessage("the message by foo", id1.get());
+        var id2 = registerLoginGetID("bar","1234", null);
+        addMessage("the message by bar", id2.get());
+        var id3 = registerLoginGetID("brian","q123", null);
+        addMessage("the message by Biran v1", id3.get());
+        addMessage("the message by Biran v2", id3.get());
 
 
         var rTweets = MessageRepository.getPersonalTweetsById(id1.get());

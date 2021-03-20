@@ -1,3 +1,4 @@
+
 import persistence.DB;
 import persistence.MessageRepository;
 import persistence.UserRepository;
@@ -35,12 +36,12 @@ abstract class DatabaseTestBase {
         return UserRepository.queryLogin(username, password);
     }
 
-    Result<Boolean> register_and_login(String username, String password) {
+    Result<Boolean> registerAndLogin(String username, String password) {
         register(username, password, null);
         return login(username, password);
     }
 
-    Result<Integer> register_login_getID(String username, String password, String email) {
+    Result<Integer> registerLoginGetID(String username, String password, String email) {
         register(username, password, email);
         login(username, password);
         var id = UserRepository.getUserId(username);
@@ -55,7 +56,7 @@ abstract class DatabaseTestBase {
         return new Success<>(true);
     }
 
-    void add_message(String text, int loggedInUserId) {
+    void addMessage(String text, int loggedInUserId) {
         var rs = MessageRepository.addMessage(text, loggedInUserId);
         assert (rs.get());
         try {

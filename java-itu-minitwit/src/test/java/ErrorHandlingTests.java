@@ -1,3 +1,4 @@
+
 import errorhandling.Failure;
 import errorhandling.Result;
 import errorhandling.Success;

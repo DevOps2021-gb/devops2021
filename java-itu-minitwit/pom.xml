@@ -91,6 +91,7 @@
                         <exclude>checkstyle:LocalVariableNameCheck</exclude>
                         <exclude>checkstyle:MultipleVariableDeclarationsCheck</exclude>
                         <exclude>checkstyle:IllegalCatchCheck</exclude>
+                        <exclude>checkstyle:AvoidDuplicateLiterals</exclude>
                     </excludes>
                 </configuration>
                 <executions>
