@@ -71,27 +71,27 @@
                 <configuration>
                     <license>file:${basedir}/QULICE_LICENSE.txt</license>
                     <excludes>
-                        <exclude>checkstyle:ParameterNumberCheck</exclude>
-                        <exclude>checkstyle:JavadocVariableCheck</exclude>
-                        <exclude>checkstyle:LineLengthCheck</exclude>
-                        <exclude>checkstyle:IllegalTokenCheck</exclude>
-                        <exclude>checkstyle:EmptyLinesCheck</exclude>
-                        <exclude>checkstyle:MagicNumberCheck</exclude>
-                        <exclude>checkstyle:FinalLocalVariableCheck</exclude>
-                        <exclude>checkstyle:MultilineJavadocTagsCheck</exclude>
-                        <exclude>checkstyle:JavadocTagsCheck</exclude>
-                        <exclude>checkstyle:JavadocPackageCheck</exclude>
-                        <exclude>checkstyle:PackageDeclarationCheck</exclude>
-                        <exclude>checkstyle:JavadocTypeCheck</exclude>
-                        <exclude>checkstyle:LocalFinalVariableNameCheck</exclude>
-                        <exclude>checkstyle:ImportOrderCheck</exclude>
-                        <exclude>checkstyle:AvoidStaticImportCheck</exclude>
-                        <exclude>checkstyle:FinalParametersCheck</exclude>
-                        <exclude>checkstyle:AvoidInlineConditionalsCheck</exclude>
-                        <exclude>checkstyle:LocalVariableNameCheck</exclude>
-                        <exclude>checkstyle:MultipleVariableDeclarationsCheck</exclude>
-                        <exclude>checkstyle:IllegalCatchCheck</exclude>
-                        <exclude>checkstyle:AvoidDuplicateLiterals</exclude>
+                        <exclude>checkstyle:.ParameterNumberCheck</exclude>
+                        <exclude>checkstyle:.JavadocVariableCheck</exclude>
+                        <exclude>checkstyle:.LineLengthCheck</exclude>
+                        <exclude>checkstyle:.IllegalTokenCheck</exclude>
+                        <exclude>checkstyle:.EmptyLinesCheck</exclude>
+                        <exclude>checkstyle:.MagicNumberCheck</exclude>
+                        <exclude>checkstyle:.FinalLocalVariableCheck</exclude>
+                        <exclude>checkstyle:.MultilineJavadocTagsCheck</exclude>
+                        <exclude>checkstyle:.JavadocTagsCheck</exclude>
+                        <exclude>checkstyle:.JavadocPackageCheck</exclude>
+                        <exclude>checkstyle:.PackageDeclarationCheck</exclude>
+                        <exclude>checkstyle:.JavadocTypeCheck</exclude>
+                        <exclude>checkstyle:.LocalFinalVariableNameCheck</exclude>
+                        <exclude>checkstyle:.ImportOrderCheck</exclude>
+                        <exclude>checkstyle:.AvoidStaticImportCheck</exclude>
+                        <exclude>checkstyle:.FinalParametersCheck</exclude>
+                        <exclude>checkstyle:.AvoidInlineConditionalsCheck</exclude>
+                        <exclude>checkstyle:.LocalVariableNameCheck</exclude>
+                        <exclude>checkstyle:.MultipleVariableDeclarationsCheck</exclude>
+                        <exclude>checkstyle:.IllegalCatchCheck</exclude>
+                        <exclude>checkstyle:.AvoidDuplicateLiterals</exclude>
                     </excludes>
                 </configuration>
                 <executions>
