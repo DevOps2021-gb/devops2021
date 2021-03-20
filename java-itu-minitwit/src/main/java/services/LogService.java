@@ -36,9 +36,8 @@ public class LogService {
     private LogService() {
     }
 
-    public static void logError(Exception error) {
-        System.out.println(error.getMessage());
-        error.printStackTrace();
+    public static void logError(Exception e) {
+        System.out.println(e.getMessage());
     }
 
     public static void logRequest(Request request) {
