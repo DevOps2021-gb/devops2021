@@ -9,7 +9,9 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiFunction;
 
-import Persistence.Repositories;
+import Persistence.FollowerRepository;
+import Persistence.MessageRepository;
+import Persistence.UserRepository;
 import io.prometheus.client.Counter;
 import io.prometheus.client.Gauge;
 import spark.Request;
@@ -17,7 +19,7 @@ import spark.Response;
 
 public class Logger {
     private static final long LOGGING_PERIOD_SECONDS = 15;
-    private static OperatingSystemMXBean operatingSystemMXBean = ManagementFactory.getOperatingSystemMXBean();
+    private static final OperatingSystemMXBean operatingSystemMXBean = ManagementFactory.getOperatingSystemMXBean();
 
     private static final Gauge cpuLoad = Gauge.build()
             .name("CPU_load").help("CPU load on server.").register();
@@ -76,15 +78,15 @@ public class Logger {
         cpuLoad.set(cpuLoadLastMinute);
     }
     public static void processUsers(){
-        long numberOfUsers = Repositories.countUsers().get();
+        long numberOfUsers = UserRepository.countUsers().get();
         users.set(numberOfUsers);
     }
     public static void processFollowers(){
-        long numberOfFollowers = Repositories.countFollowers().get();
+        long numberOfFollowers = FollowerRepository.countFollowers().get();
         followers.set(numberOfFollowers);
     }
     public static void processMessages(){
-        long numberOfMessages = Repositories.countMessages().get();
+        long numberOfMessages = MessageRepository.countMessages().get();
         messages.set(numberOfMessages);
     }
 

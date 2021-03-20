@@ -1,15 +1,16 @@
-import Logic.Minitwit;
 import Persistence.DB;
-import Persistence.Repositories;
+import Persistence.MessageRepository;
+import Persistence.UserRepository;
 import RoP.Result;
 import RoP.Success;
+import org.junit.jupiter.api.BeforeEach;
 
 import static spark.Spark.stop;
 
 public abstract class DatabaseTestBase {
     int userId = 1;
 
-    @org.junit.jupiter.api.BeforeEach
+    @BeforeEach
     void setUp() {
         DB.setDATABASE("testMinitwit");
         if (System.getProperty("DB_TEST_CONNECTION_STRING") != null) {
@@ -17,7 +18,7 @@ public abstract class DatabaseTestBase {
             DB.setUSER(System.getProperty("DB_USER"));
             DB.setPW(System.getProperty("DB_PASSWORD"));
         }
-        Repositories.dropDB();
+        DB.dropDB();
     }
 
     @org.junit.jupiter.api.AfterEach
@@ -25,25 +26,24 @@ public abstract class DatabaseTestBase {
         stop();
     }
 
-    Result<String> register(String username, String password, String password2, String email){
-        if (password2==null) password2 = password;
+    Result<String> register(String username, String password, String email){
         if (email==null)     email = username + "@example.com";
-        return Minitwit.validateUserCredentialsAndRegister(username, email, password, password2);
+        return UserRepository.AddUser(username, email, password);
     }
 
     Result<Boolean> login(String username, String password) {
-        return Repositories.queryLogin(username, password);
+        return UserRepository.queryLogin(username, password);
     }
 
     Result<Boolean> register_and_login(String username, String password) {
-        register(username, password, null, null);
+        register(username, password, null);
         return login(username, password);
     }
 
-    Result<Integer> register_login_getID(String username, String password, String password2, String email) {
-        register(username, password, password2, email);
+    Result<Integer> register_login_getID(String username, String password, String email) {
+        register(username, password, email);
         login(username, password);
-        var id = Repositories.getUserId(username);
+        var id = UserRepository.getUserId(username);
         assert (id.isSuccess());
         assert (id.get() == userId);
         userId++;
@@ -56,7 +56,7 @@ public abstract class DatabaseTestBase {
     }
 
     void add_message(String text, int loggedInUserId) {
-        var rs = Repositories.addMessage(text, loggedInUserId);
+        var rs = MessageRepository.addMessage(text, loggedInUserId);
         assert (rs.get());
         try {
             Thread.sleep(100);      //hotfix: added to ensure order of messages

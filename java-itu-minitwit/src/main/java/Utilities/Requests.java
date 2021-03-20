@@ -1,6 +1,9 @@
 package Utilities;
 
 import Logic.Minitwit;
+import RoP.Failure;
+import RoP.Result;
+import RoP.Success;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.eclipse.jetty.http.HttpStatus;
 import spark.Request;
@@ -63,5 +66,15 @@ public class Requests {
             }
         }
         return map;
+    }
+
+    public static Result<String> getParamFromRequest(String param, Request request) {
+        var params = getParamsFromRequest(request);
+
+        if (params.containsKey(param)) {
+            return new Success<>(params.get(param));
+        } else {
+            return new Failure<>(param + " was not found in request");
+        }
     }
 }

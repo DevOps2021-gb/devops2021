@@ -1,12 +1,13 @@
 package Logic;
 
-import Controller.Endpoints;
 import Model.Tweet;
 import Model.User;
-import Persistence.DB;
-import Persistence.Repositories;
+import Persistence.FollowerRepository;
+import Persistence.MessageRepository;
+import Persistence.UserRepository;
 import RoP.Failure;
 import RoP.Result;
+import RoP.Success;
 import Utilities.Formatting;
 import Utilities.Hashing;
 import Utilities.JSON;
@@ -15,7 +16,6 @@ import io.prometheus.client.CollectorRegistry;
 import io.prometheus.client.exporter.common.TextFormat;
 import org.eclipse.jetty.http.HttpStatus;
 import org.json.JSONArray;
-import org.json.JSONObject;
 import spark.Request;
 import spark.Response;
 
@@ -40,14 +40,14 @@ public class Minitwit {
     public static final String FLASH = "flash";
     private static final String ERROR = "error";
     public static final String USER_ID = "userId";
-    private static final String USER = "user";
+    public static final String USER = "user";
     private static final String USERNAME = "username";
     private static final String EMAIL = "email";
     private static final String PASSWORD = "password";
     private static final String ENDPOINT = "endpoint";
     private static final String MESSAGES = "messages";
     private static final String TITLE = "title";
-    private static final String CONTENT = "content";
+    public static final String CONTENT = "content";
 
     private static final CollectorRegistry registry = CollectorRegistry.defaultRegistry;
 
@@ -67,33 +67,13 @@ public class Minitwit {
         return JSON.respondLatest(latest);
     }
 
-    private static Object tweetsToJSONResponse(List<Tweet> tweets, Response response) {
-        List<JSONObject> messages = new ArrayList<>();
-        for (Tweet t : tweets) {
-            HashMap<String, String> msg = new HashMap<>();
-            msg.put(CONTENT, t.getText());
-            msg.put("pub_date", t.getPubDate());
-            msg.put(USER, t.getUsername());
-            messages.add(new JSONObject(msg));
-        }
-        var json = new JSONArray(messages);
-        if (json.length() == 0) {
-            response.status(HttpStatus.NO_CONTENT_204);
-            return "";
-        } else {
-            response.status(HttpStatus.OK_200);
-            response.type(JSON.APPLICATION_JSON);
-            return json;
-        }
-    }
-
     public static Object messages(Request request, Response response) {
         updateLatest(request);
         if (!isRequestFromSimulator(request)) {
             return notFromSimulatorResponse(response);
         }
-        var tweets = Repositories.publicTimeline().get();
-        return tweetsToJSONResponse(tweets, response);
+        var tweets = MessageRepository.publicTimeline().get();
+        return JSON.tweetsToJSONResponse(tweets, response);
     }
 
     public static Object messagesPerUser(Request request, Response response) {
@@ -103,17 +83,16 @@ public class Minitwit {
             return notFromSimulatorResponse(response);
         }
 
-        var params = getParamsFromRequest(request);
-        var username = params.get(":username");
-        var userIdResult = Repositories.getUserId(username);
+        var username = getParamFromRequest(":username", request).get();
+        var userIdResult = UserRepository.getUserId(username);
 
         if (!userIdResult.isSuccess()) {
             response.status(HttpStatus.NOT_FOUND_404);
             response.type(JSON.APPLICATION_JSON);
             return JSON.MESSAGE404_NOT_FOUND;
         } else {
-            var tweets = Repositories.getTweetsByUsername(username).get();
-            return tweetsToJSONResponse(tweets, response);
+            var tweets = MessageRepository.getTweetsByUsername(username).get();
+            return JSON.tweetsToJSONResponse(tweets, response);
         }
     }
 
@@ -124,16 +103,15 @@ public class Minitwit {
             return notFromSimulatorResponse(response);
         }
 
-        var params = getParamsFromRequest(request);
-        var username = params.get(":username");
-        var userIdResult = Repositories.getUserId(username);
+        var username = getParamFromRequest(":username", request).get();
+        var userIdResult = UserRepository.getUserId(username);
 
         if (!userIdResult.isSuccess()) {
             response.status(HttpStatus.NOT_FOUND_404);
             response.type(JSON.APPLICATION_JSON);
             return JSON.MESSAGE404_NOT_FOUND;
         }
-        List<User> following = Repositories.getFollowing(userIdResult.get()).get();
+        List<User> following = FollowerRepository.getFollowing(userIdResult.get()).get();
 
         response.status(HttpStatus.OK_200);
         response.type(JSON.APPLICATION_JSON);
@@ -141,7 +119,7 @@ public class Minitwit {
     }
 
     private static Object followOrUnfollow (String user, BiFunction<Integer, String, Result<String>> query, Result<Integer> userIdResult, Response response){
-        if (!Repositories.getUserId(user).isSuccess()) {
+        if (!UserRepository.getUserId(user).isSuccess()) {
             return return404(response);
         }
         var result = query.apply(userIdResult.get(), user);
@@ -156,18 +134,20 @@ public class Minitwit {
             return notFromSimulatorResponse(response);
         }
 
-        var params = getParamsFromRequest(request);
-        var username = params.get(":username");
-        var userIdResult = Repositories.getUserId(username);
+        var username = getParamFromRequest(":username", request).get();
+        var userIdResult = UserRepository.getUserId(username);
 
         if (!userIdResult.isSuccess()) {
             return return404(response);
         }
 
-        if (params.containsKey("follow")) {
-            return followOrUnfollow(params.get("follow"), Repositories::followUser, userIdResult, response);
-        } else if (params.containsKey("unfollow")) {
-            return followOrUnfollow(params.get("unfollow"), Repositories::unfollowUser, userIdResult, response);
+        var follow = getParamFromRequest("follow", request);
+        var unfollow = getParamFromRequest("unfollow", request);
+
+        if (follow.isSuccess()) {
+            return followOrUnfollow(follow.get(), FollowerRepository::followUser, userIdResult, response);
+        } else if (unfollow.isSuccess()) {
+            return followOrUnfollow(unfollow.get(), FollowerRepository::unfollowUser, userIdResult, response);
         }
         response.status(HttpStatus.BAD_REQUEST_400);
         return "";
@@ -200,12 +180,12 @@ public class Minitwit {
             response.redirect("/public");
             return null;
         }
-        var user = Repositories.getUserById(getSessionUserId(request)).get();
+        var user = UserRepository.getUserById(getSessionUserId(request)).get();
         HashMap<String, Object> context = new HashMap<>();
         context.put(USERNAME, user.getUsername());
         context.put(USER, user.getUsername());
         context.put(ENDPOINT,"timeline");
-        context.put(MESSAGES, Repositories.getPersonalTweetsById(user.id).get());
+        context.put(MESSAGES, MessageRepository.getPersonalTweetsById(user.id).get());
         context.put(TITLE, "My Timeline");
         context.put(FLASH, getSessionFlash(request));
         return Presentation.renderTemplate(TIMELINE_HTML, context);
@@ -219,11 +199,11 @@ public class Minitwit {
         var loggedInUser = getSessionUserId(request);
         Object returnPage;
         HashMap<String, Object> context = new HashMap<>();
-        context.put(MESSAGES, Repositories.publicTimeline().get());
+        context.put(MESSAGES, MessageRepository.publicTimeline().get());
         context.put(ENDPOINT, "publicTimeline");
         context.put(TITLE, "Public Timeline");
         if(loggedInUser != null) {
-            var user = Repositories.getUserById(loggedInUser);
+            var user = UserRepository.getUserById(loggedInUser);
             context.put(USERNAME, user.get().getUsername());
             context.put(USER, user.get().getUsername());
         } else {
@@ -238,34 +218,36 @@ public class Minitwit {
      */
     public static Object userTimeline(Request request) {
         updateLatest(request);
-        var params = getParamsFromRequest(request);
-        var profileUsername = params.get(":username");
+
+        var username = getParamFromRequest(":username", request).get();
 
         //TODO handle this
-        if (profileUsername.equals("favicon.ico")) return "";
+        if (username.equals("favicon.ico")) return "";
+
+        var profileUser = UserRepository.getUser(username);
 
         HashMap<String, Object> context = new HashMap<>();
         context.put(ENDPOINT, "userTimeline");
-        var profileUser = Repositories.getUser(profileUsername);
         context.put(TITLE, profileUser.get().getUsername() + "'s Timeline");
         context.put("profileUserId", profileUser.get().id);
         context.put("profileUserUsername", profileUser.get().getUsername());
-        context.put(MESSAGES, Repositories.getTweetsByUsername(profileUsername).get());
-        if (!isUserLoggedIn(request)) {
-            context.put(USERNAME, profileUsername);
-        } else {
+        context.put(MESSAGES, MessageRepository.getTweetsByUsername(username).get());
+
+        if (isUserLoggedIn(request)) {
             var userId = getSessionUserId(request);
-            var loggedInUser = Repositories.getUserById(userId);
+            var loggedInUser = UserRepository.getUserById(userId);
             context.put(USERNAME, loggedInUser.get().getUsername());
             context.put(USER, loggedInUser.get().id);
             context.put(USER_ID, userId);
-            context.put("followed", Repositories.isFollowing(loggedInUser.get().id, profileUser.get().id).get());
+            context.put("followed", FollowerRepository.isFollowing(loggedInUser.get().id, profileUser.get().id).get());
             context.put(FLASH, getSessionFlash(request));
+        } else {
+            context.put(USERNAME, username);
         }
         return Presentation.renderTemplate(TIMELINE_HTML, context);
     }
 
-    static void followOrUnfollow(Request request, Response response, BiFunction<Integer, String, Result<String>> query, String flashMessage){
+    private static void followOrUnfollow(Request request, Response response, BiFunction<Integer, String, Result<String>> query, String flashMessage){
         updateLatest(request);
 
         var params = getParamsFromRequest(request, USERNAME);
@@ -288,23 +270,21 @@ public class Minitwit {
     /*
     Adds the current user as follower of the given user.
      */
-    public static Object followUser(Request request, Response response) {
-        followOrUnfollow(request, response, Repositories::followUser, "You are now following ");
-        return null;
+    public static void followUser(Request request, Response response) {
+        followOrUnfollow(request, response, FollowerRepository::followUser, "You are now following ");
     }
 
     /*
     Removes the current user as follower of the given user.
      */
-    public static Object unfollowUser(Request request, Response response) {
-        followOrUnfollow(request, response, Repositories::unfollowUser, "You are no longer following ");
-        return null;
+    public static void unfollowUser(Request request, Response response) {
+        followOrUnfollow(request, response, FollowerRepository::unfollowUser, "You are no longer following ");
     }
 
     /*
     Registers a new message for the user.
      */
-    public static Object addMessage(Request request, Response response) {
+    public static void addMessage(Request request, Response response) {
         updateLatest(request);
 
         var params = getParamsFromRequest(request, USERNAME, CONTENT);
@@ -315,26 +295,23 @@ public class Minitwit {
         if(username == null){
             if (!isUserLoggedIn(request)) {
                 halt(401, "You need to sign in to post a message");
-                return null;
             }
             userId = getSessionUserId(request);
         }
         else {
-            userId = Repositories.getUserId(username).get();
+            userId = UserRepository.getUserId(username).get();
         }
 
-        var rs = Repositories.addMessage(content, userId);
+        var rs = MessageRepository.addMessage(content, userId);
         if (rs.isSuccess()){
             if (isRequestFromSimulator(request)) {
                 response.status(HttpStatus.NO_CONTENT_204);
-                return "";
             } else {
                 System.out.println("Your message was recorded");
                 request.session().attribute(FLASH, "Your message was recorded");
             }
         }
         response.redirect("/");
-        return null;
     }
 
     public static Object login(Request request, Response response) {
@@ -349,10 +326,10 @@ public class Minitwit {
             return null;
         }
 
-        var loginResult = Repositories.queryLogin(username, password);
+        var loginResult = UserRepository.queryLogin(username, password);
 
         if (loginResult.isSuccess()) {
-            request.session().attribute(USER_ID, Repositories.getUserId(username).get());
+            request.session().attribute(USER_ID, UserRepository.getUserId(username).get());
             request.session().attribute(FLASH, "You were logged in");
             response.redirect("/");
             return null;
@@ -381,6 +358,7 @@ public class Minitwit {
         String email = params.get(EMAIL).replace("%40", "@");
         String password1 = params.get(PASSWORD);
         String password2 = params.get("password2");
+
         if (isRequestFromSimulator(request) && password1 == null && password2 == null) {
             password1 = params.get("pwd");
             password2 = password1;
@@ -390,57 +368,56 @@ public class Minitwit {
             return Presentation.renderTemplate(TIMELINE_HTML);
         }
 
-        var result = validateUserCredentialsAndRegister(username, email, password1, password2);
+        var isValid = validateUserCredentials(username, email, password1, password2);
 
-        if (result.isSuccess()) {
-            if (isRequestFromSimulator(request)) {
-                response.status(HttpStatus.NO_CONTENT_204);
-                return "";
-            } else {
-                request.session().attribute(FLASH, "You were successfully registered and can login now");
-                response.redirect("/login");
-                return null;
-            }
-        } else {
+        if (!isValid.isSuccess()) {
             if (isRequestFromSimulator(request)) {
                 response.status(HttpStatus.BAD_REQUEST_400);
                 response.type(JSON.APPLICATION_JSON);
-                return JSON.respond404Message(result.getFailureMessage());
+                return JSON.respond404Message(isValid.getFailureMessage());
             } else {
                 HashMap<String, Object> context = new HashMap<>();
-                context.put(ERROR, result.getFailureMessage());
+                context.put(ERROR, isValid.getFailureMessage());
                 context.put(USERNAME, username);
                 context.put(EMAIL, email);
                 return Presentation.renderTemplate(REGISTER_HTML, context);
             }
         }
-    }
 
-    public static Result<String> validateUserCredentialsAndRegister(String username, String email, String password1, String password2) {
-        String error;
-        if (username == null || username.equals("")) {
-            error = "You have to enter a username";
-        } else if (email == null || !email.contains("@")) {
-            error = "You have to enter a valid email address";
-        } else if (password1 == null || password1.equals("")) {
-            error = "You have to enter a password";
-        } else if (!password1.equals(password2)) {
-            error = "The two passwords do not match";
-        } else if (Repositories.getUserId(username).isSuccess()) {
-            error = "The username is already taken";
+        UserRepository.AddUser(username, email, password1);
+
+        if (isRequestFromSimulator(request)) {
+            response.status(HttpStatus.NO_CONTENT_204);
         } else {
-            //TODO remove this from this method and return OK instead
-            return Repositories.InsertUser(username, email, password1);
+            request.session().attribute(FLASH, "You were successfully registered and can login now");
+            response.redirect("/login");
         }
-        return new Failure<>(error);
+
+        return null;
+
     }
 
-    public static Object logout(Request request, Response response) {
+    public static Result<String> validateUserCredentials(String username, String email, String password1, String password2) {
+        if (username == null || username.equals("")) {
+            return new Failure<>("You have to enter a username");
+        } else if (email == null || !email.contains("@")) {
+            return new Failure<>("You have to enter a valid email address");
+        } else if (password1 == null || password1.equals("")) {
+            return new Failure<>("You have to enter a password");
+        } else if (!password1.equals(password2)) {
+            return new Failure<>("The two passwords do not match");
+        } else if (UserRepository.getUserId(username).isSuccess()) {
+            return new Failure<>("The username is already taken");
+        } else {
+            return new Success<>("OK");
+        }
+    }
+
+    public static void logout(Request request, Response response) {
         System.out.println("You were logged out");
         request.session().removeAttribute(USER_ID);
         request.session().attribute(FLASH, "You were logged out");
         response.redirect("/public");
-        return null;
     }
 
     public static List<Tweet> tweetsFromListOfHashMap(List<HashMap> result){

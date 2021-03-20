@@ -2,7 +2,7 @@ package Controller;
 
 import Logic.Logger;
 import Logic.Minitwit;
-import Persistence.Repositories;
+import Persistence.UserRepository;
 import Utilities.JSON;
 import Utilities.Requests;
 import View.Presentation;
@@ -76,15 +76,18 @@ public class Endpoints {
     }
 
     public static Object logout(Request request, Response response) {
-        return Minitwit.logout(request, response);
+        Minitwit.logout(request, response);
+        return null;
     }
 
     public static Object followUser(Request request, Response response) {
-        return Minitwit.followUser(request, response);
+        Minitwit.followUser(request, response);
+        return null;
     }
 
     public static Object unfollowUser(Request request, Response response) {
-        return Minitwit.unfollowUser(request, response);
+        Minitwit.unfollowUser(request, response);
+        return null;
     }
 
     public static Object userTimeline(Request request, Response response) {
@@ -92,7 +95,8 @@ public class Endpoints {
     }
 
     public static Object addMessage(Request request, Response response) {
-        return Minitwit.addMessage(request, response);
+        Minitwit.addMessage(request, response);
+        return null;
     }
 
     public static Object postFollow(Request request, Response response) {
@@ -125,7 +129,7 @@ public class Endpoints {
 
             Integer userId = Requests.getSessionUserId(request);
             if (userId != null) {
-                var user = Repositories.getUserById(userId);
+                var user = UserRepository.getUserById(userId);
                 if (user.isSuccess()) {
                     request.session().attribute(Minitwit.USER_ID, user.get().id);
                 }

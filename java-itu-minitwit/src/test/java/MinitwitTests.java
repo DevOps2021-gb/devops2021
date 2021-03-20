@@ -1,33 +1,44 @@
 import Logic.Logger;
-import Persistence.Repositories;
+import Logic.Minitwit;
+import Persistence.MessageRepository;
+import Persistence.UserRepository;
 import org.junit.jupiter.api.Test;
 
 public class MinitwitTests extends DatabaseTestBase {
     @Test
-    void test_register(){
-        Logger.processUsers();
-        assert ((int) Logger.getUsers() == 0);
-        assert (Repositories.countUsers().get() == 0);
-
-        var error = register("user1", "q123", null, null);
-        assert (error.isSuccess() && error.get().equals("OK"));
-        assert (Repositories.countUsers().get() == 1);
+    void validateUserCredentials_given_already_existing_user_returns_user_already_exists() {
+        var result = UserRepository.AddUser("user1", "test@test.dk", "q123");
+        assert (result.isSuccess() && result.get().equals("OK"));
+        assert (UserRepository.countUsers().get() == 1);
         Logger.processUsers();
         assert ((int) Logger.getUsers() == 1);
 
-        error = register("user1", "q123", null, null);
-        assert (!error.isSuccess() && error.getFailureMessage().equals("The username is already taken"));
-        error = register("", "q123", null, null);
+        result = Minitwit.validateUserCredentials("user1", "test@test.dk", "q123", "q123");
+        assert (!result.isSuccess() && result.getFailureMessage().equals("The username is already taken"));
+    }
+
+    @Test
+    void validateUserCredentials_given_no_username_returns_missing_username() {
+        var error = Minitwit.validateUserCredentials("", "q123", null, null);
         assert (!error.isSuccess() && error.getFailureMessage().equals("You have to enter a username"));
-        error = register("user2", "", null, null);
+    }
+
+    @Test
+    void validateUserCredentials_given_no_password_returns_missing_password() {
+        var error = Minitwit.validateUserCredentials("user2", "test@test.dk", "", null);
         assert (!error.isSuccess() && error.getFailureMessage().equals("You have to enter a password"));
-        error = register("user2", "1", "2", null);
+    }
+
+    @Test
+    void validateUserCredentials_given_non_matching_passwords_returns_non_matching_passwords() {
+        var error = Minitwit.validateUserCredentials("user2", "test@test.dk", "2", "1");
         assert (!error.isSuccess() && error.getFailureMessage().equals("The two passwords do not match"));
-        error = register("user2", "1", null, "bad email");
+    }
+
+    @Test
+    void validateUserCredentials_given_invalid_email_returns_invalid_email() {
+        var error = Minitwit.validateUserCredentials("user2", "1", null, "bad email");
         assert (!error.isSuccess() && error.getFailureMessage().equals("You have to enter a valid email address"));
-        assert (Repositories.countUsers().get() == 1);
-        Logger.processUsers();
-        assert ((int) Logger.getUsers() == 1);
     }
 
     @Test
@@ -45,12 +56,12 @@ public class MinitwitTests extends DatabaseTestBase {
 
     @Test
     void test_publicTimeline() {
-        var id1 = register_login_getID("foo", "default", null, null);
+        var id1 = register_login_getID("foo", "default", null);
 
         String text1 = "test message 1", text2 = "<test message 2>";
         add_message(text1, id1.get());
         add_message(text2, id1.get());
-        var rs = Repositories.publicTimeline();
+        var rs = MessageRepository.publicTimeline();
         assert (rs.isSuccess());
         var tweet1 = rs.get().get(1);
         var tweet2 = rs.get().get(0);
