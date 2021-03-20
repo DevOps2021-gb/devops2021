@@ -1,9 +1,9 @@
-import RoP.Failure;
-import RoP.Result;
-import RoP.Success;
+import errorhandling.Failure;
+import errorhandling.Result;
+import errorhandling.Success;
 import org.junit.jupiter.api.Test;
 
-class RoPTest {
+class RoPTests {
 
     @Test
     void test_Success() {

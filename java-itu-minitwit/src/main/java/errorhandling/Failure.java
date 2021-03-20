@@ -1,4 +1,4 @@
-package RoP;
+package errorhandling;
 
 public class Failure<T> implements Result<T> {
 

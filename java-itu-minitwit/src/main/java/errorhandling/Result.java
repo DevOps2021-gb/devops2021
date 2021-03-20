@@ -1,4 +1,4 @@
-package RoP;
+package errorhandling;
 
 public interface Result<T>
 {
