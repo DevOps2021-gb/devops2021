@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+
+<ruleset name="Not qulice">
+
+    <description>
+        My custom rules (qulice can die)
+    </description>
+
+    <!-- Your rules will come here -->
+    <rule ref="category/java/bestpractices.xml">
+    </rule>
+
+    <rule ref="category/java/codestyle.xml">
+    </rule>
+
+    <rule ref="category/java/design.xml">
+    </rule>
+
+    <rule ref="category/java/documentation.xml">
+    </rule>
+
+    <rule ref="category/java/errorprone.xml">
+    </rule>
+
+    <rule ref="category/java/multithreading.xml">
+    </rule>
+
+    <rule ref="category/java/performance.xml">
+    </rule>
+
+    <rule ref="category/java/security.xml">
+    </rule>
+
+</ruleset>
