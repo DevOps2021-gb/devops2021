@@ -10,8 +10,8 @@ public final class DB {
     private static Database instance;
     private static String database = "Logic.minitwit";
     private static String ip = "localhost";
-    private static String user = "u-root";
-    private static String pw = "pw-root";
+    private static String user = "root";
+    private static String pw = user;
     private static String connectionString;
 
     private DB() {}
