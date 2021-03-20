@@ -7,10 +7,10 @@ class MessageTests extends DatabaseTestBase {
     @Test
     void testGetTweetsByUsername() {
         var id1 = this.registerLoginGetID("foo", "default",  null);
-        addMessage("the message by foo", id1.get());
-        logout();
+        this.addMessage("the message by foo", id1.get());
+        this.logout();
         var id2 = this.registerLoginGetID("bar","default",  null);
-        addMessage("the message by bar", id2.get());
+        this.addMessage("the message by bar", id2.get());
         var rs = MessageRepository.getTweetsByUsername("foo");
         assert (rs.isSuccess());
         var tweet1 = rs.get().get(0);
@@ -35,7 +35,7 @@ class MessageTests extends DatabaseTestBase {
         assert (MessageRepository.countMessages().get() == 1);
         LogService.processMessages();
         assert ((int) LogService.getMessages() == 1);
-        logout();
+        this.logout();
         var id2 = this.registerLoginGetID("bar","default",  null);
         this.addMessage("the message by bar", id2.get());
         assert (MessageRepository.countMessages().get() == 2);

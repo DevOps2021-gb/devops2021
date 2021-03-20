@@ -46,7 +46,7 @@ class MessageServiceTests extends DatabaseTestBase {
     void testLoginLogout() {
         var result = this.registerAndLogin("user1", "default");
         assert (result.isSuccess() && result.get());
-        result = logout();
+        result = this.logout();
         assert (result.isSuccess() && result.get()); //TODO will always succeed as is now
         result = login("user2", "wrongpassword");
         assert (!result.isSuccess() && result.getFailureMessage().equals("Invalid username"));
