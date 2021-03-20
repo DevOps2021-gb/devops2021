@@ -1,10 +1,7 @@
 name: Backup DB # ssh into minitwit server and make backup of remote database
 on:
-  push:
-    branches:
-    - feature/CI/BackupDB
   schedule:
-    - cron: "0 10 * * 1" # Every Monday at 10 AM UTC
+    - cron: "0 0 * * *" # At the end of every day (UTC)
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -24,4 +21,3 @@ jobs:
           envs: DB_HOST,DB_USERNAME,DB_PASSWORD,DB_PORT,DB_NAME
           script: |
             mysqldump -P $DB_PORT -h $DB_HOST -u $DB_USERNAME -p$DB_PASSWORD $DB_NAME > .db_backups/$(date +'%H-%M-%d-%m-%Y').sql
-            ls .db_backups/
