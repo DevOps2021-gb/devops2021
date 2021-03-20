@@ -27,8 +27,10 @@ abstract class DatabaseTestBase {
         stop();
     }
 
-    Result<String> register(String username, String password, String email){
-        if (email==null)     email = username + "@example.com";
+    Result<String> register(String username, String password, String email) {
+        if (email == null) {
+            email = new StringBuilder(username).append( "@example.com").toString();
+        }
         return UserRepository.addUser(username, email, password);
     }
 
@@ -38,29 +40,29 @@ abstract class DatabaseTestBase {
 
     Result<Boolean> registerAndLogin(String username, String password) {
         this.register(username, password, null);
-        return login(username, password);
+        return this.login(username, password);
     }
 
     Result<Integer> registerLoginGetID(String username, String password, String email) {
         this.register(username, password, email);
         this.login(username, password);
         var id = UserRepository.getUserId(username);
-        assert (id.isSuccess());
-        assert (id.get() == userId);
-        userId++;
+        assert id.isSuccess();
+        assert id.get() == this.userId;
+        this.userId++;
         return id;
     }
 
-    Result<Boolean> logout() {
+    static Result<Boolean> logout() {
         //todo logout helper function
         return new Success<>(true);
     }
 
+    //hotfix: added Thread.sleep to ensure order of messages
     void addMessage(String text, int loggedInUserId) {
         var rs = MessageRepository.addMessage(text, loggedInUserId);
-        assert (rs.get());
+        assert rs.get();
         try {
-            //hotfix: added to ensure order of messages
             Thread.sleep(100);
         } catch (InterruptedException e) {
             e.printStackTrace();
