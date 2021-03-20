@@ -2,11 +2,13 @@ package logic;
 
 import java.security.*;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.Base64;
 
 public class Hashing {
 
-    private Hashing() {}
+    private Hashing() {
+
+    }
 
     private static String generateHashString(String input) {
         String hashString = null;
