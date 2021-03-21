@@ -1,4 +1,3 @@
-
 import persistence.DB;
 import persistence.MessageRepository;
 import persistence.UserRepository;
@@ -53,7 +52,22 @@ abstract class DatabaseTestBase {
         return id;
     }
 
-    static Result<Boolean> logout() {
+    Result<Boolean> register_and_login(String username, String password) {
+        register(username, password, null);
+        return login(username, password);
+    }
+
+    Result<Integer> register_login_getID(String username, String password, String email) {
+        register(username, password, email);
+        login(username, password);
+        var id = UserRepository.getUserId(username);
+        assert (id.isSuccess());
+        assert (id.get() == userId);
+        userId++;
+        return id;
+    }
+
+    Result<Boolean> logout() {
         //todo logout helper function
         return new Success<>(true);
     }
@@ -64,6 +78,7 @@ abstract class DatabaseTestBase {
         assert rs.get();
         try {
             Thread.sleep(100);
+
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

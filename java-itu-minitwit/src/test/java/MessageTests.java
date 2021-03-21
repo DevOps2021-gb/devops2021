@@ -1,4 +1,3 @@
-
 import services.LogService;
 import persistence.MessageRepository;
 import org.junit.jupiter.api.Test;

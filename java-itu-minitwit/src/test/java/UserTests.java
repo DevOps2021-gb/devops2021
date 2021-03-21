@@ -1,4 +1,3 @@
-
 import persistence.UserRepository;
 import utilities.Hashing;
 import org.junit.jupiter.api.Test;

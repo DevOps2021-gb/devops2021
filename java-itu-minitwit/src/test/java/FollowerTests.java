@@ -56,7 +56,6 @@ class FollowerTests extends DatabaseTestBase{
         assert rs.get().size() == 0;
     }
 
-
     @Test
     void testFollowingPersonalTweets() {
         var id1 = this.registerLoginGetID("foo", "default", null);
