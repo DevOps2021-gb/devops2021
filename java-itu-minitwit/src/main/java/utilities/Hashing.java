@@ -53,8 +53,8 @@ public class Hashing {
     Return the gravatar image for the given email address.
     */
     public static String gravatarUrl(String email) {
-        String encodedEmail = new String(email.trim().toLowerCase().getBytes(StandardCharsets.UTF_8), StandardCharsets.UTF_8);
+        String encodedEmail = new String(email.trim().toLowerCase(Locale.ENGLISH).getBytes(StandardCharsets.UTF_8), StandardCharsets.UTF_8);
         String hashHex = Hashing.generateHashHex(encodedEmail);
-        return String.format("http://www.gravatar.com/avatar/%s?d=identicon&s=%d", hashHex, 50);
+        return String.format(Locale.ENGLISH, "http://www.gravatar.com/avatar/%s?d=identicon&s=%d", hashHex, 50);
     }
 }

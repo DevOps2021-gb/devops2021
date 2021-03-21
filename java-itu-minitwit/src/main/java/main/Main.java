@@ -16,12 +16,9 @@ public class Main {
                 DB.setUSER(args[1]);
                 DB.setPW(args[2]);
             }
-
             Endpoints.registerHooks();
             Endpoints.registerEndpoints();
-
             //add db clear here if working LOCALLY
-
             LogService.startSchedules();
 
         } catch (Exception e) {

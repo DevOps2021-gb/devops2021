@@ -7,7 +7,7 @@ public class Tweet {
     private String pubDate;
     private String profilePic;
 
-    public Tweet(String email, String username, String text, String pubDate, String profilePic) {
+    public Tweet(final String email, final String username, final String text, final String pubDate, final String profilePic) {
         this.email = email;
         this.username = username;
         this.text = text;
@@ -21,7 +21,7 @@ public class Tweet {
         return email;
     }
 
-    public void setEmail(String email) {
+    public void setEmail(final String email) {
         this.email = email;
     }
 
@@ -29,7 +29,7 @@ public class Tweet {
         return username;
     }
 
-    public void setUsername(String username) {
+    public void setUsername(final String username) {
         this.username = username;
     }
 
@@ -37,7 +37,7 @@ public class Tweet {
         return text;
     }
 
-    public void setText(String text) {
+    public void setText(final String text) {
         this.text = text;
     }
 
@@ -45,7 +45,7 @@ public class Tweet {
         return pubDate;
     }
 
-    public void setPubDate(String pubDate) {
+    public void setPubDate(final String pubDate) {
         this.pubDate = pubDate;
     }
 
@@ -53,7 +53,7 @@ public class Tweet {
         return profilePic;
     }
 
-    public void setProfilePic(String profilePic) {
+    public void setProfilePic(final String profilePic) {
         this.profilePic = profilePic;
     }
 }

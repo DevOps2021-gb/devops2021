@@ -14,15 +14,19 @@ public class Message {
     private long pubDate;
     private int flagged;
 
-    // must have 0-arg constructor
+    /**
+     * must have 0-arg constructor
+     */
     public Message() {}
-    // must be public or privat with getter and setter
-    public Message(int authorId, String text, long pubDate, int flagged) {
+
+    public Message(final int authorId, final String text, final long pubDate, final int flagged) {
         this.authorId = authorId;
         this.text = text;
         this.pubDate = pubDate;
         this.flagged = flagged;
     }
+
+    //Jinjava needs to have access to getters/setters
 
     public int getAuthorId() {
         return authorId;

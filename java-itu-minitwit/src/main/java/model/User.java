@@ -6,17 +6,6 @@ import javax.persistence.Table;
 
 @Table(name = "user")
 public class User {
-
-    // must have 0-arg constructor
-    public User() {}
-
-    public User(String username, String email, String pwHash) {
-        this.username = username;
-        this.email = email;
-        this.pwHash = pwHash;
-    }
-
-    // must be public or privat with getter and setter
     @Id
     @GeneratedValue
     public int id;
@@ -25,11 +14,24 @@ public class User {
     private String email;
     private String pwHash;
 
+    /**
+     * must have 0-arg constructor
+     */
+    public User() {}
+
+    public User(final String username, final String email, final String pwHash) {
+        this.username = username;
+        this.email = email;
+        this.pwHash = pwHash;
+    }
+
+    //Jinjava needs to have access to getters/setters
+
     public String getUsername() {
         return username;
     }
 
-    public void setUsername(String username) {
+    public void setUsername(final String username) {
         this.username = username;
     }
 
@@ -37,7 +39,7 @@ public class User {
         return email;
     }
 
-    public void setEmail(String email) {
+    public void setEmail(final String email) {
         this.email = email;
     }
 
@@ -45,7 +47,7 @@ public class User {
         return pwHash;
     }
 
-    public void setPwHash(String pwHash) {
+    public void setPwHash(final String pwHash) {
         this.pwHash = pwHash;
     }
 }
