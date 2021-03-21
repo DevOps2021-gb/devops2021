@@ -1,15 +1,15 @@
-package rop;
+package errorhandling;
 
 public class Success<T> implements Result<T> {
     private final T value;
 
     public Success(T val) {
-        value = val;
+        this.value = val;
     }
 
     @Override
     public T get() {
-        return value;
+        return this.value;
     }
 
     @Override
