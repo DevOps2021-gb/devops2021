@@ -16,10 +16,10 @@ public class Formatting {
     */
     public static Result<String> formatDatetime(String timestamp) {
         try {
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd '@' HH:mm");
+            //SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd '@' HH:mm");
             Date resultDate = new Date(Long.parseLong(timestamp));
-            String date = sdf.format(resultDate);
-            return new Success<>(date);
+            //String date = sdf.format(resultDate);
+            return new Success<>(resultDate.toString().substring(4, 21));
         } catch (Exception e) {
             return new Failure<>(e);
         }
