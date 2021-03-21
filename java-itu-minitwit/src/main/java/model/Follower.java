@@ -1,4 +1,4 @@
-package Model;
+package model;
 
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -12,15 +12,17 @@ public class Follower {
     private int whoId;
     private int whomId;
 
-    // must have 0-arg constructor
-    public Follower() {
+    /**
+     * must have 0-arg constructor
+     */
+    public Follower() {}
 
-    }
-
-    public Follower(int whoId, int whomId) {
+    public Follower(final int whoId, final int whomId) {
         this.whoId = whoId;
         this.whomId = whomId;
     }
+
+    //Jinjava needs to have access to getters/setters
 
     public int getWhoId() {
         return whoId;

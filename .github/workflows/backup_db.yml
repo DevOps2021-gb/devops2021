@@ -1,0 +1,23 @@
+name: Backup DB # ssh into minitwit server and make backup of remote database
+on:
+  schedule:
+    - cron: "0 0 * * *" # At the end of every day (UTC)
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Backup remote database
+        uses: appleboy/ssh-action@v0.1.2
+        env:
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_USERNAME: ${{ secrets.DB_USERNAME }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_PORT: "25060" # Inside env object, you need to pass every environment variable as a string
+          DB_NAME: "minitwit"
+        with:
+          host: ${{secrets.SSH_HOST}} # IP address of the server we wish to ssh into
+          key: ${{secrets.SSH_KEY}} # Private key of the server
+          username: ${{ secrets.SSH_USERNAME }} # user of the server we want to ssh into
+          envs: DB_HOST,DB_USERNAME,DB_PASSWORD,DB_PORT,DB_NAME
+          script: |
+            mysqldump -P $DB_PORT -h $DB_HOST -u $DB_USERNAME -p$DB_PASSWORD $DB_NAME > .db_backups/$(date +'%H-%M-%d-%m-%Y').sql

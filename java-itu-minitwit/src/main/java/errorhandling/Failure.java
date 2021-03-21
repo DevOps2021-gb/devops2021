@@ -1,15 +1,15 @@
-package RoP;
+package errorhandling;
 
 public class Failure<T> implements Result<T> {
 
     final Exception exception;
 
     public Failure(Exception e) {
-        exception = e;
+        this.exception = e;
     }
 
     public Failure(String errorMsg) {
-        exception = new Exception(errorMsg);
+        this.exception = new Exception(errorMsg);
     }
 
     @Override
@@ -19,7 +19,7 @@ public class Failure<T> implements Result<T> {
 
     @Override
     public String getFailureMessage() {
-        return exception.getMessage();
+        return this.exception.getMessage();
     }
 
     @Override
@@ -28,11 +28,11 @@ public class Failure<T> implements Result<T> {
     }
 
     public Exception getException() {
-        return exception;
+        return this.exception;
     }
 
     @Override
     public String toString() {
-        return exception.toString();
+        return this.exception.toString();
     }
 }
