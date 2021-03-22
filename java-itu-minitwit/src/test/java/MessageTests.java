@@ -1,3 +1,4 @@
+import org.junit.jupiter.api.Assertions;
 import services.LogService;
 import persistence.MessageRepository;
 import org.junit.jupiter.api.Test;
@@ -11,46 +12,46 @@ class MessageTests extends DatabaseTestBase {
         var id2 = this.registerLoginGetID("bar","default",  null);
         this.addMessage("the message by bar", id2.get());
         var rs = MessageRepository.getTweetsByUsername("foo");
-        assert rs.isSuccess();
+        Assertions.assertEquals(true, rs.isSuccess());
         var tweet1 = rs.get().get(0);
-        assert tweet1.getEmail().equals("foo@example.com");
-        assert tweet1.getUsername().equals("foo");
-        assert tweet1.getText().equals("the message by foo");
+        Assertions.assertEquals("foo@example.com", tweet1.getEmail());
+        Assertions.assertEquals("foo", tweet1.getUsername());
+        Assertions.assertEquals("the message by foo", tweet1.getText());
         rs = MessageRepository.getTweetsByUsername("bar");
-        assert rs.isSuccess();
+        Assertions.assertEquals(true, rs.isSuccess());
         var tweet2 = rs.get().get(0);
-        assert tweet2.getEmail().equals("bar@example.com");
-        assert tweet2.getUsername().equals("bar");
-        assert tweet2.getText().equals("the message by bar");
+        Assertions.assertEquals("bar@example.com", tweet2.getEmail());
+        Assertions.assertEquals("bar", tweet2.getUsername());
+        Assertions.assertEquals("the message by bar", tweet2.getText());
     }
 
     @Test
     void testGetPersonalTweetsById() {
-        assert MessageRepository.countMessages().get() == 0;
+        Assertions.assertEquals(true, MessageRepository.countMessages().get() == 0);
         LogService.processMessages();
-        assert (int) LogService.getMessages() == 0;
+        Assertions.assertEquals(true, (int) LogService.getMessages() == 0);
         var id1 = this.registerLoginGetID("foo", "default",  null);
         this.addMessage("the message by foo", id1.get());
-        assert MessageRepository.countMessages().get() == 1;
+        Assertions.assertEquals(true, MessageRepository.countMessages().get() == 1);
         LogService.processMessages();
-        assert (int) LogService.getMessages() == 1;
+        Assertions.assertEquals(true, LogService.getMessages() == 1);
         this.logout();
         var id2 = this.registerLoginGetID("bar","default",  null);
         this.addMessage("the message by bar", id2.get());
-        assert MessageRepository.countMessages().get() == 2;
+        Assertions.assertEquals(true, MessageRepository.countMessages().get() == 2);
         LogService.processMessages();
-        assert (int) LogService.getMessages() == 2;
+        Assertions.assertEquals(true, (int) LogService.getMessages() == 2);
         var rs = MessageRepository.getPersonalTweetsById(id1.get());
-        assert rs.isSuccess();
+        Assertions.assertEquals(true, rs.isSuccess());
         var tweet1 = rs.get().get(0);
-        assert tweet1.getEmail().equals("foo@example.com");
-        assert tweet1.getUsername().equals("foo");
-        assert tweet1.getText().equals("the message by foo");
+        Assertions.assertEquals("foo@example.com", tweet1.getEmail());
+        Assertions.assertEquals("foo", tweet1.getUsername());
+        Assertions.assertEquals("the message by foo", tweet1.getText());
         rs = MessageRepository.getPersonalTweetsById(id2.get());
-        assert rs.isSuccess();
+        Assertions.assertEquals(true, rs.isSuccess());
         var tweet2 = rs.get().get(0);
-        assert tweet2.getEmail().equals("bar@example.com");
-        assert tweet2.getUsername().equals("bar");
-        assert tweet2.getText().equals("the message by bar");
+        Assertions.assertEquals("bar@example.com", tweet2.getEmail());
+        Assertions.assertEquals("bar", tweet2.getUsername());
+        Assertions.assertEquals("the message by bar", tweet2.getText());
     }
 }
