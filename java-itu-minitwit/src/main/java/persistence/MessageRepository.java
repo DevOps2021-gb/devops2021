@@ -45,7 +45,7 @@ Displays the latest messages of all users.
     public static Result<List<Tweet>> getTweetsByUsername(String username) {
         var userId = UserRepository.getUserId(username);
         if (!userId.isSuccess()) {
-            return new Failure<List<Tweet>>(userId.getFailureMessage());
+            return new Failure<>(userId.getFailureMessage());
         }
         return getTweetsFromMessageUser("and user.id = ? ", userId.get());
     }
