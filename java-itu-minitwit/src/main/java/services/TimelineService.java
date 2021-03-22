@@ -7,6 +7,7 @@ import view.Presentation;
 import spark.Request;
 import spark.Response;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 
 import static services.MessageService.*;
@@ -54,12 +55,17 @@ public class TimelineService {
             response.redirect("/public");
             return null;
         }
-        var user = UserRepository.getUserById(getSessionUserId(request)).get();
         HashMap<String, Object> context = new HashMap<>();
-        context.put(USERNAME, user.getUsername());
-        context.put(USER, user.getUsername());
+        var user = UserRepository.getUserById(getSessionUserId(request));
+        if (user.isSuccess()) {
+            context.put(USERNAME, user.get().getUsername());
+            context.put(USER, user.get().getUsername());
+        }
         context.put(ENDPOINT,"timeline");
-        context.put(MESSAGES, MessageRepository.getPersonalTweetsById(user.id).get());
+        var rsTweets = MessageRepository.getPersonalTweetsById(user.get().id);
+        if (rsTweets.isSuccess()) {
+            context.put(MESSAGES, rsTweets.get());
+        }
         context.put(TITLE, "My Timeline");
         context.put(FLASH, getSessionFlash(request));
         return Presentation.renderTemplate(TIMELINE_HTML, context);
@@ -77,13 +83,27 @@ Display's a users tweets.
         if (username.equals("favicon.ico")) return "";
 
         var profileUser = UserRepository.getUser(username);
-
         HashMap<String, Object> context = new HashMap<>();
         context.put(ENDPOINT, "userTimeline");
-        context.put(TITLE, profileUser.get().getUsername() + "'s Timeline");
-        context.put("profileUserId", profileUser.get().id);
-        context.put("profileUserUsername", profileUser.get().getUsername());
-        context.put(MESSAGES, MessageRepository.getTweetsByUsername(username).get());
+
+        if(profileUser.isSuccess()){
+            context.put(TITLE, profileUser.get().getUsername() + "'s Timeline");
+            context.put("profileUserId", profileUser.get().id);
+            context.put("profileUserUsername", profileUser.get().getUsername());
+        }
+        else{
+            context.put(TITLE, "404 not found" + "'s Timeline");
+            context.put("profileUserId", -1);
+            context.put("profileUserUsername", "404");
+        }
+
+        var rsTweets = MessageRepository.getTweetsByUsername(username);
+        if (rsTweets.isSuccess()) {
+            context.put(MESSAGES, rsTweets.get());
+        }
+        else {
+            context.put(MESSAGES, new ArrayList<>());
+        }
 
         if (isUserLoggedIn(request)) {
             var userId = getSessionUserId(request);
@@ -91,7 +111,10 @@ Display's a users tweets.
             context.put(USERNAME, loggedInUser.get().getUsername());
             context.put(USER, loggedInUser.get().id);
             context.put(USER_ID, userId);
-            context.put("followed", FollowerRepository.isFollowing(loggedInUser.get().id, profileUser.get().id).get());
+            var rsIsFollowing = FollowerRepository.isFollowing(loggedInUser.get().id, profileUser.get().id);
+            if(rsIsFollowing.isSuccess()) {
+                context.put("followed", rsIsFollowing.get());
+            }
             context.put(FLASH, getSessionFlash(request));
         } else {
             context.put(USERNAME, username);
