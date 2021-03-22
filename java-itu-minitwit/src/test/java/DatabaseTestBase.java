@@ -77,11 +77,5 @@ abstract class DatabaseTestBase {
     void addMessage(String text, int loggedInUserId) {
         var rs = MessageRepository.addMessage(text, loggedInUserId);
         Assertions.assertEquals(true, rs.get());
-        try {
-            Thread.sleep(100);
-
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
     }
 }
