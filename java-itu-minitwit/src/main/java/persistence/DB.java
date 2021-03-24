@@ -25,7 +25,6 @@ public class DB {
         } else {
             System.setProperty("norm.jdbcUrl", "jdbc:mysql://" + IP + ":" + PORT + "/" + database + "?allowPublicKeyRetrieval=true&useSSL=false");
         }
-
         System.setProperty("norm.user", user);
         System.setProperty("norm.password", pw);
     }
@@ -98,5 +97,16 @@ public class DB {
 
     public static String getConnectionString() {
         return connectionString;
+    }
+
+    public static void removeInstance() {
+        System.clearProperty("norm.jdbcUrl");
+        System.clearProperty("norm.user");
+        System.clearProperty("norm.password");
+        if (instance == null) {
+            return;
+        }
+        instance.close();
+        instance = null;
     }
 }
