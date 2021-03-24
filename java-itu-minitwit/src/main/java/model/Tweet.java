@@ -15,14 +15,8 @@ public class Tweet {
         this.profilePic = profilePic;
     }
 
-    //Jinjava needs to have access to getters/setters
-
     public String getEmail() {
         return email;
-    }
-
-    public void setEmail(final String email) {
-        this.email = email;
     }
 
     public String getUsername() {
@@ -45,15 +39,7 @@ public class Tweet {
         return pubDate;
     }
 
-    public void setPubDate(final String pubDate) {
-        this.pubDate = pubDate;
-    }
-
     public String getProfilePic() {
         return profilePic;
-    }
-
-    public void setProfilePic(final String profilePic) {
-        this.profilePic = profilePic;
     }
 }
