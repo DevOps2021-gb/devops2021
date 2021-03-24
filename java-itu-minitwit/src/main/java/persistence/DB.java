@@ -18,12 +18,14 @@ public class DB {
     private static String connectionString = null;
 
     private DB() {}
-
+    private static void setPropertyUrl(String url){
+        System.setProperty("norm.jdbcUrl", url);
+    }
     private static void setSystemProperties() {
         if(connectionString != null) {
-            System.setProperty("norm.jdbcUrl", "jdbc:" + connectionString);
+            setPropertyUrl("jdbc:" + connectionString);
         } else {
-            System.setProperty("norm.jdbcUrl", "jdbc:mysql://" + IP + ":" + PORT + "/" + database + "?allowPublicKeyRetrieval=true&useSSL=false");
+            setPropertyUrl("jdbc:mysql://" + IP + ":" + PORT + "/" + database + "?allowPublicKeyRetrieval=true&useSSL=false");
         }
         System.setProperty("norm.user", user);
         System.setProperty("norm.password", pw);
