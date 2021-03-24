@@ -122,8 +122,6 @@
 		<sonar.projectKey>DevOps2021-gb_devops2021</sonar.projectKey>
 		<sonar.organization>devops2021-gb</sonar.organization>
 		<sonar.host.url>https://sonarcloud.io</sonar.host.url>
-		<sonar.tests>src</sonar.tests>
-		<sonar.test.inclusions>src/test/java</sonar.test.inclusions>
 	</properties>
 
     <dependencies>
