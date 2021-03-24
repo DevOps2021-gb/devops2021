@@ -12,11 +12,12 @@ services:
             - "3306:3306"
         networks:
             - main
-    minitwit:
+    minitwitserver:
         build:
             context: ./
             dockerfile: Dockerfile-localDB
-        image: minitwit
+        image: ${ELK_USER}/minitwitserver
+        container_name: minitwit
         ports:
             - "4567:4567"
         networks:
