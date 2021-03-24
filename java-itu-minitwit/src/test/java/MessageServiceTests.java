@@ -1,3 +1,4 @@
+import org.junit.jupiter.api.Assertions;
 import services.LogService;
 import persistence.MessageRepository;
 import persistence.UserRepository;
@@ -8,49 +9,59 @@ class MessageServiceTests extends DatabaseTestBase {
     @Test
     void validateUserCredentialsGivenAlreadyExistingUserReturnsUserAlreadyExists() {
         var result = UserRepository.addUser("user1", "test@test.dk", "q123");
-        assert result.isSuccess() && result.get().equals("OK");
-        assert UserRepository.countUsers().get() == 1;
+        Assertions.assertEquals(true, result.isSuccess());
+        Assertions.assertEquals("OK", result.get());
+        Assertions.assertEquals(true, UserRepository.countUsers().get() == 1);
         LogService.processUsers();
-        assert (int) LogService.getUsers() == 1;
+        Assertions.assertEquals(true, LogService.getUsers() == 1);
 
         result = UserService.validateUserCredentials("user1", "test@test.dk", "q123", "q123");
-        assert !result.isSuccess() && result.getFailureMessage().equals("The username is already taken");
+        Assertions.assertEquals(false, result.isSuccess());
+        Assertions.assertEquals("The username is already taken",result.getFailureMessage());
     }
 
     @Test
     void validateUserCredentialsGivenNoUsernameReturnsMissingUsername() {
         var error = UserService.validateUserCredentials("", "q123", null, null);
-        assert !error.isSuccess() && error.getFailureMessage().equals("You have to enter a username");
+        Assertions.assertEquals(false, error.isSuccess());
+        Assertions.assertEquals("You have to enter a username", error.getFailureMessage());
     }
 
     @Test
     void validateUserCredentialsGivenNoPasswordReturnsMissingPassword() {
         var error = UserService.validateUserCredentials("user2", "test@test.dk", "", null);
-        assert !error.isSuccess() && error.getFailureMessage().equals("You have to enter a password");
+        Assertions.assertEquals(false, error.isSuccess());
+        Assertions.assertEquals("You have to enter a password", error.getFailureMessage());
     }
 
     @Test
     void validateUserCredentialsGivenNonMatchingPasswordsReturnsNonMatchingPasswords() {
         var error = UserService.validateUserCredentials("user2", "test@test.dk", "2", "1");
-        assert !error.isSuccess() && error.getFailureMessage().equals("The two passwords do not match");
+        Assertions.assertEquals(false, error.isSuccess());
+        Assertions.assertEquals("The two passwords do not match", error.getFailureMessage());
     }
 
     @Test
     void validateUserCredentialsGivenInvalidEmailReturnsInvalidEmail() {
         var error = UserService.validateUserCredentials("user2", "1", null, "bad email");
-        assert !error.isSuccess() && error.getFailureMessage().equals("You have to enter a valid email address");
+        Assertions.assertEquals(false, error.isSuccess());
+        Assertions.assertEquals("You have to enter a valid email address", error.getFailureMessage());
     }
 
     @Test
     void testLoginLogout() {
         var result = this.registerAndLogin("user1", "default");
-        assert result.isSuccess() && result.get();
+        Assertions.assertEquals(true, result.isSuccess());
+        Assertions.assertEquals(true, result.get());
         result = this.logout();
-        assert result.isSuccess() && result.get(); //TODO will always succeed as is now
-        result = login("user2", "wrongpassword");
-        assert !result.isSuccess() && result.getFailureMessage().equals("Invalid username");
-        result = login("user1", "wrongpassword");
-        assert !result.isSuccess() && result.getFailureMessage().equals("Invalid password");
+        Assertions.assertEquals(true, result.isSuccess());
+        Assertions.assertEquals(true, result.get()); //TODO will always succeed as is now
+        result = this.login("user2", "wrongpassword");
+        Assertions.assertEquals(false, result.isSuccess());
+        Assertions.assertEquals("Invalid username", result.getFailureMessage());
+        result = this.login("user1", "wrongpassword");
+        Assertions.assertEquals(false, result.isSuccess());
+        Assertions.assertEquals("Invalid password", result.getFailureMessage());
     }
 
     @Test
@@ -60,15 +71,15 @@ class MessageServiceTests extends DatabaseTestBase {
         this.addMessage(text1, id1.get());
         this.addMessage(text2, id1.get());
         var rs = MessageRepository.publicTimeline();
-        assert (rs.isSuccess());
+        Assertions.assertEquals(true, rs.isSuccess());
         var tweet1 = rs.get().get(1);
         var tweet2 = rs.get().get(0);
-        assert tweet1.getEmail().equals("foo@example.com");
-        assert tweet1.getUsername().equals("foo");
-        assert tweet1.getText().equals(text1);
-        assert tweet2.getEmail().equals("foo@example.com");
-        assert tweet2.getUsername().equals("foo");
+        Assertions.assertEquals( "foo@example.com", tweet1.getEmail());
+        Assertions.assertEquals( "foo", tweet1.getUsername());
+        Assertions.assertEquals( text1, tweet1.getText());
+        Assertions.assertEquals( "foo@example.com", tweet2.getEmail());
+        Assertions.assertEquals( "foo", tweet2.getUsername());
         //todo store as: "&lt;test message 2&gt;"
-        assert tweet2.getText().equals(text2);
+        Assertions.assertEquals(text2, tweet2.getText());
     }
 }

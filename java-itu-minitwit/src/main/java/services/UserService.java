@@ -100,7 +100,6 @@ public class UserService {
     private static void followOrUnfollow(Request request, Response response, BiFunction<Integer, String, Result<String>> query, String flashMessage){
         updateLatest(request);
 
-
         var params = getParamsFromRequest(request, USERNAME);
         String profileUsername = params.get(USERNAME) != null ? params.get(USERNAME) : params.get(USR_NAME);
 

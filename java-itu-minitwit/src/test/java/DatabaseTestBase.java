@@ -1,3 +1,4 @@
+import org.junit.jupiter.api.Assertions;
 import persistence.DB;
 import persistence.MessageRepository;
 import persistence.UserRepository;
@@ -46,8 +47,8 @@ abstract class DatabaseTestBase {
         this.register(username, password, email);
         this.login(username, password);
         var id = UserRepository.getUserId(username);
-        assert id.isSuccess();
-        assert id.get() == this.userId;
+        Assertions.assertEquals(true, id.isSuccess());
+        Assertions.assertEquals(true, id.get() == this.userId);
         this.userId++;
         return id;
     }
@@ -61,8 +62,8 @@ abstract class DatabaseTestBase {
         register(username, password, email);
         login(username, password);
         var id = UserRepository.getUserId(username);
-        assert (id.isSuccess());
-        assert (id.get() == userId);
+        Assertions.assertEquals(true, id.isSuccess());
+        Assertions.assertEquals(true, id.get() == userId);
         userId++;
         return id;
     }
@@ -75,12 +76,6 @@ abstract class DatabaseTestBase {
     //hotfix: added Thread.sleep to ensure order of messages
     void addMessage(String text, int loggedInUserId) {
         var rs = MessageRepository.addMessage(text, loggedInUserId);
-        assert rs.get();
-        try {
-            Thread.sleep(100);
-
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        Assertions.assertEquals(true, rs.get());
     }
 }
