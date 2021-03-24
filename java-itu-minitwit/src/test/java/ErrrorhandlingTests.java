@@ -4,7 +4,7 @@ import errorhandling.Success;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-class RoPTests {
+class ErrrorhandlingTests {
 
     @Test
     void test_Success() {

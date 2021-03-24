@@ -10,19 +10,20 @@ public class Main {
     public static void main(String[] args) {
         try {
             staticFiles.location("/");
-
-            if(args.length > 0) {
-                DB.setCONNECTIONSTRING(args[0]);
-                DB.setUSER(args[1]);
-                DB.setPW(args[2]);
-            }
+            handleArgs(args);
             Endpoints.registerHooks();
             Endpoints.registerEndpoints();
             //add db clear here if working LOCALLY
             LogService.startSchedules();
-
         } catch (Exception e) {
             LogService.logError(e);
+        }
+    }
+    public static void handleArgs(String[] args){
+        if(args.length > 0) {
+            DB.setCONNECTIONSTRING(args[0]);
+            DB.setUSER(args[1]);
+            DB.setPW(args[2]);
         }
     }
 }

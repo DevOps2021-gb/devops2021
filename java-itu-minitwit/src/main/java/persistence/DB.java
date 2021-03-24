@@ -9,13 +9,13 @@ import errorhandling.Success;
 import com.dieselpoint.norm.Database;
 
 public class DB {
-    static final int PORT = 3306;
     private static Database instance;
-    private static String database = "minitwit";
-    private static final String IP = "localhost";
-    private static String user = "root";
-    private static String pw = "root";
-    private static String connectionString;
+    static final int PORT                  = 3306;
+    private static String database         = "minitwit";
+    private static final String IP         = "localhost";
+    private static String user             = "root";
+    private static String pw               = "root";
+    private static String connectionString = null;
 
     private DB() {}
 
@@ -80,4 +80,23 @@ public class DB {
         db.sql("ALTER TABLE follower ADD FOREIGN KEY (whomId) REFERENCES user(id)").execute();
     }
 
+    public static String getDatabase() {
+        return database;
+    }
+
+    public static String getIP() {
+        return IP;
+    }
+
+    public static String getUser() {
+        return user;
+    }
+
+    public static String getPw() {
+        return pw;
+    }
+
+    public static String getConnectionString() {
+        return connectionString;
+    }
 }
