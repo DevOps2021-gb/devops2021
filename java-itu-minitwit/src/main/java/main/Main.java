@@ -19,6 +19,8 @@ public class Main {
             Endpoints.registerHooks();
             Endpoints.registerEndpoints();
             //add db clear here if working LOCALLY
+            persistence.DB.dropDB();
+
             LogService.startSchedules();
 
         } catch (Exception e) {
