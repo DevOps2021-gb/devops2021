@@ -13,6 +13,7 @@ abstract class DatabaseTestBase {
 
     @BeforeEach
     void setUp() {
+        DB.removeInstance();
         DB.setDATABASE("testMinitwit");
         if (System.getProperty("DB_TEST_CONNECTION_STRING") != null) {
             DB.setCONNECTIONSTRING(System.getProperty("DB_TEST_CONNECTION_STRING"));

@@ -100,6 +100,9 @@ public class DB {
     }
 
     public static void removeInstance() {
+        user             = "root";
+        pw               = "root";
+        connectionString = null;
         System.clearProperty("norm.jdbcUrl");
         System.clearProperty("norm.user");
         System.clearProperty("norm.password");
