@@ -123,7 +123,7 @@
 		<sonar.organization>devops2021-gb</sonar.organization>
 		<sonar.host.url>https://sonarcloud.io</sonar.host.url>
 		<sonar.tests>src</sonar.tests>
-		<sonar.tests>src/test/java</sonar.tests>
+		<sonar.test.inclusions>src/test/java</sonar.test.inclusions>
 	</properties>
 
     <dependencies>
