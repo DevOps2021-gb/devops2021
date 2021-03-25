@@ -2,6 +2,7 @@ import org.junit.jupiter.api.Assertions;
 import services.LogService;
 import persistence.MessageRepository;
 import org.junit.jupiter.api.Test;
+import utilities.Hashing;
 
 class MessageTests extends DatabaseTestBase {
     @Test
@@ -17,12 +18,14 @@ class MessageTests extends DatabaseTestBase {
         Assertions.assertEquals("foo@example.com", tweet1.getEmail());
         Assertions.assertEquals("foo", tweet1.getUsername());
         Assertions.assertEquals("the message by foo", tweet1.getText());
+        Assertions.assertEquals(Hashing.gravatarUrl(tweet1.getEmail()), tweet1.getProfilePic());
         rs = MessageRepository.getTweetsByUsername("bar");
         Assertions.assertEquals(true, rs.isSuccess());
         var tweet2 = rs.get().get(0);
         Assertions.assertEquals("bar@example.com", tweet2.getEmail());
         Assertions.assertEquals("bar", tweet2.getUsername());
         Assertions.assertEquals("the message by bar", tweet2.getText());
+        Assertions.assertEquals(Hashing.gravatarUrl(tweet2.getEmail()), tweet2.getProfilePic());
     }
 
     @Test
