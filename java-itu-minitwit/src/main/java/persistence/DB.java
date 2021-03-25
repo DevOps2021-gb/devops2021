@@ -9,23 +9,24 @@ import errorhandling.Success;
 import com.dieselpoint.norm.Database;
 
 public class DB {
-    static final int PORT = 3306;
     private static Database instance;
-    private static String database = "minitwit";
-    private static final String IP = "localhost";
-    private static String user = "root";
-    private static String pw = "root";
-    private static String connectionString;
+    static final int PORT                  = 3306;
+    private static String database         = "minitwit";
+    private static final String IP         = "localhost";
+    private static String user             = "root";
+    private static String pw               = "root";
+    private static String connectionString = null;
 
     private DB() {}
-
+    private static void setPropertyUrl(String url){
+        System.setProperty("norm.jdbcUrl", url);
+    }
     private static void setSystemProperties() {
         if(connectionString != null) {
-            System.setProperty("norm.jdbcUrl", "jdbc:" + connectionString);
+            setPropertyUrl("jdbc:" + connectionString);
         } else {
-            System.setProperty("norm.jdbcUrl", "jdbc:mysql://" + IP + ":" + PORT + "/" + database + "?allowPublicKeyRetrieval=true&useSSL=false");
+            setPropertyUrl("jdbc:mysql://" + IP + ":" + PORT + "/" + database + "?allowPublicKeyRetrieval=true&useSSL=false");
         }
-
         System.setProperty("norm.user", user);
         System.setProperty("norm.password", pw);
     }
@@ -80,4 +81,37 @@ public class DB {
         db.sql("ALTER TABLE follower ADD FOREIGN KEY (whomId) REFERENCES user(id)").execute();
     }
 
+    public static String getDatabase() {
+        return database;
+    }
+
+    public static String getIP() {
+        return IP;
+    }
+
+    public static String getUser() {
+        return user;
+    }
+
+    public static String getPw() {
+        return pw;
+    }
+
+    public static String getConnectionString() {
+        return connectionString;
+    }
+
+    public static void removeInstance() {
+        user             = "root";
+        pw               = "root";
+        connectionString = null;
+        System.clearProperty("norm.jdbcUrl");
+        System.clearProperty("norm.user");
+        System.clearProperty("norm.password");
+        if (instance == null) {
+            return;
+        }
+        instance.close();
+        instance = null;
+    }
 }
