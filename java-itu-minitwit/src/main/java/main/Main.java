@@ -14,7 +14,7 @@ public class Main {
             Endpoints.registerHooks();
             Endpoints.registerEndpoints();
             //add db clear here if working LOCALLY
-            LogService.startSchedules();
+            //LogService.startSchedules();
         } catch (Exception e) {
             LogService.logError(e);
         }
