@@ -47,21 +47,44 @@ Displays the latest messages of all users.
         if (!userId.isSuccess()) {
             return new Failure<>(userId.getFailureMessage());
         }
-        return getTweetsFromMessageUser("and user.id = ? ", userId.get());
+        return getTweetsFromMessageUser("and u.id = ? ", userId.get());
     }
 
     public static Result<List<Tweet>> getPersonalTweetsById(int userId) {
-        return getTweetsFromMessageUser("and (user.id = ? or user.id in (select whomId from follower where whoId = ?)) ", userId, userId);
+        //return getTweetsFromMessageUser("and (u.id = ? or u.id in (select f.whomId from follower f where f.whoId = ?)) ", userId, userId);
+        try{
+            var db = DB.connectDb().get();
+            String query =
+                    new StringBuilder("select joined.email, joined.username, joined.text, joined.pubDate ")
+                            .append("from ( ")
+                            .append("select u.email as email, u.username as username, m.text as text, m.pubDate as pubDate ")
+                            .append("from message m join user u on m.authorId = u.id ")
+                            .append("where m.flagged = 0 and u.id = ? ")
+                            .append("union ")
+                            .append("select u.email as email, u.username as username, m.text as text, m.pubDate as pubDate ")
+                            .append("from message m ")
+                            .append("join user u on m.authorId = u.id ")
+                            .append("join follower f on f.whoId = ? and f.whomId = u.id ")
+                            .append("where m.flagged = 0 ")
+                            .append(") joined ")
+                            .append("order by joined.pubDate desc limit ").append(PER_PAGE).toString();
+            var result = db.sql( query, userId, userId).results(HashMap.class);
+            return new Success<>(MessageService.tweetsFromListOfHashMap(result));
+        } catch (Exception e) {
+            return new Failure<>(e);
+        }
     }
 
     private static Result<List<Tweet>> getTweetsFromMessageUser(String condition, Object... args){
         try{
             var db = DB.connectDb().get();
-            var result = db.sql(
-                    "select message.*, user.* from message, user " +
-                            "where message.flagged = 0 and message.authorId = user.id " +
-                            condition +" "+
-                            "order by message.pubDate desc limit "+PER_PAGE, args).results(HashMap.class);
+            String query =
+                new StringBuilder("select u.email, u.username, m.text, m.pubDate ")
+                    .append("from message m join user u on m.authorId = u.id ")
+                    .append("where m.flagged = 0 ")
+                    .append(condition).append(" ")
+                    .append("order by m.pubDate desc limit ").append(PER_PAGE).toString();
+            var result = db.sql( query, args).results(HashMap.class);
             return new Success<>(MessageService.tweetsFromListOfHashMap(result));
         } catch (Exception e) {
             return new Failure<>(e);
