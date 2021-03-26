@@ -9,6 +9,11 @@ import java.util.Random;
 import java.util.function.IntToDoubleFunction;
 
 class Benchmark {
+
+  private static int n          = 10;
+  private static double minTime = 1;
+
+
   public static void main(String[] args) {
     //setup
     final int USERS_TO_ADD     = 20_000;
@@ -40,15 +45,15 @@ class Benchmark {
     SystemInfo();
     final Random rand = new Random();
     printMark8Headers();
-    Mark8("GetUserId",    i -> DBBenchmarkableFunctions.runGetUserId(   rand, USERS_TO_ADD, usernames));
-    Mark8("GetUser",      i -> DBBenchmarkableFunctions.runGetUser(     rand, USERS_TO_ADD, usernames));
-    Mark8("GetUserById",  i -> DBBenchmarkableFunctions.runGetUserById( rand, USERS_TO_ADD));
-    Mark8("CountUsers",       i -> DBBenchmarkableFunctions.runCountUsers());
-    Mark8("CountFollowers",   i -> DBBenchmarkableFunctions.runCountFollowers());
-    Mark8("CountMessages",    i -> DBBenchmarkableFunctions.runCountMessages());
-    Mark8("publicTimeline",     i -> DBBenchmarkableFunctions.runPublicTimeline());
-    Mark8("TweetsByUsername",   i -> DBBenchmarkableFunctions.runTweetsByUsername(   rand, USERS_TO_ADD, usernames));
-    Mark8("PersonalTweetsById", i -> DBBenchmarkableFunctions.runPersonalTweetsById( rand, USERS_TO_ADD));
+    Mark8("GetUserId", "",    i -> DBBenchmarkableFunctions.runGetUserId(   rand, USERS_TO_ADD, usernames));
+    Mark8("GetUser", "",      i -> DBBenchmarkableFunctions.runGetUser(     rand, USERS_TO_ADD, usernames));
+    Mark8("GetUserById", "",  i -> DBBenchmarkableFunctions.runGetUserById( rand, USERS_TO_ADD));
+    Mark8("CountUsers", "",       i -> DBBenchmarkableFunctions.runCountUsers());
+    Mark8("CountFollowers", "",   i -> DBBenchmarkableFunctions.runCountFollowers());
+    Mark8("CountMessages", "",    i -> DBBenchmarkableFunctions.runCountMessages());
+    Mark8("publicTimeline", "",     i -> DBBenchmarkableFunctions.runPublicTimeline());
+    Mark8("TweetsByUsername", "",   i -> DBBenchmarkableFunctions.runTweetsByUsername(   rand, USERS_TO_ADD, usernames));
+    Mark8("PersonalTweetsById", "", i -> DBBenchmarkableFunctions.runPersonalTweetsById( rand, USERS_TO_ADD));
   }
   // ========== Infrastructure code ==========
 
@@ -72,7 +77,7 @@ class Benchmark {
     System.out.println("msg, info,  mean, sdev, count");
   }
 
-  public static double Mark8(String msg, String info, IntToDoubleFunction f, int n, double minTime) {
+  public static double Mark8(String msg, String info, IntToDoubleFunction f) {
     int count = 1, totalCount = 0;
     double dummy = 0.0, runningTime = 0.0, st = 0.0, sst = 0.0;
     double timeSpentPausingOnce = getTimeSpentPausingOnce();
@@ -101,16 +106,13 @@ class Benchmark {
     System.out.printf("%-25s %s%15.1f ns %10.2f %10d%n", msg, info, mean, sdev, count);
     return dummy / totalCount;
   }
-  public static double Mark8(String msg, IntToDoubleFunction f) {
-    return Mark8(msg, "", f, 10, 1);
-  }
   public static double getTimeSpentPausingOnce(){
     Timer tForTimePausePlay = new Timer();
     long timesPaused = 10_000_000;
     for (int paused = 0; paused < timesPaused; paused++) { tForTimePausePlay.play(); tForTimePausePlay.pause(); }
     return 0.9*tForTimePausePlay.check() / timesPaused;    //0.9 to counter garbadge collection as that part rarely takes time normally
   }
-  public static double Mark8Setup(String msg, String info, Benchmarkable f, int n, double minTime) {
+  public static double Mark8Setup(String msg, String info, Benchmarkable f) {
     int count = 1, totalCount = 0;
     double dummy = 0.0, runningTime = 0.0, st = 0.0, sst = 0.0;
     double timeSpentPausingOnce = getTimeSpentPausingOnce();
@@ -140,5 +142,4 @@ class Benchmark {
     System.out.printf("%-25s %s%15.1f ns %10.2f %10d%n", msg, info, mean, sdev, count);
     return dummy / totalCount;
   }
-  public static double Mark8Setup(String msg, String info, Benchmarkable f) { return Mark8Setup(msg, info, f, 10, 1); }
 }
