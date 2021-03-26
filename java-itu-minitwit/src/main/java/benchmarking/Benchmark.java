@@ -16,43 +16,44 @@ class Benchmark {
   private static final int FOLLOWERS_TO_ADD = 40_000;
   private static final int MESSAGES_TO_ADD  = 40_000;
 
+  private static final Random rand = new Random();
+
 
   public static void main(String[] args) {
     //setup
-    boolean dbExists = true;
     final String[] usernames = CreateAndFillTestDB.genUsernames(USERS_TO_ADD);
     CreateAndFillTestDB.instantiateDB();
-    if (!dbExists) {
-      DB.dropDB();
-      System.out.println("start adding users");
-      CreateAndFillTestDB.addUsers(USERS_TO_ADD, usernames);
-      System.out.println("end adding users");
-      System.out.println("start adding followers");
-      CreateAndFillTestDB.addFollowers(FOLLOWERS_TO_ADD, usernames);
-      System.out.println("end adding followers");
-      System.out.println("start adding messages");
-      CreateAndFillTestDB.addMessages(MESSAGES_TO_ADD, USERS_TO_ADD);
-      System.out.println("end adding messages");
-    }
+    //populateDB(usernames);
     var db = DB.connectDb().get();
     DB.addIndexes(db);
     System.out.println("start measureing");
     runBenchmarks(usernames);
   }
+  private static void populateDB(String[] usernames) {
+    DB.dropDB();
+    System.out.println("start adding users");
+    CreateAndFillTestDB.addUsers(USERS_TO_ADD, usernames);
+    System.out.println("end adding users");
+    System.out.println("start adding followers");
+    CreateAndFillTestDB.addFollowers(FOLLOWERS_TO_ADD, usernames);
+    System.out.println("end adding followers");
+    System.out.println("start adding messages");
+    CreateAndFillTestDB.addMessages(MESSAGES_TO_ADD, USERS_TO_ADD);
+    System.out.println("end adding messages");
+  }
   public static void runBenchmarks(String[] usernames){
     DBBenchmarkableFunctions.runCountUsers();
     SystemInfo();
-    final Random rand = new Random();
     printMark8Headers();
-    Mark8("GetUserId", "",    i -> DBBenchmarkableFunctions.runGetUserId(   rand, USERS_TO_ADD, usernames));
-    Mark8("GetUser", "",      i -> DBBenchmarkableFunctions.runGetUser(     rand, USERS_TO_ADD, usernames));
-    Mark8("GetUserById", "",  i -> DBBenchmarkableFunctions.runGetUserById( rand, USERS_TO_ADD));
+    Mark8("GetUserId", "",    i -> DBBenchmarkableFunctions.runGetUserId( USERS_TO_ADD, usernames));
+    Mark8("GetUser", "",      i -> DBBenchmarkableFunctions.runGetUser( USERS_TO_ADD, usernames));
+    Mark8("GetUserById", "",  i -> DBBenchmarkableFunctions.runGetUserById( USERS_TO_ADD));
     Mark8("CountUsers", "",       i -> DBBenchmarkableFunctions.runCountUsers());
     Mark8("CountFollowers", "",   i -> DBBenchmarkableFunctions.runCountFollowers());
     Mark8("CountMessages", "",    i -> DBBenchmarkableFunctions.runCountMessages());
     Mark8("publicTimeline", "",     i -> DBBenchmarkableFunctions.runPublicTimeline());
-    Mark8("TweetsByUsername", "",   i -> DBBenchmarkableFunctions.runTweetsByUsername(   rand, USERS_TO_ADD, usernames));
-    Mark8("PersonalTweetsById", "", i -> DBBenchmarkableFunctions.runPersonalTweetsById( rand, USERS_TO_ADD));
+    Mark8("TweetsByUsername", "",   i -> DBBenchmarkableFunctions.runTweetsByUsername( USERS_TO_ADD, usernames));
+    Mark8("PersonalTweetsById", "", i -> DBBenchmarkableFunctions.runPersonalTweetsById( USERS_TO_ADD));
   }
   // ========== Infrastructure code ==========
 

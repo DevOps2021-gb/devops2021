@@ -11,6 +11,8 @@ import java.util.List;
 import java.util.Random;
 
 public class CreateAndFillTestDB {
+    private static Random rand = new Random();
+
     public static void instantiateDB(){
         DB.removeInstance();
         DB.setDATABASE("benchmarkMinitwit");
@@ -35,10 +37,9 @@ public class CreateAndFillTestDB {
         }
     }
     public static void addFollowers(int count, String[] userNames) {
-        Random rand = new Random();
         int countUsers = userNames.length;
         for(int i=0; i<count; i++) {
-            var rs = FollowerRepository.followUser(getRandomID(rand, countUsers), userNames[getRandomIndex(rand, countUsers)]);
+            var rs = FollowerRepository.followUser(getRandomID(countUsers), userNames[getRandomIndex(countUsers)]);
             if(!rs.isSuccess()) {
                 i--;
                 continue;
@@ -50,7 +51,6 @@ public class CreateAndFillTestDB {
     }
 
     public static void addMessages(int count, int countUsers) {
-        Random rand = new Random();
         for(int i=0; i<count; i++) {
             var text = generateRandomString(30);
             var rs = MessageRepository.addMessage(text, getRandomIndex(rand, countUsers));
@@ -68,7 +68,6 @@ public class CreateAndFillTestDB {
         String seedChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890 ";
         StringBuilder sb = new StringBuilder();
         int i = 0;
-        Random rand = new Random();
         while (i < length) {
             sb.append(seedChars.charAt(rand.nextInt(seedChars.length())));
             i++;
@@ -82,11 +81,11 @@ public class CreateAndFillTestDB {
         }
         return users;
     }
-    public static int getRandomID(Random rand, int count){
+    public static int getRandomID(int count){
         return rand.nextInt(count)+1;
     }
 
-    public static int getRandomIndex(Random rand, int count){
+    public static int getRandomIndex(int count){
         return rand.nextInt(count);
     }
 
