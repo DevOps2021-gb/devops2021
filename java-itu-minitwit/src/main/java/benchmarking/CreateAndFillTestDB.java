@@ -53,7 +53,7 @@ public class CreateAndFillTestDB {
     public static void addMessages(int count, int countUsers) {
         for(int i=0; i<count; i++) {
             var text = generateRandomString(30);
-            var rs = MessageRepository.addMessage(text, getRandomIndex(rand, countUsers));
+            var rs = MessageRepository.addMessage(text, getRandomIndex(countUsers));
             if(!rs.isSuccess()) {
                 i--;
                 continue;
