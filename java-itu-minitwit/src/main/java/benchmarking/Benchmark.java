@@ -103,7 +103,7 @@ class Benchmark {
       runningTime = totalTime.check() / n;
     } while (runningTime < minTime && count < Integer.MAX_VALUE/2);
     double mean = st/n, sdev = Math.sqrt((sst - mean*mean*n)/(n-1));
-    System.out.printf("%-25s %s%15.1f ns %10.2f %10d%n", msg, info, mean, sdev, count);
+    System.out.println(msg+" "+info+" "+mean+"ns "+sdev+" "+count);
     return dummy / totalCount;
   }
   public static double getTimeSpentPausingOnce(){
@@ -139,7 +139,7 @@ class Benchmark {
       runningTime = totalTime.check();
     } while (runningTime < minTime && count < Integer.MAX_VALUE/2);
     double mean = st/n, sdev = Math.sqrt((sst - mean*mean*n)/(n-1));
-    System.out.printf("%-25s %s%15.1f ns %10.2f %10d%n", msg, info, mean, sdev, count);
+    System.out.println(msg+" "+info+" "+mean+"ns "+sdev+" "+count);
     return dummy / totalCount;
   }
 }
