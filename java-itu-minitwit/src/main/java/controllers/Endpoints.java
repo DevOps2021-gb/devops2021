@@ -133,8 +133,8 @@ public class Endpoints {
 
     public static void registerHooks() {
         Spark.before((request, response) -> {
-            LogService.processRequest();
-            LogService.logRequest(request);
+            //LogService.processRequest();
+            //LogService.logRequest(request);
 
             Integer userId = Requests.getSessionUserId(request);
             if (userId != null) {
