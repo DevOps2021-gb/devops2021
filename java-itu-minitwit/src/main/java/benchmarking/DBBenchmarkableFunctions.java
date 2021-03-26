@@ -15,11 +15,11 @@ public class DBBenchmarkableFunctions {
         return CreateAndFillTestDB.getRandomID(rand, count);
     }
 
-    public static int runGetUserId(Random rand, int sizeUsers, List<String> usernames){
-        return UserRepository.getUserId(usernames.get(rand.nextInt(sizeUsers))).get();
+    public static int runGetUserId(Random rand, int sizeUsers, String[] usernames){
+        return UserRepository.getUserId(usernames[rand.nextInt(sizeUsers)]).get();
     }
-    public static int runGetUser(Random rand, int sizeUsers, List<String> usernames){
-        return UserRepository.getUser(usernames.get(rand.nextInt(sizeUsers))).get().id;
+    public static int runGetUser(Random rand, int sizeUsers, String[] usernames){
+        return UserRepository.getUser(usernames[rand.nextInt(sizeUsers)]).get().id;
     }
     public static int runGetUserById(Random rand, int sizeUsers){
         return UserRepository.getUserById(rand.nextInt(sizeUsers)+1).get().id;
@@ -37,8 +37,8 @@ public class DBBenchmarkableFunctions {
     public static int runPublicTimeline(){
         return MessageRepository.publicTimeline().get().size();
     }
-    public static int runTweetsByUsername(Random rand, int sizeUsers, List<String> usernames){
-        return MessageRepository.getTweetsByUsername(usernames.get(getRandomIndex(rand, sizeUsers))).get().size();
+    public static int runTweetsByUsername(Random rand, int sizeUsers, String[] usernames){
+        return MessageRepository.getTweetsByUsername(usernames[getRandomIndex(rand, sizeUsers)]).get().size();
     }
     public static int runPersonalTweetsById(Random rand, int sizeUsers){
         return MessageRepository.getPersonalTweetsById(getRandomID(rand, sizeUsers)).get().size();

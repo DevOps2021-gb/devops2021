@@ -22,27 +22,25 @@ public class CreateAndFillTestDB {
         DB.dropDB();
         return DB.connectDb().get();
     }
-    public static List<String> addUsers(int count) {
-        List<String> users = new ArrayList<>();
-        while (users.size() < count) {
-            var username = generateRandomString(14);
-            var email = generateRandomString(14);
-            var password1 = generateRandomString(14);
-            var rs = UserRepository.addUser(username, email, password1);
-            if(rs.isSuccess()) {
-                users.add(username);
+    public static void addUsers(int count, String[] users) {
+        for(int i=0; i<count; i++) {
+            var email       = generateRandomString(14);
+            var password1   = generateRandomString(14);
+            var rs = UserRepository.addUser(users[i], email, password1);
+            if(!rs.isSuccess()) {
+                i--;
+                continue;
             }
-            if(users.size() % 1000 == 0) {
-                System.out.println(count - users.size());
+            if(i % 1000 == 0) {
+                System.out.println(count - i);
             }
         }
-        return users;
     }
-    public static void addFollowers(int count, List<String> userNames) {
+    public static void addFollowers(int count, String[] userNames) {
         Random rand = new Random();
-        int countUsers = userNames.size();
+        int countUsers = userNames.length;
         for(int i=0; i<count; i++) {
-            var rs = FollowerRepository.followUser(getRandomID(rand, countUsers), userNames.get(getRandomIndex(rand, countUsers)));
+            var rs = FollowerRepository.followUser(getRandomID(rand, countUsers), userNames[getRandomIndex(rand, countUsers)]);
             if(!rs.isSuccess()) {
                 i--;
                 continue;
@@ -79,6 +77,13 @@ public class CreateAndFillTestDB {
         }
         return sb.toString();
     }
+    public static String[] genUsernames(int count) {
+        String[] users = new String[count];
+        for(int i=0; i<count; i++) {
+            users[i] = "paul"+i;
+        }
+        return users;
+    }
     public static int getRandomID(Random rand, int count){
         return rand.nextInt(count)+1;
     }
@@ -86,4 +91,5 @@ public class CreateAndFillTestDB {
     public static int getRandomIndex(Random rand, int count){
         return rand.nextInt(count);
     }
+
 }

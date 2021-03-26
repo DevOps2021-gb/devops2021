@@ -9,19 +9,24 @@ import java.util.function.IntToDoubleFunction;
 class Benchmark {
   public static void main(String[] args) {
     //setup
-    CreateAndFillTestDB.instantiateDB();
     final int USERS_TO_ADD     = 20_000;
     final int FOLLOWERS_TO_ADD = 40_000;
     final int MESSAGES_TO_ADD  = 40_000;
-    System.out.println("start adding users");
-    final List<String> usernames = CreateAndFillTestDB.addUsers(USERS_TO_ADD);
-    System.out.println("end adding users");
-    System.out.println("start adding followers");
-    CreateAndFillTestDB.addFollowers(FOLLOWERS_TO_ADD, usernames);
-    System.out.println("end adding followers");
-    System.out.println("start adding messages");
-    CreateAndFillTestDB.addMessages(MESSAGES_TO_ADD, USERS_TO_ADD);
-    System.out.println("end adding messages");
+    boolean dbExists = false;
+    final String[] usernames = CreateAndFillTestDB.genUsernames(USERS_TO_ADD);
+    if (!dbExists) {
+      CreateAndFillTestDB.instantiateDB();
+      System.out.println("start adding users");
+      CreateAndFillTestDB.addUsers(USERS_TO_ADD, usernames);
+      System.out.println("end adding users");
+      System.out.println("start adding followers");
+      CreateAndFillTestDB.addFollowers(FOLLOWERS_TO_ADD, usernames);
+      System.out.println("end adding followers");
+      System.out.println("start adding messages");
+      CreateAndFillTestDB.addMessages(MESSAGES_TO_ADD, USERS_TO_ADD);
+      System.out.println("end adding messages");
+    }
+
     System.out.println("start testing");
 
 
