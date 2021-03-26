@@ -29,8 +29,9 @@ class Benchmark {
       CreateAndFillTestDB.addMessages(MESSAGES_TO_ADD, USERS_TO_ADD);
       System.out.println("end adding messages");
     }
-    DB.connectDb().get();
+    var db = DB.connectDb().get();
 
+    DB.addIndexes(db);
     System.out.println("start testing");
 
 

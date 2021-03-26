@@ -13,6 +13,10 @@ public class Main {
             handleArgs(args);
             Endpoints.registerHooks();
             Endpoints.registerEndpoints();
+
+            //Add indexes to make sure they exits
+            DB.addIndexes(DB.initDb());
+
             //add db clear here if working LOCALLY
             LogService.startSchedules();
         } catch (Exception e) {

@@ -8,6 +8,8 @@ import errorhandling.Result;
 import errorhandling.Success;
 import com.dieselpoint.norm.Database;
 
+import java.sql.SQLSyntaxErrorException;
+
 public class DB {
     private static Database instance;
     static final int PORT                  = 3306;
@@ -79,6 +81,22 @@ public class DB {
         db.createTable(Follower.class);
         db.sql("ALTER TABLE follower ADD FOREIGN KEY (whoId) REFERENCES user(id)").execute();
         db.sql("ALTER TABLE follower ADD FOREIGN KEY (whomId) REFERENCES user(id)").execute();
+    }
+    public static void addIndexes(Database db){
+        //indexes on references is created automatically
+        addIndex(db, "messagePubDate", "message", "pubDate");
+    }
+    private static void addIndex(Database db, String indexName, String table, String attributes){
+        //indexes on references is created automatically
+        try {
+            db.sql("CREATE INDEX "+indexName+" ON "+table+" ("+attributes+");").execute();
+        } catch (Exception e) {
+            if (!e.getMessage().equals("Duplicate key name '"+indexName+"'")) {
+                System.out.println(e.getMessage());
+            }
+        }
+
+
     }
 
     public static String getDatabase() {
