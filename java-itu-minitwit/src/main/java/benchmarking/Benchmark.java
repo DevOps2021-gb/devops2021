@@ -106,35 +106,6 @@ class Benchmark {
     for (int paused = 0; paused < timesPaused; paused++) { tForTimePausePlay.play(); tForTimePausePlay.pause(); }
     return 0.9*tForTimePausePlay.check() / timesPaused;    //0.9 to counter garbadge collection as that part rarely takes time normally
   }
-  public static double Mark8Setup(String msg, Benchmarkable f) {
-    int count = 1, totalCount = 0;
-    double dummy = 0.0, runningTime = 0.0, st = 0.0, sst = 0.0;
-    double timeSpentPausingOnce = getTimeSpentPausingOnce();
-    do {
-      count *= 2;
-      double timeSpentPausingCount = timeSpentPausingOnce*count;
-      st = sst = 0.0;
-      Timer totalTime = new Timer();
-      totalTime.play();
-      for (int j=0; j<n; j++) {
-        Timer t = new Timer();
-        for (int i=0; i<count; i++) {
-          f.setup();
-          t.play();
-          dummy += f.applyAsDouble(i);
-          t.pause();
-        }
-        double time = Math.max((t.check()-timeSpentPausingCount) * 1e9 / count, 0.0);
-        totalCount += count;
-        st += time;
-        sst += time * time;
-      }
-      totalTime.pause();
-      runningTime = totalTime.check();
-    } while (runningTime < minTime && count < Integer.MAX_VALUE/2);
-    computeResult(st, sst, msg, count);
-    return dummy/totalCount;
-  }
   private static void computeResult(double st, double sst, String msg, int count) {
     double mean = st/n, sdev = Math.sqrt((sst - mean*mean*n)/(n-1));
     System.out.println(msg+" "+mean+"ns "+sdev+" "+count);
