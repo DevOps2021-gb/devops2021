@@ -59,13 +59,7 @@ public class Requests {
     private static void addFromBody(Map<String, String> map, Request request) {
         if (!request.body().isEmpty()) {
             if(JSON.isJSON(request.body())) {
-                ObjectMapper mapper = new ObjectMapper();
-                try {
-                    Map<String, String> temp = mapper.readValue(request.body(), Map.class);
-                    map.putAll(temp);
-                } catch (IOException e) {
-                    LogService.logError(e);
-                }
+                addJsonFromBody(map, request);
             }
             else {
                 for(String keyValue : request.body().split(" *& *")) {
@@ -73,6 +67,15 @@ public class Requests {
                     map.put(pairs[0], pairs.length == 1 ? "" : pairs[1]);
                 }
             }
+        }
+    }
+    private static void addJsonFromBody(Map<String, String> map, Request request) {
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            Map<String, String> temp = mapper.readValue(request.body(), Map.class);
+            map.putAll(temp);
+        } catch (IOException e) {
+            LogService.logError(e);
         }
     }
 
