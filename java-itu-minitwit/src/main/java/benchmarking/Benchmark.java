@@ -20,63 +20,67 @@ class Benchmark {
     //populateDB(usernames);
     var db = DB.connectDb().get();
     DB.addIndexes(db);
-    System.err.println("start measureing");
+    System.out.println("start measureing");
     runBenchmarks(usernames);
   }
   private static void populateDB(String[] usernames) {
     DB.dropDB();
-    System.err.println("start adding users");
+    System.out.println("start adding users");
     CreateAndFillTestDB.addUsers(USERS_TO_ADD, usernames);
-    System.err.println("end adding users");
-    System.err.println("start adding followers");
+    System.out.println("end adding users");
+    System.out.println("start adding followers");
     CreateAndFillTestDB.addFollowers(FOLLOWERS_TO_ADD, usernames);
-    System.err.println("end adding followers");
-    System.err.println("start adding messages");
+    System.out.println("end adding followers");
+    System.out.println("start adding messages");
     CreateAndFillTestDB.addMessages(MESSAGES_TO_ADD, USERS_TO_ADD);
-    System.err.println("end adding messages");
+    System.out.println("end adding messages");
   }
   public static void runBenchmarks(String[] usernames){
     DBBenchmarkableFunctions.runCountUsers();
-    SystemInfo();
+    systemInfo();
     printMark8Headers();
-    Mark8("GetUserId",    i -> DBBenchmarkableFunctions.runGetUserId( USERS_TO_ADD, usernames));
-    Mark8("GetUser",      i -> DBBenchmarkableFunctions.runGetUser( USERS_TO_ADD, usernames));
-    Mark8("GetUserById",  i -> DBBenchmarkableFunctions.runGetUserById( USERS_TO_ADD));
-    Mark8("CountUsers",     i -> DBBenchmarkableFunctions.runCountUsers());
-    Mark8("CountFollowers", i -> DBBenchmarkableFunctions.runCountFollowers());
-    Mark8("CountMessages",  i -> DBBenchmarkableFunctions.runCountMessages());
-    Mark8("publicTimeline",     i -> DBBenchmarkableFunctions.runPublicTimeline());
-    Mark8("TweetsByUsername",   i -> DBBenchmarkableFunctions.runTweetsByUsername( USERS_TO_ADD, usernames));
-    Mark8("PersonalTweetsById", i -> DBBenchmarkableFunctions.runPersonalTweetsById( USERS_TO_ADD));
+    mark8("GetUserId", i -> DBBenchmarkableFunctions.runGetUserId( USERS_TO_ADD, usernames));
+    mark8("GetUser", i -> DBBenchmarkableFunctions.runGetUser( USERS_TO_ADD, usernames));
+    mark8("GetUserById", i -> DBBenchmarkableFunctions.runGetUserById( USERS_TO_ADD));
+    mark8("CountUsers", i -> DBBenchmarkableFunctions.runCountUsers());
+    mark8("CountFollowers", i -> DBBenchmarkableFunctions.runCountFollowers());
+    mark8("CountMessages", i -> DBBenchmarkableFunctions.runCountMessages());
+    mark8("publicTimeline", i -> DBBenchmarkableFunctions.runPublicTimeline());
+    mark8("TweetsByUsername", i -> DBBenchmarkableFunctions.runTweetsByUsername( USERS_TO_ADD, usernames));
+    mark8("PersonalTweetsById", i -> DBBenchmarkableFunctions.runPersonalTweetsById( USERS_TO_ADD));
   }
   // ========== Infrastructure code ==========
 
-  public static void SystemInfo() {
-    System.err.println("# OS:   "+
+  public static void systemInfo() {
+    System.out.println("# OS:   "+
             System.getProperty("os.name")+"; "+
             System.getProperty("os.version")+"; "+
             System.getProperty("os.arch"));
-    System.err.println("# JVM:  %s; %s%n"+
+    System.out.println("# JVM:  %s; %s%n"+
             System.getProperty("java.vendor")+"; "+
             System.getProperty("java.version"));
     // The processor identifier works only on MS Windows:
-    System.err.println("# CPU:  "+
+    System.out.println("# CPU:  "+
             System.getenv("PROCESSOR_IDENTIFIER")+"; cores:"+
             Runtime.getRuntime().availableProcessors());
-    java.util.Date now = new java.util.Date();
   }
   public static void printMark8Headers(){
-    System.err.println("msg, info,  mean, sdev, count");
+    System.out.println("msg, info,  mean, sdev, count");
   }
 
-  public static double Mark8(String msg, IntToDoubleFunction f) {
-    int count = 1, totalCount = 0;
-    double dummy = 0.0, runningTime = 0.0, st = 0.0, sst = 0.0;
+  public static double mark8(String msg, IntToDoubleFunction f) {
+    int count = 1;
+    int totalCount = 0;
+    double dummy = 0.0;
+    double runningTime;
+    double st;
+    double sst;
     double timeSpentPausingOnce = getTimeSpentPausingOnce();
     do {
       count *= 2;
       double timeSpentPausingCount = timeSpentPausingOnce*count;
-      st = sst = 0.0;
+      st = 0.0;
+      sst = 0.0;
       Timer totalTime = new Timer();
       totalTime.play();
       for (int j=0; j<n; j++) {
@@ -104,8 +108,9 @@ class Benchmark {
     return 0.9*tForTimePausePlay.check() / timesPaused;    //0.9 to counter garbadge collection as that part rarely takes time normally
   }
   private static void computeResult(double st, double sst, String msg, int count) {
-    double mean = st/n, sdev = Math.sqrt((sst - mean*mean*n)/(n-1));
-    System.err.println(msg+" "+mean+"ns "+sdev+" "+count);
+    double mean = st/n;
+    double sdev = Math.sqrt((sst - mean*mean*n)/(n-1));
+    System.out.println(msg+" "+mean+"ns "+sdev+" "+count);
   }
 
 }

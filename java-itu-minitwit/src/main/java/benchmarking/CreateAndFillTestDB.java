@@ -1,16 +1,15 @@
 package benchmarking;
 
-import com.dieselpoint.norm.Database;
 import persistence.DB;
 import persistence.FollowerRepository;
 import persistence.MessageRepository;
 import persistence.UserRepository;
-
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Random;
 
 public class CreateAndFillTestDB {
+    private CreateAndFillTestDB(){
+
+    }
     private static Random rand = new java.security.SecureRandom();
 
     public static void instantiateDB(){
@@ -23,7 +22,8 @@ public class CreateAndFillTestDB {
         }
     }
     public static void addUsers(int count, String[] users) {
-        for(int i=0; i<count; i++) {
+        int i=0;
+        while(i++<count) {
             var email       = generateRandomString(14);
             var password1   = generateRandomString(14);
             var rs = UserRepository.addUser(users[i], email, password1);
@@ -38,7 +38,8 @@ public class CreateAndFillTestDB {
     }
     public static void addFollowers(int count, String[] userNames) {
         int countUsers = userNames.length;
-        for(int i=0; i<count; i++) {
+        int i=0;
+        while(i++<count) {
             var rs = FollowerRepository.followUser(getRandomID(countUsers), userNames[getRandomIndex(countUsers)]);
             if(!rs.isSuccess()) {
                 i--;
@@ -51,7 +52,8 @@ public class CreateAndFillTestDB {
     }
 
     public static void addMessages(int count, int countUsers) {
-        for(int i=0; i<count; i++) {
+        int i=0;
+        while(i++<count) {
             var text = generateRandomString(30);
             var rs = MessageRepository.addMessage(text, getRandomIndex(countUsers));
             if(!rs.isSuccess()) {
