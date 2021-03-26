@@ -8,6 +8,9 @@ import errorhandling.Result;
 import errorhandling.Success;
 import com.dieselpoint.norm.Database;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 public class DB {
     private static Database instance;
     static final int PORT                  = 3306;
@@ -16,6 +19,7 @@ public class DB {
     private static String user             = "root";
     private static String pw               = "root";
     private static String connectionString = null;
+    private static final Logger logger = Logger.getLogger(DB.class.getSimpleName());
 
     private DB() {}
     private static void setPropertyUrl(String url){
@@ -79,6 +83,24 @@ public class DB {
         db.createTable(Follower.class);
         db.sql("ALTER TABLE follower ADD FOREIGN KEY (whoId) REFERENCES user(id)").execute();
         db.sql("ALTER TABLE follower ADD FOREIGN KEY (whomId) REFERENCES user(id)").execute();
+    }
+    public static void addIndexes(Database db){
+        //indexes on references is created automatically
+        addIndex(db, "messagePubDate",  "message",  "pubDate");
+        addIndex(db, "userUsername",    "user",     "Username");
+        addIndex(db, "followerWhoWhom", "follower", "whoId, whomId");
+    }
+    private static void addIndex(Database db, String indexName, String table, String attributes){
+        //indexes on references is created automatically
+        try {
+            db.sql("CREATE INDEX "+indexName+" ON "+table+" ("+attributes+");").execute();
+        } catch (Exception e) {
+            if (!e.getMessage().equals("Duplicate key name '"+indexName+"'")) {
+                logger.log(Level.INFO,e.getMessage());
+            }
+        }
+
+
     }
 
     public static String getDatabase() {

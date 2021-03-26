@@ -1,0 +1,13 @@
+users:     20.000
+messages:  40.000
+followers: 40.000
+msg, info,  mean, sdev, count
+GetUserId                      28009759,0 ns 1571254,52         32
+GetUser                        27685430,0 ns 1623247,43         32
+GetUserById                      730226,2 ns   25399,60       1024
+CountUsers                      5985594,0 ns  393874,13        128
+CountFollowers                  6095462,2 ns  524556,41        128
+CountMessages                   7204871,1 ns  169282,46        128
+publicTimeline                 94159567,5 ns 2219165,75          8
+TweetsByUsername               27590024,4 ns  416139,64         32
+PersonalTweetsById            105522613,8 ns 6716018,22          8

@@ -3,7 +3,6 @@ package main;
 import controllers.Endpoints;
 import services.LogService;
 import persistence.DB;
-
 import static spark.Spark.staticFiles;
 
 public class Main {
@@ -13,6 +12,10 @@ public class Main {
             handleArgs(args);
             Endpoints.registerHooks();
             Endpoints.registerEndpoints();
+
+            //Add indexes to make sure they exits
+            DB.addIndexes(DB.initDb());
+
             //add db clear here if working LOCALLY
             //LogService.startSchedules();
         } catch (Exception e) {
