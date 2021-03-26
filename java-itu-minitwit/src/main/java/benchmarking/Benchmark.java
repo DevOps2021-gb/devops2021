@@ -55,17 +55,17 @@ class Benchmark {
   // ========== Infrastructure code ==========
 
   public static void systemInfo() {
-    logger.log(Level.INFO, "# OS:   "+
-            System.getProperty("os.name")+"; "+
-            System.getProperty("os.version")+"; "+
-            System.getProperty("os.arch"));
-    logger.log(Level.INFO, "# JVM:  %s; %s%n"+
-            System.getProperty("java.vendor")+"; "+
-            System.getProperty("java.version"));
+    logger.log(Level.INFO, new StringBuilder("# OS:   ")
+            .append(System.getProperty("os.name")).append("; ")
+            .append(System.getProperty("os.version")).append("; ")
+            .append(System.getProperty("os.arch")).toString());
+    logger.log(Level.INFO, new StringBuilder("# JVM:  %s; %s%n")
+            .append(System.getProperty("java.vendor")).append("; ")
+            .append(System.getProperty("java.version")).toString());
     // The processor identifier works only on MS Windows:
-    logger.log(Level.INFO, "# CPU:  "+
-            System.getenv("PROCESSOR_IDENTIFIER")+"; cores:"+
-            Runtime.getRuntime().availableProcessors());
+    logger.log(Level.INFO, new StringBuilder("# CPU:  ")
+            .append(System.getenv("PROCESSOR_IDENTIFIER")).append("; cores:")
+            .append(Runtime.getRuntime().availableProcessors()).toString());
   }
   public static void printMark8Headers(){
     logger.log(Level.INFO, "msg, mean, sdev, count");

@@ -28,7 +28,7 @@ import static spark.Spark.halt;
 public class UserService {
 
     private static final String USR_NAME = ":username";
-    public static int latest = 147371;
+    public static final int latest = 147371;
     private static final Logger logger = Logger.getLogger(UserService.class.getSimpleName());
 
     private UserService() {}

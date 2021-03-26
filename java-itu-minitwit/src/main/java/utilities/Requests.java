@@ -43,7 +43,6 @@ public class Requests {
         return msg;
     }
 
-    //TODO refactor this: Method getParamsFromRequest has a Cognitive Complexity of 13 (exceeds 5 allowed). Consider refactoring
     public static Map<String,String> getParamsFromRequest(Request request, String ... args){
         Map<String, String> map = new HashMap<>(request.params());
         addFromParams(map, request, args);
