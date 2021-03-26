@@ -3,7 +3,6 @@ package main;
 import controllers.Endpoints;
 import services.LogService;
 import persistence.DB;
-
 import static spark.Spark.staticFiles;
 
 public class Main {

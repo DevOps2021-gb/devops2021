@@ -7,6 +7,7 @@ import persistence.UserRepository;
 import java.util.Random;
 
 public class CreateAndFillTestDB {
+
     private CreateAndFillTestDB(){
 
     }
@@ -29,10 +30,6 @@ public class CreateAndFillTestDB {
             var rs = UserRepository.addUser(users[i], email, password1);
             if(!rs.isSuccess()) {
                 i--;
-                continue;
-            }
-            if(i % 1000 == 0) {
-                System.out.println(count - i);
             }
         }
     }
@@ -43,10 +40,6 @@ public class CreateAndFillTestDB {
             var rs = FollowerRepository.followUser(getRandomID(countUsers), userNames[getRandomIndex(countUsers)]);
             if(!rs.isSuccess()) {
                 i--;
-                continue;
-            }
-            if(i % 1000 == 0) {
-                System.out.println(count - i);
             }
         }
     }
@@ -58,10 +51,6 @@ public class CreateAndFillTestDB {
             var rs = MessageRepository.addMessage(text, getRandomIndex(countUsers));
             if(!rs.isSuccess()) {
                 i--;
-                continue;
-            }
-            if(i % 1000 == 0) {
-                System.out.println(count - i);
             }
         }
     }

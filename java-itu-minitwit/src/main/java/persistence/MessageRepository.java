@@ -51,7 +51,6 @@ Displays the latest messages of all users.
     }
 
     public static Result<List<Tweet>> getPersonalTweetsById(int userId) {
-        //return getTweetsFromMessageUser("and (u.id = ? or u.id in (select f.whomId from follower f where f.whoId = ?)) ", userId, userId);
         try{
             var db = DB.connectDb().get();
             String query =
