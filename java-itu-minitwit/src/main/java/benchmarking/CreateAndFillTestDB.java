@@ -13,7 +13,7 @@ import java.util.Random;
 public class CreateAndFillTestDB {
     public static void instantiateDB(){
         DB.removeInstance();
-        DB.setDATABASE("testMinitwit");
+        DB.setDATABASE("benchmarkMinitwit");
         if (System.getProperty("DB_TEST_CONNECTION_STRING") != null) {
             DB.setCONNECTIONSTRING(System.getProperty("DB_TEST_CONNECTION_STRING"));
             DB.setUSER(System.getProperty("DB_USER"));
