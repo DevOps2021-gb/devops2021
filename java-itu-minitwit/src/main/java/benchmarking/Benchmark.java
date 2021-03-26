@@ -16,9 +16,6 @@ class Benchmark {
   private static final int FOLLOWERS_TO_ADD = 40_000;
   private static final int MESSAGES_TO_ADD  = 40_000;
 
-  private static final Random rand = new Random();
-
-
   public static void main(String[] args) {
     //setup
     final String[] usernames = CreateAndFillTestDB.genUsernames(USERS_TO_ADD);

@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Random;
 
 public class CreateAndFillTestDB {
-    private static Random rand = new Random();
+    private static Random rand = new java.security.SecureRandom();
 
     public static void instantiateDB(){
         DB.removeInstance();

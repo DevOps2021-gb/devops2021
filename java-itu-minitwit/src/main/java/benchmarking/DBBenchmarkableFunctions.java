@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Random;
 
 public class DBBenchmarkableFunctions {
-    private static Random rand = new Random();
+    private static Random rand = new java.security.SecureRandom();
     private static int getRandomIndex(int count){
         return CreateAndFillTestDB.getRandomIndex(count);
     }
