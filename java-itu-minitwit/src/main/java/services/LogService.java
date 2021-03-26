@@ -48,7 +48,7 @@ public class LogService {
         if (request.params().size() == 0) {
             logger.log(Level.INFO, new StringBuilder(request.requestMethod()).append(" ").append(request.url()).toString());
         } else {
-            logger.log(Level.INFO, new StringBuilder(request.requestMethod()).append(" with args ").append(request.params()).toString());
+            logger.log(Level.INFO, new StringBuilder(request.requestMethod()).append(" with args ").append(request.params().toString().replaceAll("[\n\r\t]", "_")).toString());
         }
     }
 
