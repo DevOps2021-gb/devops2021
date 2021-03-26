@@ -58,19 +58,19 @@ class Benchmark {
   // ========== Infrastructure code ==========
 
   public static void SystemInfo() {
-    System.out.printf("# OS:   %s; %s; %s%n",
-            System.getProperty("os.name"),
-            System.getProperty("os.version"),
+    System.out.println("# OS:   "+
+            System.getProperty("os.name")+"; "+
+            System.getProperty("os.version")+"; "+
             System.getProperty("os.arch"));
-    System.out.printf("# JVM:  %s; %s%n",
-            System.getProperty("java.vendor"),
+    System.out.println("# JVM:  %s; %s%n"+
+            System.getProperty("java.vendor")+"; "+
             System.getProperty("java.version"));
     // The processor identifier works only on MS Windows:
-    System.out.printf("# CPU:  %s; %d \"cores\"%n",
-            System.getenv("PROCESSOR_IDENTIFIER"),
+    System.out.println("# CPU:  "+
+            System.getenv("PROCESSOR_IDENTIFIER")+"; cores:"+
             Runtime.getRuntime().availableProcessors());
     java.util.Date now = new java.util.Date();
-    System.out.printf("# Date: %s%n",
+    System.out.println("# Date: " +
             new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ").format(now));
   }
   public static void printMark8Headers(){
