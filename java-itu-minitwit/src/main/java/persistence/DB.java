@@ -84,7 +84,9 @@ public class DB {
     }
     public static void addIndexes(Database db){
         //indexes on references is created automatically
-        addIndex(db, "messagePubDate", "message", "pubDate");
+        addIndex(db, "messagePubDate",  "message",  "pubDate");
+        addIndex(db, "userUsername",    "user",     "Username");
+        addIndex(db, "followerWhoWhom", "follower", "whoId, whomId");
     }
     private static void addIndex(Database db, String indexName, String table, String attributes){
         //indexes on references is created automatically
