@@ -4,6 +4,8 @@ package benchmarking;
 
 import persistence.DB;
 import java.util.function.IntToDoubleFunction;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 class Benchmark {
 
@@ -12,6 +14,7 @@ class Benchmark {
   private static final int USERS_TO_ADD     = 20_000;
   private static final int FOLLOWERS_TO_ADD = 40_000;
   private static final int MESSAGES_TO_ADD  = 40_000;
+  private static final Logger logger = Logger.getLogger(Benchmark.class.getSimpleName());
 
   public static void main(String[] args) {
     //setup
@@ -20,20 +23,20 @@ class Benchmark {
     //populateDB(usernames);
     var db = DB.connectDb().get();
     DB.addIndexes(db);
-    System.out.println("start measureing");
+    logger.log(Level.INFO, "start measureing");
     runBenchmarks(usernames);
   }
   private static void populateDB(String[] usernames) {
     DB.dropDB();
-    System.out.println("start adding users");
+    logger.log(Level.INFO, "start adding users");
     CreateAndFillTestDB.addUsers(USERS_TO_ADD, usernames);
-    System.out.println("end adding users");
-    System.out.println("start adding followers");
+    logger.log(Level.INFO, "end adding users");
+    logger.log(Level.INFO, "start adding followers");
     CreateAndFillTestDB.addFollowers(FOLLOWERS_TO_ADD, usernames);
-    System.out.println("end adding followers");
-    System.out.println("start adding messages");
+    logger.log(Level.INFO, "end adding followers");
+    logger.log(Level.INFO, "start adding messages");
     CreateAndFillTestDB.addMessages(MESSAGES_TO_ADD, USERS_TO_ADD);
-    System.out.println("end adding messages");
+    logger.log(Level.INFO, "end adding messages");
   }
   public static void runBenchmarks(String[] usernames){
     DBBenchmarkableFunctions.runCountUsers();
@@ -52,20 +55,20 @@ class Benchmark {
   // ========== Infrastructure code ==========
 
   public static void systemInfo() {
-    System.out.println("# OS:   "+
+    logger.log(Level.INFO, "# OS:   "+
             System.getProperty("os.name")+"; "+
             System.getProperty("os.version")+"; "+
             System.getProperty("os.arch"));
-    System.out.println("# JVM:  %s; %s%n"+
+    logger.log(Level.INFO, "# JVM:  %s; %s%n"+
             System.getProperty("java.vendor")+"; "+
             System.getProperty("java.version"));
     // The processor identifier works only on MS Windows:
-    System.out.println("# CPU:  "+
+    logger.log(Level.INFO, "# CPU:  "+
             System.getenv("PROCESSOR_IDENTIFIER")+"; cores:"+
             Runtime.getRuntime().availableProcessors());
   }
   public static void printMark8Headers(){
-    System.out.println("msg, info,  mean, sdev, count");
+    logger.log(Level.INFO, "msg, mean, sdev, count");
   }
 
   public static double mark8(String msg, IntToDoubleFunction f) {
@@ -110,7 +113,7 @@ class Benchmark {
   private static void computeResult(double st, double sst, String msg, int count) {
     double mean = st/n;
     double sdev = Math.sqrt((sst - mean*mean*n)/(n-1));
-    System.out.println(msg+" "+mean+"ns "+sdev+" "+count);
+    logger.log(Level.INFO, msg+" "+mean+"ns "+sdev+" "+count);
   }
 
 }

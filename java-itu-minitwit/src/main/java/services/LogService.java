@@ -8,6 +8,9 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiFunction;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import persistence.FollowerRepository;
 import persistence.MessageRepository;
 import persistence.UserRepository;
@@ -30,21 +33,22 @@ public class LogService {
     private static final Gauge messages = Gauge.build()
         .name("messages_total").help("Total amount of messages.").register();
     private static final Map<String, Gauge> responseTimeEndPoints = new HashMap<>();
+    private static final Logger logger = Logger.getLogger(LogService.class.getSimpleName());
 
     private LogService() {
     }
 
     public static void logError(Exception e) {
-        System.out.println(e.getMessage());
+        logger.log(Level.INFO,e.getMessage());
     }
 
     public static void logRequest(Request request) {
         if (request.url().contains("favicon.ico")) return;
 
         if (request.params().size() == 0) {
-            System.out.println(request.requestMethod() + " " + request.url());
+            logger.log(Level.INFO, new StringBuilder(request.requestMethod()).append(" ").append(request.url()).toString());
         } else {
-            System.out.println(request.requestMethod() + " " + request.url() + " with args " + request.params());
+            logger.log(Level.INFO, new StringBuilder(request.requestMethod()).append(" with args ").append(request.params()).toString());
         }
     }
 

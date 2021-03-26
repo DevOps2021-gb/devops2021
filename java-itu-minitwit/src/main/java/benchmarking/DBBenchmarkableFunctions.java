@@ -3,11 +3,12 @@ package benchmarking;
 import persistence.FollowerRepository;
 import persistence.MessageRepository;
 import persistence.UserRepository;
-
-import java.util.List;
 import java.util.Random;
 
 public class DBBenchmarkableFunctions {
+    private DBBenchmarkableFunctions() {
+
+    }
     private static Random rand = new java.security.SecureRandom();
     private static int getRandomIndex(int count){
         return CreateAndFillTestDB.getRandomIndex(count);

@@ -46,13 +46,18 @@ public class Requests {
     //TODO refactor this: Method getParamsFromRequest has a Cognitive Complexity of 13 (exceeds 5 allowed). Consider refactoring
     public static Map<String,String> getParamsFromRequest(Request request, String ... args){
         Map<String, String> map = new HashMap<>(request.params());
-
+        addFromParams(map, request, args);
+        addFromBody(map, request);
+        return map;
+    }
+    private static void addFromParams(Map<String, String> map, Request request, String[] args) {
         for (String arg : args) {
             if (request.queryParams(arg) != null) {
                 map.put(arg, request.queryParams(arg));
             }
         }
-
+    }
+    private static void addFromBody(Map<String, String> map, Request request) {
         if (!request.body().isEmpty()) {
             if(JSON.isJSON(request.body())) {
                 ObjectMapper mapper = new ObjectMapper();
@@ -70,7 +75,6 @@ public class Requests {
                 }
             }
         }
-        return map;
     }
 
     public static Result<String> getParamFromRequest(String param, Request request) {
