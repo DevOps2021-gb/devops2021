@@ -12,13 +12,13 @@ class Benchmark {
 
   private static int n          = 10;
   private static double minTime = 1;
+  private static final int USERS_TO_ADD     = 20_000;
+  private static final int FOLLOWERS_TO_ADD = 40_000;
+  private static final int MESSAGES_TO_ADD  = 40_000;
 
 
   public static void main(String[] args) {
     //setup
-    final int USERS_TO_ADD     = 20_000;
-    final int FOLLOWERS_TO_ADD = 40_000;
-    final int MESSAGES_TO_ADD  = 40_000;
     boolean dbExists = true;
     final String[] usernames = CreateAndFillTestDB.genUsernames(USERS_TO_ADD);
     CreateAndFillTestDB.instantiateDB();
@@ -35,12 +35,11 @@ class Benchmark {
       System.out.println("end adding messages");
     }
     var db = DB.connectDb().get();
-
     DB.addIndexes(db);
-    System.out.println("start testing");
-
-
-    //tests
+    System.out.println("start measureing");
+    runBenchmarks(usernames);
+  }
+  public static void runBenchmarks(String[] usernames){
     DBBenchmarkableFunctions.runCountUsers();
     SystemInfo();
     final Random rand = new Random();
@@ -70,8 +69,6 @@ class Benchmark {
             System.getenv("PROCESSOR_IDENTIFIER")+"; cores:"+
             Runtime.getRuntime().availableProcessors());
     java.util.Date now = new java.util.Date();
-    System.out.println("# Date: " +
-            new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ").format(now));
   }
   public static void printMark8Headers(){
     System.out.println("msg, info,  mean, sdev, count");
@@ -102,9 +99,7 @@ class Benchmark {
       totalTime.pause();
       runningTime = totalTime.check() / n;
     } while (runningTime < minTime && count < Integer.MAX_VALUE/2);
-    double mean = st/n, sdev = Math.sqrt((sst - mean*mean*n)/(n-1));
-    System.out.println(msg+" "+info+" "+mean+"ns "+sdev+" "+count);
-    return dummy / totalCount;
+    return computeResult(st, sst, msg, info, count, dummy, totalCount);
   }
   public static double getTimeSpentPausingOnce(){
     Timer tForTimePausePlay = new Timer();
@@ -138,6 +133,9 @@ class Benchmark {
       totalTime.pause();
       runningTime = totalTime.check();
     } while (runningTime < minTime && count < Integer.MAX_VALUE/2);
+    return computeResult(st, sst, msg, info, count, dummy, totalCount);
+  }
+  private static double computeResult(double st, double sst, String msg, String info, int count, double dummy, int totalCount){
     double mean = st/n, sdev = Math.sqrt((sst - mean*mean*n)/(n-1));
     System.out.println(msg+" "+info+" "+mean+"ns "+sdev+" "+count);
     return dummy / totalCount;
