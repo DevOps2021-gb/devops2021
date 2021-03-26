@@ -3,9 +3,6 @@ package benchmarking;
 // sestoft@itu.dk * 2013-06-02, 2015-09-15
 
 import persistence.DB;
-
-import java.util.List;
-import java.util.Random;
 import java.util.function.IntToDoubleFunction;
 
 class Benchmark {
@@ -23,20 +20,20 @@ class Benchmark {
     //populateDB(usernames);
     var db = DB.connectDb().get();
     DB.addIndexes(db);
-    System.out.println("start measureing");
+    System.err.println("start measureing");
     runBenchmarks(usernames);
   }
   private static void populateDB(String[] usernames) {
     DB.dropDB();
-    System.out.println("start adding users");
+    System.err.println("start adding users");
     CreateAndFillTestDB.addUsers(USERS_TO_ADD, usernames);
-    System.out.println("end adding users");
-    System.out.println("start adding followers");
+    System.err.println("end adding users");
+    System.err.println("start adding followers");
     CreateAndFillTestDB.addFollowers(FOLLOWERS_TO_ADD, usernames);
-    System.out.println("end adding followers");
-    System.out.println("start adding messages");
+    System.err.println("end adding followers");
+    System.err.println("start adding messages");
     CreateAndFillTestDB.addMessages(MESSAGES_TO_ADD, USERS_TO_ADD);
-    System.out.println("end adding messages");
+    System.err.println("end adding messages");
   }
   public static void runBenchmarks(String[] usernames){
     DBBenchmarkableFunctions.runCountUsers();
@@ -55,21 +52,21 @@ class Benchmark {
   // ========== Infrastructure code ==========
 
   public static void SystemInfo() {
-    System.out.println("# OS:   "+
+    System.err.println("# OS:   "+
             System.getProperty("os.name")+"; "+
             System.getProperty("os.version")+"; "+
             System.getProperty("os.arch"));
-    System.out.println("# JVM:  %s; %s%n"+
+    System.err.println("# JVM:  %s; %s%n"+
             System.getProperty("java.vendor")+"; "+
             System.getProperty("java.version"));
     // The processor identifier works only on MS Windows:
-    System.out.println("# CPU:  "+
+    System.err.println("# CPU:  "+
             System.getenv("PROCESSOR_IDENTIFIER")+"; cores:"+
             Runtime.getRuntime().availableProcessors());
     java.util.Date now = new java.util.Date();
   }
   public static void printMark8Headers(){
-    System.out.println("msg, info,  mean, sdev, count");
+    System.err.println("msg, info,  mean, sdev, count");
   }
 
   public static double Mark8(String msg, IntToDoubleFunction f) {
@@ -98,7 +95,7 @@ class Benchmark {
       runningTime = totalTime.check() / n;
     } while (runningTime < minTime && count < Integer.MAX_VALUE/2);
     computeResult(st, sst, msg, count);
-    return dummy/totalCount;
+    return dummy*totalCount;
   }
   public static double getTimeSpentPausingOnce(){
     Timer tForTimePausePlay = new Timer();
@@ -108,7 +105,7 @@ class Benchmark {
   }
   private static void computeResult(double st, double sst, String msg, int count) {
     double mean = st/n, sdev = Math.sqrt((sst - mean*mean*n)/(n-1));
-    System.out.println(msg+" "+mean+"ns "+sdev+" "+count);
+    System.err.println(msg+" "+mean+"ns "+sdev+" "+count);
   }
 
 }
