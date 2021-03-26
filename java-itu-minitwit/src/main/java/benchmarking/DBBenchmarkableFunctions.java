@@ -24,13 +24,13 @@ public class DBBenchmarkableFunctions {
     public static int runGetUserById(Random rand, int sizeUsers){
         return UserRepository.getUserById(rand.nextInt(sizeUsers)+1).get().id;
     }
-    public static int runCountUsers(Random rand){
+    public static int runCountUsers(){
         return Math.toIntExact(UserRepository.countUsers().get());
     }
-    public static int runCountMessages(Random rand){
+    public static int runCountMessages(){
         return Math.toIntExact(MessageRepository.countMessages().get());
     }
-    public static int runCountFollowers(Random rand){
+    public static int runCountFollowers(){
         return Math.toIntExact(FollowerRepository.countFollowers().get());
     }
 

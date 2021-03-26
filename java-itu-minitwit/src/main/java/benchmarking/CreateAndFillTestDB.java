@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Random;
 
 public class CreateAndFillTestDB {
-    public static Database instantiateDB(){
+    public static void instantiateDB(){
         DB.removeInstance();
         DB.setDATABASE("testMinitwit");
         if (System.getProperty("DB_TEST_CONNECTION_STRING") != null) {
@@ -19,8 +19,6 @@ public class CreateAndFillTestDB {
             DB.setUSER(System.getProperty("DB_USER"));
             DB.setPW(System.getProperty("DB_PASSWORD"));
         }
-        DB.dropDB();
-        return DB.connectDb().get();
     }
     public static void addUsers(int count, String[] users) {
         for(int i=0; i<count; i++) {
