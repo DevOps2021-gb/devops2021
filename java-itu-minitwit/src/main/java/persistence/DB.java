@@ -8,24 +8,29 @@ import errorhandling.Result;
 import errorhandling.Success;
 import com.dieselpoint.norm.Database;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 public class DB {
-    static final int PORT = 3306;
     private static Database instance;
-    private static String database = "minitwit";
-    private static final String IP = "localhost";
-    private static String user = "root";
-    private static String pw = "root";
-    private static String connectionString;
+    static final int PORT                  = 3306;
+    private static String database         = "minitwit";
+    private static final String IP         = "localhost";
+    private static String user             = "root";
+    private static String pw               = "root";
+    private static String connectionString = null;
+    private static final Logger logger = Logger.getLogger(DB.class.getSimpleName());
 
     private DB() {}
-
+    private static void setPropertyUrl(String url){
+        System.setProperty("norm.jdbcUrl", url);
+    }
     private static void setSystemProperties() {
         if(connectionString != null) {
-            System.setProperty("norm.jdbcUrl", "jdbc:" + connectionString);
+            setPropertyUrl("jdbc:" + connectionString);
         } else {
-            System.setProperty("norm.jdbcUrl", "jdbc:mysql://" + IP + ":" + PORT + "/" + database + "?allowPublicKeyRetrieval=true&useSSL=false");
+            setPropertyUrl("jdbc:mysql://" + IP + ":" + PORT + "/" + database + "?allowPublicKeyRetrieval=true&useSSL=false");
         }
-
         System.setProperty("norm.user", user);
         System.setProperty("norm.password", pw);
     }
@@ -79,5 +84,56 @@ public class DB {
         db.sql("ALTER TABLE follower ADD FOREIGN KEY (whoId) REFERENCES user(id)").execute();
         db.sql("ALTER TABLE follower ADD FOREIGN KEY (whomId) REFERENCES user(id)").execute();
     }
+    public static void addIndexes(Database db){
+        //indexes on references is created automatically
+        addIndex(db, "messagePubDate",  "message",  "pubDate");
+        addIndex(db, "userUsername",    "user",     "Username");
+        addIndex(db, "followerWhoWhom", "follower", "whoId, whomId");
+    }
+    private static void addIndex(Database db, String indexName, String table, String attributes){
+        //indexes on references is created automatically
+        try {
+            db.sql("CREATE INDEX "+indexName+" ON "+table+" ("+attributes+");").execute();
+        } catch (Exception e) {
+            if (!e.getMessage().equals("Duplicate key name '"+indexName+"'")) {
+                logger.log(Level.INFO,e.getMessage());
+            }
+        }
 
+
+    }
+
+    public static String getDatabase() {
+        return database;
+    }
+
+    public static String getIP() {
+        return IP;
+    }
+
+    public static String getUser() {
+        return user;
+    }
+
+    public static String getPw() {
+        return pw;
+    }
+
+    public static String getConnectionString() {
+        return connectionString;
+    }
+
+    public static void removeInstance() {
+        user             = "root";
+        pw               = "root";
+        connectionString = null;
+        System.clearProperty("norm.jdbcUrl");
+        System.clearProperty("norm.user");
+        System.clearProperty("norm.password");
+        if (instance == null) {
+            return;
+        }
+        instance.close();
+        instance = null;
+    }
 }

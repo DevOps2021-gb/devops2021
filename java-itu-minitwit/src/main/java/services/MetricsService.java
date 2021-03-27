@@ -2,7 +2,6 @@ package services;
 
 import io.prometheus.client.CollectorRegistry;
 import io.prometheus.client.exporter.common.TextFormat;
-import model.User;
 import spark.Request;
 import spark.Response;
 

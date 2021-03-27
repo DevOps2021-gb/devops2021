@@ -12,6 +12,8 @@ import spark.Response;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 
 import static services.MetricsService.updateLatest;
@@ -28,17 +30,18 @@ public class MessageService {
     public static final String LOGIN_HTML = "login.html";
 
     // context fields
-    public static final String FLASH = "flash";
-    public static final String ERROR = "error";
-    public static final String USER_ID = "userId";
-    public static final String USER = "user";
+    public static final String FLASH    = "flash";
+    public static final String ERROR    = "error";
+    public static final String USER_ID  = "userId";
+    public static final String USER     = "user";
     public static final String USERNAME = "username";
-    public static final String EMAIL = "email";
+    public static final String EMAIL    = "email";
     public static final String PASSWORD = "password";
     public static final String ENDPOINT = "endpoint";
     public static final String MESSAGES = "messages";
-    public static final String TITLE = "title";
-    public static final String CONTENT = "content";
+    public static final String TITLE    = "title";
+    public static final String CONTENT  = "content";
+    private static final Logger logger  = Logger.getLogger(MessageService.class.getSimpleName());
 
     public static Object getLatest(Response response) {
         response.type(JSON.APPLICATION_JSON);
@@ -100,7 +103,7 @@ Registers a new message for the user.
                 response.status(HttpStatus.NO_CONTENT_204);
             } else {
                 var message = "Your message was recorded";
-                System.out.println(message);
+                logger.log(Level.INFO,message);
                 request.session().attribute(FLASH, message);
             }
         }
@@ -110,8 +113,8 @@ Registers a new message for the user.
     public static List<Tweet> tweetsFromListOfHashMap(List<HashMap> result){
         List<Tweet> tweets = new ArrayList<>();
         for (HashMap hm: result) {
-            String email        = (String) hm.get("email");
-            String username     = (String) hm.get("username");
+            String email        = (String) hm.get(EMAIL);
+            String username     = (String) hm.get(USERNAME);
             String text         = (String) hm.get("text");
             String pubDate      = Formatting.formatDatetime((long) hm.get("pubDate") + "").get();
             String profilePic   = Hashing.gravatarUrl(email);
