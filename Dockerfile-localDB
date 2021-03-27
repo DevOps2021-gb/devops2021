@@ -5,7 +5,7 @@ RUN apt-get update --fix-missing
 
 RUN apt-get -y install git
 RUN echo "CLONING REPOSITORY"
-RUN git clone https://github.com/DevOps2021-gb/devops2021.git -b feature/localDockerCompose
+RUN git clone https://github.com/DevOps2021-gb/devops2021.git -b feature/logging
 RUN echo "INSTALLING MAVEN"
 RUN apt install maven -y
 WORKDIR "/devops2021/java-itu-minitwit"
