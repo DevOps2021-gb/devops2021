@@ -17,9 +17,7 @@ public class Main {
             DB.addIndexes(DB.initDb());
 
             //add db clear here if working LOCALLY
-            persistence.DB.dropDB();
-
-            LogService.startSchedules();
+            //LogService.startSchedules();
         } catch (Exception e) {
             LogService.logError(e);
         }
