@@ -29,7 +29,7 @@ class Benchmark {
   private static void populateDB(String[] usernames) {
     DB.dropDB();
     logger.log(Level.INFO, "start adding users");
-    CreateAndFillTestDB.addUsers(USERS_TO_ADD, usernames);
+    CreateAndFillTestDB.addUsers(usernames);
     logger.log(Level.INFO, "end adding users");
     logger.log(Level.INFO, "start adding followers");
     CreateAndFillTestDB.addFollowers(FOLLOWERS_TO_ADD, usernames);

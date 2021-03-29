@@ -18,10 +18,10 @@ public class DBBenchmarkableFunctions {
     }
 
     public static int runGetUserId(int sizeUsers, String[] usernames){
-        return UserRepository.getUserId(usernames[rand.nextInt(sizeUsers)]).get();
+        return UserRepository.getUserId(usernames[getRandomIndex(sizeUsers)]).get();
     }
     public static int runGetUser(int sizeUsers, String[] usernames){
-        return UserRepository.getUser(usernames[rand.nextInt(sizeUsers)]).get().id;
+        return UserRepository.getUser(usernames[getRandomIndex(sizeUsers)]).get().id;
     }
     public static int runGetUserById(int sizeUsers){
         return UserRepository.getUserById(rand.nextInt(sizeUsers)+1).get().id;

@@ -4,6 +4,8 @@ import persistence.DB;
 import persistence.FollowerRepository;
 import persistence.MessageRepository;
 import persistence.UserRepository;
+
+import java.util.Arrays;
 import java.util.Random;
 
 public class CreateAndFillTestDB {
@@ -22,35 +24,32 @@ public class CreateAndFillTestDB {
             DB.setPW(System.getProperty("DB_PASSWORD"));
         }
     }
-    public static void addUsers(int count, String[] users) {
-        int i=0;
-        while(i++<count) {
+    public static void addUsers(String[] users) {
+        for (String user : users) {
             var email       = generateRandomString(14);
             var password1   = generateRandomString(14);
-            var rs = UserRepository.addUser(users[i], email, password1);
-            if(!rs.isSuccess()) {
-                i--;
+            var rs = UserRepository.addUser(user, email, password1);
+            while (!rs.isSuccess()) {
+                rs = UserRepository.addUser(user, email, password1);
             }
         }
     }
     public static void addFollowers(int count, String[] userNames) {
         int countUsers = userNames.length;
-        int i=0;
-        while(i++<count) {
+        for(int i =0; i<count; i++) {
             var rs = FollowerRepository.followUser(getRandomID(countUsers), userNames[getRandomIndex(countUsers)]);
-            if(!rs.isSuccess()) {
-                i--;
+            while (!rs.isSuccess()) {
+                rs = FollowerRepository.followUser(getRandomID(countUsers), userNames[getRandomIndex(countUsers)]);
             }
         }
     }
 
     public static void addMessages(int count, int countUsers) {
-        int i=0;
-        while(i++<count) {
+        for(int i =0; i<count; i++) {
             var text = generateRandomString(30);
             var rs = MessageRepository.addMessage(text, getRandomIndex(countUsers));
-            if(!rs.isSuccess()) {
-                i--;
+            while (!rs.isSuccess()) {
+                rs = MessageRepository.addMessage(text, getRandomIndex(countUsers));
             }
         }
     }
@@ -70,6 +69,7 @@ public class CreateAndFillTestDB {
         for(int i=0; i<count; i++) {
             users[i] = "paul"+i;
         }
+        System.out.println(Arrays.toString(users));
         return users;
     }
     public static int getRandomID(int count){
