@@ -1,3 +1,5 @@
+package testUtilities;
+
 import org.junit.jupiter.api.Assertions;
 import persistence.DB;
 import persistence.MessageRepository;
@@ -8,19 +10,17 @@ import org.junit.jupiter.api.BeforeEach;
 
 import static spark.Spark.stop;
 
-abstract class DatabaseTestBase {
+public abstract class DatabaseTestBase {
     int userId = 1;
 
     @BeforeEach
     void setUp() {
         DB.removeInstance();
-        DB.setDATABASE("testMinitwit");
+        DB.setDatabase("testMinitwit");
         if (System.getProperty("DB_TEST_CONNECTION_STRING") != null) {
-            DB.setCONNECTIONSTRING(System.getProperty("DB_TEST_CONNECTION_STRING"));
-            DB.setUSER(System.getProperty("DB_USER"));
-            DB.setPW(System.getProperty("DB_PASSWORD"));
+            DB.setDatabaseParameters(System.getProperty("DB_TEST_CONNECTION_STRING"), System.getProperty("DB_USER"), System.getProperty("DB_PASSWORD"));
         }
-        DB.dropDB();
+        DB.dropDatabase();
     }
 
     @org.junit.jupiter.api.AfterEach
@@ -28,54 +28,54 @@ abstract class DatabaseTestBase {
         stop();
     }
 
-    Result<String> register(String username, String password, String email) {
+    public Result<String> register(String username, String password, String email) {
         if (email == null) {
-            email = new StringBuilder(username).append( "@example.com").toString();
+            email = username + "@example.com";
         }
         return UserRepository.addUser(username, email, password);
     }
 
-    Result<Boolean> login(String username, String password) {
+    public Result<Boolean> login(String username, String password) {
         return UserRepository.queryLogin(username, password);
     }
 
-    Result<Boolean> registerAndLogin(String username, String password) {
+    public Result<Boolean> registerAndLogin(String username, String password) {
         this.register(username, password, null);
         return this.login(username, password);
     }
 
-    Result<Integer> registerLoginGetID(String username, String password, String email) {
+    public Result<Integer> registerLoginGetID(String username, String password, String email) {
         this.register(username, password, email);
         this.login(username, password);
         var id = UserRepository.getUserId(username);
-        Assertions.assertEquals(true, id.isSuccess());
-        Assertions.assertEquals(true, id.get() == this.userId);
+        Assertions.assertTrue(id.isSuccess());
+        Assertions.assertTrue(id.get() == this.userId);
         this.userId++;
         return id;
     }
 
-    Result<Boolean> register_and_login(String username, String password) {
+    public Result<Boolean> register_and_login(String username, String password) {
         register(username, password, null);
         return login(username, password);
     }
 
-    Result<Integer> register_login_getID(String username, String password, String email) {
+    public  Result<Integer> register_login_getID(String username, String password, String email) {
         register(username, password, email);
         login(username, password);
         var id = UserRepository.getUserId(username);
-        Assertions.assertEquals(true, id.isSuccess());
-        Assertions.assertEquals(true, id.get() == userId);
+        Assertions.assertTrue(id.isSuccess());
+        Assertions.assertEquals(userId, (int) id.get());
         userId++;
         return id;
     }
 
-    Result<Boolean> logout() {
+    public Result<Boolean> logout() {
         //todo logout helper function
         return new Success<>(true);
     }
 
     //hotfix: added Thread.sleep to ensure order of messages
-    void addMessage(String text, int loggedInUserId) {
+    public void addMessage(String text, int loggedInUserId) {
         var rs = MessageRepository.addMessage(text, loggedInUserId);
         Assertions.assertEquals(true, rs.get());
     }

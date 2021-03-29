@@ -9,24 +9,21 @@ public class Main {
     public static void main(String[] args) {
         try {
             staticFiles.location("/");
-            handleArgs(args);
-            Endpoints.registerHooks();
-            Endpoints.registerEndpoints();
 
-            //Add indexes to make sure they exits
-            DB.addIndexes(DB.initDb());
+            if (args.length > 0) {
+                DB.setDatabaseParameters(args[0], args[1], args[2]);
+            }
+
+            Endpoints.init();
 
             //add db clear here if working LOCALLY
+            //DB.dropDatabase();
+
+            //Add indexes to make sure they exits
+            //DB.addIndexes(DB.initDatabase());
             LogService.startSchedules();
         } catch (Exception e) {
             LogService.logError(e);
-        }
-    }
-    public static void handleArgs(String[] args){
-        if(args.length > 0) {
-            DB.setCONNECTIONSTRING(args[0]);
-            DB.setUSER(args[1]);
-            DB.setPW(args[2]);
         }
     }
 }

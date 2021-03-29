@@ -49,6 +49,7 @@ public class Requests {
         addFromBody(map, request);
         return map;
     }
+
     private static void addFromParams(Map<String, String> map, Request request, String[] args) {
         for (String arg : args) {
             if (request.queryParams(arg) != null) {
@@ -56,6 +57,7 @@ public class Requests {
             }
         }
     }
+
     private static void addFromBody(Map<String, String> map, Request request) {
         if (!request.body().isEmpty()) {
             if(JSON.isJSON(request.body())) {
@@ -69,6 +71,7 @@ public class Requests {
             }
         }
     }
+
     private static void addJsonFromBody(Map<String, String> map, Request request) {
         ObjectMapper mapper = new ObjectMapper();
         try {

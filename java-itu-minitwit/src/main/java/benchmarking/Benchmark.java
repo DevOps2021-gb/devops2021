@@ -27,7 +27,7 @@ class Benchmark {
     runBenchmarks(usernames);
   }
   private static void populateDB(String[] usernames) {
-    DB.dropDB();
+    DB.dropDatabase();
     logger.log(Level.INFO, "start adding users");
     CreateAndFillTestDB.addUsers(usernames);
     logger.log(Level.INFO, "end adding users");

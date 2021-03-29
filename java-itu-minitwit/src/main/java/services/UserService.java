@@ -142,7 +142,7 @@ public class UserService {
         if (!userIdResult.isSuccess()) {
             response.status(HttpStatus.NOT_FOUND_404);
             response.type(JSON.APPLICATION_JSON);
-            return JSON.MESSAGE404_NOT_FOUND;
+            return JSON.respond404();
         }
         List<User> following = FollowerRepository.getFollowing(userIdResult.get()).get();
 
@@ -230,6 +230,5 @@ public class UserService {
         }
 
         return null;
-
     }
 }
