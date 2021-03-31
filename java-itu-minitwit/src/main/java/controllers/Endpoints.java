@@ -28,10 +28,7 @@ public class Endpoints {
     private static final Map<String, BiFunction<Request, Response, Object>> endpointsGet = new HashMap<>();
     private static final Map<String, BiFunction<Request, Response, Object>> endpointsPost =new HashMap<>();
 
-    public static void init() {
-        registerHooks();
-        registerEndpoints();
-    }
+
 
     private static void setUpEntryPointsMap(){
         endpointsGet.put("/latest",              Endpoints::getLatest);
@@ -55,89 +52,108 @@ public class Endpoints {
         endpointsPost.put(REGISTER,              Endpoints::register);
     }
 
-    private static Object getLatest(Request request, Response response) {
+    public static Object getLatest(Request request, Response response) {
         return MessageService.getLatest(response);
     }
 
-    private static Object messages(Request request, Response response) {
+    public static Object messages(Request request, Response response) {
         return MessageService.getMessages(request, response);
     }
 
-    private static Object messagesPerUser(Request request, Response response) {
+    public static Object messagesPerUser(Request request, Response response) {
         return MessageService.messagesPerUser(request, response);
     }
 
-    private static Object getFollow(Request request, Response response) {
+    public static Object getFollow(Request request, Response response) {
         return UserService.getFollow(request, response);
     }
 
-    private static Object timeline(Request request, Response response) {
+    public static Object timeline(Request request, Response response) {
         return TimelineService.timeline(request, response);
     }
 
-    private static Object metrics(Request request, Response response) {
+    public static Object metrics(Request request, Response response) {
         return MetricsService.metrics(response);
     }
 
-    private static Object publicTimeline(Request request, Response response) {
+    public static Object publicTimeline(Request request, Response response) {
         return TimelineService.publicTimeline(request);
     }
 
-    private static Object loginGet(Request request, Response response) {
+    public static Object loginGet(Request request, Response response) {
         return UserService.loginGet(request);
     }
 
-    private static Object logout(Request request, Response response) {
+    public static Object logout(Request request, Response response) {
         UserService.logout(request, response);
         return null;
     }
 
-    private static Object followUser(Request request, Response response) {
+    public static Object followUser(Request request, Response response) {
         UserService.followUser(request, response);
         return null;
     }
 
-    private static Object unfollowUser(Request request, Response response) {
+    public static Object unfollowUser(Request request, Response response) {
         UserService.unfollowUser(request, response);
         return null;
     }
 
-    private static Object userTimeline(Request request, Response response) {
+    public static Object userTimeline(Request request, Response response) {
         return TimelineService.userTimeline(request);
     }
 
-    private static Object addMessage(Request request, Response response) {
+    public static Object addMessage(Request request, Response response) {
         MessageService.addMessage(request, response);
         return null;
     }
 
-    private static Object postFollow(Request request, Response response) {
+    public static Object postFollow(Request request, Response response) {
         return UserService.postFollow(request, response);
     }
 
-    private static Object login(Request request, Response response) {
+    public static Object login(Request request, Response response) {
         return UserService.login(request, response);
     }
 
-    private static Object register(Request request, Response response) {
+    public static Object register(Request request, Response response) {
         return UserService.register(request, response);
     }
 
-    private static void registerEndpoints() {
-        setUpEntryPointsMap();
+    public static void registerEndpoints() {
+/*        setUpEntryPointsMap();
         for(String point : entryPointsGetOrder) {
-            Spark.get(point, (req, res)-> LogService.benchMarkEndpoint(point, endpointsGet.get(point), req, res));
+            Spark.get(point, (req, res)-> endpointsGet.get(point));
         }
         for(String point : entryPointsPostOrder) {
-            Spark.post(point, (req, res)-> LogService.benchMarkEndpoint(point, endpointsPost.get(point), req, res));
-        }
-        LogService.setEndpointsToLog(entryPointsGetOrder, entryPointsPostOrder);
+            Spark.post(point, (req, res)-> endpointsPost.get(point));
+        }*/
+
+        Spark.get("/latest",              Endpoints::getLatest);
+        Spark.get("/msgs",                Endpoints::messages);
+        Spark.get(MSGS_USERNAME,          Endpoints::messagesPerUser);
+        Spark.get(FLLWS_USERNAME,         Endpoints::getFollow);
+        Spark.get("/",                    Endpoints::timeline);
+        Spark.get("/metrics",             Endpoints::metrics);
+        Spark.get("/public",              Endpoints::publicTimeline);
+        Spark.get(LOGIN,               Endpoints::loginGet);
+        Spark.get(REGISTER,              (req, res)-> Presentation.renderTemplate(MessageService.REGISTER_HTML));
+        Spark.get("/logout",              Endpoints::logout);
+        Spark.get("/:username/follow",    Endpoints::followUser);
+        Spark.get("/:username/unfollow",  Endpoints::unfollowUser);
+        Spark.get("/:username",           Endpoints::userTimeline);
+
+        Spark.post(MSGS_USERNAME,         Endpoints::addMessage);
+        Spark.post(FLLWS_USERNAME,        Endpoints::postFollow);
+        Spark.post("/add_message",        Endpoints::addMessage);
+        Spark.post(LOGIN,                 Endpoints::login);
+        Spark.post(REGISTER,              Endpoints::register);
     }
 
-    private static void registerHooks() {
+    public static void registerHooks() {
         Spark.before((request, response) -> {
-            LogService.processRequest();
-            LogService.logRequest(request);
+            //LogService.processRequest();
+            //LogService.logRequest(request);
 
             Integer userId = Requests.getSessionUserId(request);
             if (userId != null) {
@@ -150,12 +166,12 @@ public class Endpoints {
 
         Spark.notFound((req, res) -> {
             res.type(JSON.APPLICATION_JSON);
-            return JSON.respond404();
+            return JSON.MESSAGE404_NOT_FOUND;
         });
 
         Spark.internalServerError((req, res) -> {
             res.type(JSON.APPLICATION_JSON);
-            return JSON.respond500();
+            return JSON.MESSAGE500_SERVER_ERROR;
         });
     }
 }
