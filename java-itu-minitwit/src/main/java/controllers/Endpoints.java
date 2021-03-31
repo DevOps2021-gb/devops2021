@@ -123,12 +123,11 @@ public class Endpoints {
     public static void registerEndpoints() {
         setUpEntryPointsMap();
         for(String point : entryPointsGetOrder) {
-            Spark.get(point, (req, res)-> LogService.benchMarkEndpoint(point, endpointsGet.get(point), req, res));
+            Spark.get(point, (req, res)-> endpointsGet.get(point));
         }
         for(String point : entryPointsPostOrder) {
-            Spark.post(point, (req, res)-> LogService.benchMarkEndpoint(point, endpointsPost.get(point), req, res));
+            Spark.post(point, (req, res)-> endpointsPost.get(point));
         }
-        LogService.setEndpointsToLog(entryPointsGetOrder, entryPointsPostOrder);
     }
 
     public static void registerHooks() {
