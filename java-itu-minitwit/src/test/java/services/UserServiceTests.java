@@ -3,8 +3,9 @@ package services;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import persistence.UserRepository;
+import testUtilities.DatabaseTestBase;
 
-public class UserServiceTests {
+public class UserServiceTests extends DatabaseTestBase {
     @Test
     void validateUserCredentialsGivenAlreadyExistingUserReturnsUserAlreadyExists() {
         var result = UserRepository.addUser("user1", "test@test.dk", "q123");
@@ -12,7 +13,7 @@ public class UserServiceTests {
         Assertions.assertEquals("OK", result.get());
         Assertions.assertEquals((long) UserRepository.countUsers().get(), 1);
         LogService.processUsers();
-        Assertions.assertEquals(LogService.getUsers(), 1);
+        Assertions.assertEquals(1, LogService.getUsers());
 
         result = UserService.validateUserCredentials("user1", "test@test.dk", "q123", "q123");
         Assertions.assertFalse(result.isSuccess());
