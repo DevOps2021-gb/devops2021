@@ -148,7 +148,6 @@ public class Endpoints {
         Spark.post("/add_message",        Endpoints::addMessage);
         Spark.post(LOGIN,                 Endpoints::login);
         Spark.post(REGISTER,              Endpoints::register);
-
     }
 
     public static void registerHooks() {
