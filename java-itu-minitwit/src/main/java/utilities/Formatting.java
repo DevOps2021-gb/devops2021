@@ -6,6 +6,7 @@ import errorhandling.Success;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Locale;
 
 public class Formatting {
 
@@ -16,7 +17,7 @@ public class Formatting {
     public static Result<String> formatDatetime(String timestamp) {
         try {
             Date resultDate = new Date(Long.parseLong(timestamp));
-            SimpleDateFormat sdf = new SimpleDateFormat(TIMESTAMP_PATTERN);
+            SimpleDateFormat sdf = new SimpleDateFormat(TIMESTAMP_PATTERN, Locale.ENGLISH);
             String formattedDate = sdf.format(resultDate);
 
             return new Success<>(formattedDate);
