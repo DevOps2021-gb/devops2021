@@ -121,13 +121,34 @@ public class Endpoints {
     }
 
     public static void registerEndpoints() {
-        setUpEntryPointsMap();
+/*        setUpEntryPointsMap();
         for(String point : entryPointsGetOrder) {
             Spark.get(point, (req, res)-> endpointsGet.get(point));
         }
         for(String point : entryPointsPostOrder) {
             Spark.post(point, (req, res)-> endpointsPost.get(point));
-        }
+        }*/
+
+        Spark.get("/latest",              Endpoints::getLatest);
+        Spark.get("/msgs",                Endpoints::messages);
+        Spark.get(MSGS_USERNAME,          Endpoints::messagesPerUser);
+        Spark.get(FLLWS_USERNAME,         Endpoints::getFollow);
+        Spark.get("/",                    Endpoints::timeline);
+        Spark.get("/metrics",             Endpoints::metrics);
+        Spark.get("/public",              Endpoints::publicTimeline);
+        Spark.get(LOGIN,               Endpoints::loginGet);
+        Spark.get(REGISTER,              (req, res)-> Presentation.renderTemplate(MessageService.REGISTER_HTML));
+        Spark.get("/logout",              Endpoints::logout);
+        Spark.get("/:username/follow",    Endpoints::followUser);
+        Spark.get("/:username/unfollow",  Endpoints::unfollowUser);
+        Spark.get("/:username",           Endpoints::userTimeline);
+
+        Spark.post(MSGS_USERNAME,         Endpoints::addMessage);
+        Spark.post(FLLWS_USERNAME,        Endpoints::postFollow);
+        Spark.post("/add_message",        Endpoints::addMessage);
+        Spark.post(LOGIN,                 Endpoints::login);
+        Spark.post(REGISTER,              Endpoints::register);
+
     }
 
     public static void registerHooks() {
