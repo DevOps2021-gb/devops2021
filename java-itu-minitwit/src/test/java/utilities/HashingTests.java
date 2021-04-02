@@ -3,7 +3,7 @@ package utilities;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-public class HashingTests {
+class HashingTests {
     @Test
     void getGravatarUrlGivenEmailReturnsFormattedEmail() {
         var actual = Hashing.getGravatarUrl("test@email.dk");

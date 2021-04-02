@@ -5,13 +5,13 @@ import org.junit.jupiter.api.Test;
 import persistence.UserRepository;
 import testUtilities.DatabaseTestBase;
 
-public class UserServiceTests extends DatabaseTestBase {
+class UserServiceTests extends DatabaseTestBase {
     @Test
     void validateUserCredentialsGivenAlreadyExistingUserReturnsUserAlreadyExists() {
         var result = UserRepository.addUser("user1", "test@test.dk", "q123");
         Assertions.assertTrue(result.isSuccess());
         Assertions.assertEquals("OK", result.get());
-        Assertions.assertEquals((long) UserRepository.countUsers().get(), 1);
+        Assertions.assertEquals(1, (long) UserRepository.countUsers().get());
         LogService.processUsers();
         Assertions.assertEquals(1, LogService.getUsers());
 

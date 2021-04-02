@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test;
 import java.util.Date;
 
 
-public class FormattingTests {
+class FormattingTests {
     @Test
     void formatDatetimeGivenValidTimestampReturnsSuccess() {
         var time = new Date().getTime();

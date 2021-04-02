@@ -49,7 +49,7 @@ public abstract class DatabaseTestBase {
         this.login(username, password);
         var id = UserRepository.getUserId(username);
         Assertions.assertTrue(id.isSuccess());
-        Assertions.assertTrue(id.get() == this.userId);
+        Assertions.assertEquals(this.userId, (int) id.get());
         this.userId++;
         return id;
     }

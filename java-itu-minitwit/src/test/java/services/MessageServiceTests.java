@@ -59,9 +59,9 @@ class MessageServiceTests extends DatabaseTestBase {
 
         Assertions.assertEquals(1, actual.size());
         var tweet = actual.get(0);
-        Assertions.assertEquals(tweet.getEmail(), "test@test.dk");
-        Assertions.assertEquals(tweet.getUsername(), "test");
-        Assertions.assertEquals(tweet.getText(), "body");
+        Assertions.assertEquals("test@test.dk", tweet.getEmail());
+        Assertions.assertEquals("test", tweet.getUsername());
+        Assertions.assertEquals("body", tweet.getText());
         Assertions.assertNotNull(tweet.getPubDate());
         Assertions.assertNotNull(tweet.getProfilePic());
     }
