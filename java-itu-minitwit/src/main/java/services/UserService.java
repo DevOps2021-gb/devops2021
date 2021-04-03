@@ -224,6 +224,7 @@ public class UserService {
 
         if (isRequestFromSimulator(request)) {
             response.status(HttpStatus.NO_CONTENT_204);
+            response.redirect("/"); //todo: hotfix needed for simulator endpoint
         } else {
             request.session().attribute(FLASH, "You were successfully registered and can login now");
             response.redirect("/login");
