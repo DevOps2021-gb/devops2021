@@ -46,16 +46,16 @@ public class LogService {
         if (request.url().contains("favicon.ico")) return;
 
         if (request.params().size() == 0) {
-            logger.log(Level.INFO, new StringBuilder(request.requestMethod()).append(" ").append(request.url()).toString());
+            logger.log(Level.INFO, request.requestMethod() + " " + request.url());
         } else {
-            logger.log(Level.INFO, new StringBuilder(request.requestMethod()).append(" with args ").append(request.params().toString().replaceAll("[\n\r\t]", "_")).toString());
+            logger.log(Level.INFO, request.requestMethod() + " with args " + request.params().toString().replaceAll("[\n\r\t]", "_"));
         }
     }
 
     private static void setEndpoints(String[] endpoints, String namePrefix, String helpPrefix) {
         for (String key: endpoints){
-            String endPoint     = new StringBuilder(namePrefix).append(key.replace('/', '_')).toString();
-            String helpString   = new StringBuilder(helpPrefix).append(key).toString();
+            String endPoint     = namePrefix + key.replace('/', '_');
+            String helpString   = helpPrefix + key;
             Gauge gauge = Gauge.build()
                 .name(endPoint).help(helpString).register();
             responseTimeEndPoints.put(key, gauge);

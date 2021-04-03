@@ -4,29 +4,29 @@ import controllers.Endpoints;
 import services.LogService;
 import persistence.DB;
 import static spark.Spark.staticFiles;
+import static spark.Spark.threadPool;
 
 public class Main {
     public static void main(String[] args) {
         try {
+
             staticFiles.location("/");
-            handleArgs(args);
-            Endpoints.registerHooks();
             Endpoints.registerEndpoints();
+            Endpoints.registerHooks();
+
+            if (args.length > 0) {
+                DB.setDatabaseParameters(args[0], args[1], args[2]);
+            }
+
+            int maxThreads = 4;
+            threadPool(maxThreads);
 
             //Add indexes to make sure they exits
-            DB.addIndexes(DB.initDb());
+            DB.addIndexes(DB.initDatabase());
 
-            //add db clear here if working LOCALLY
             LogService.startSchedules();
         } catch (Exception e) {
             LogService.logError(e);
-        }
-    }
-    public static void handleArgs(String[] args){
-        if(args.length > 0) {
-            DB.setCONNECTIONSTRING(args[0]);
-            DB.setUSER(args[1]);
-            DB.setPW(args[2]);
         }
     }
 }

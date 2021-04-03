@@ -27,7 +27,7 @@ public class UserRepository {
     public static Result<String> addUser(String username, String email, String password1) {
         try {
             var db = DB.connectDb().get();
-            db.insert(new User(username, email, Hashing.generatePasswordHash(password1).get()));
+            db.insert(new User(username, email, Hashing.hash(password1).get()));
             return new Success<>("OK");
         } catch (Exception e) {
             return new Failure<>(e);

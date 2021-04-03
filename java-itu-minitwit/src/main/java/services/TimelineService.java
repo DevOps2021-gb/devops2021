@@ -58,7 +58,7 @@ public class TimelineService {
 
         if (getSessionUserId(request) == null) {
             response.redirect("/public");
-            return null;
+            return "";
         }
         HashMap<String, Object> context = new HashMap<>();
         var user = UserRepository.getUserById(getSessionUserId(request));

@@ -54,19 +54,19 @@ Displays the latest messages of all users.
         try{
             var db = DB.connectDb().get();
             String query =
-                    new StringBuilder("select joined.email, joined.username, joined.text, joined.pubDate ")
-                            .append("from ( ")
-                            .append("select u.email as email, u.username as username, m.text as text, m.pubDate as pubDate ")
-                            .append("from message m join user u on m.authorId = u.id ")
-                            .append("where m.flagged = 0 and u.id = ? ")
-                            .append("union ")
-                            .append("select u.email as email, u.username as username, m.text as text, m.pubDate as pubDate ")
-                            .append("from message m ")
-                            .append("join user u on m.authorId = u.id ")
-                            .append("join follower f on f.whoId = ? and f.whomId = u.id ")
-                            .append("where m.flagged = 0 ")
-                            .append(") joined ")
-                            .append("order by joined.pubDate desc limit ").append(PER_PAGE).toString();
+                    "select joined.email, joined.username, joined.text, joined.pubDate " +
+                            "from ( " +
+                            "select u.email as email, u.username as username, m.text as text, m.pubDate as pubDate " +
+                            "from message m join user u on m.authorId = u.id " +
+                            "where m.flagged = 0 and u.id = ? " +
+                            "union " +
+                            "select u.email as email, u.username as username, m.text as text, m.pubDate as pubDate " +
+                            "from message m " +
+                            "join user u on m.authorId = u.id " +
+                            "join follower f on f.whoId = ? and f.whomId = u.id " +
+                            "where m.flagged = 0 " +
+                            ") joined " +
+                            "order by joined.pubDate desc limit " + PER_PAGE;
             var result = db.sql( query, userId, userId).results(HashMap.class);
             return new Success<>(MessageService.tweetsFromListOfHashMap(result));
         } catch (Exception e) {
@@ -78,11 +78,11 @@ Displays the latest messages of all users.
         try{
             var db = DB.connectDb().get();
             String query =
-                new StringBuilder("select u.email, u.username, m.text, m.pubDate ")
-                    .append("from message m join user u on m.authorId = u.id ")
-                    .append("where m.flagged = 0 ")
-                    .append(condition).append(" ")
-                    .append("order by m.pubDate desc limit ").append(PER_PAGE).toString();
+                    "select u.email, u.username, m.text, m.pubDate " +
+                            "from message m join user u on m.authorId = u.id " +
+                            "where m.flagged = 0 " +
+                            condition + " " +
+                            "order by m.pubDate desc limit " + PER_PAGE;
             var result = db.sql( query, args).results(HashMap.class);
             return new Success<>(MessageService.tweetsFromListOfHashMap(result));
         } catch (Exception e) {

@@ -8,6 +8,8 @@ import persistence.UserRepository;
 import java.util.Arrays;
 import java.util.Random;
 
+import static persistence.DB.setDatabaseParameters;
+
 public class CreateAndFillTestDB {
 
     private CreateAndFillTestDB(){
@@ -17,11 +19,9 @@ public class CreateAndFillTestDB {
 
     public static void instantiateDB(){
         DB.removeInstance();
-        DB.setDATABASE("benchmarkMinitwit");
+        DB.setDatabase("benchmarkMinitwit");
         if (System.getProperty("DB_TEST_CONNECTION_STRING") != null) {
-            DB.setCONNECTIONSTRING(System.getProperty("DB_TEST_CONNECTION_STRING"));
-            DB.setUSER(System.getProperty("DB_USER"));
-            DB.setPW(System.getProperty("DB_PASSWORD"));
+            setDatabaseParameters(System.getProperty("DB_TEST_CONNECTION_STRING"), System.getProperty("DB_USER"), System.getProperty("DB_PASSWORD"));
         }
     }
     public static void addUsers(String[] users) {

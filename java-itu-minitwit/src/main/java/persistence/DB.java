@@ -22,22 +22,7 @@ public class DB {
     private static final Logger logger = Logger.getLogger(DB.class.getSimpleName());
 
     private DB() {}
-    private static void setPropertyUrl(String url){
-        System.setProperty("norm.jdbcUrl", url);
-    }
-    private static void setSystemProperties() {
-        if(connectionString != null) {
-            setPropertyUrl("jdbc:" + connectionString);
-        } else {
-            setPropertyUrl("jdbc:mysql://" + IP + ":" + PORT + "/" + database + "?allowPublicKeyRetrieval=true&useSSL=false");
-        }
-        System.setProperty("norm.user", user);
-        System.setProperty("norm.password", pw);
-    }
 
-    /*
-        Returns a new connection to the database.
-    */
     public static Result<Database> connectDb() {
         if (instance == null) {
             try {
@@ -52,27 +37,22 @@ public class DB {
         return new Success<>(instance);
     }
 
-    public static void setCONNECTIONSTRING(String connectionString) {
-        DB.connectionString = connectionString;
+    public static void setDatabaseParameters(String connectionString, String user, String password){
+        DB.setConnectionString(connectionString);
+        DB.setUser(user);
+        DB.setPassword(password);
     }
 
-    public static void setUSER(String user) {
-        DB.user = user;
-    }
-
-    public static void setPW(String pw) {
-        DB.pw = pw;
-    }
-
-    public static void setDATABASE(String dbName) {
+    public static void setDatabase(String dbName) {
         database = dbName;
     }
 
-    public static Database initDb()  {
+    public static Database initDatabase()  {
         return DB.connectDb().get();
     }
-    public static void dropDB(){
-        var db = initDb();
+
+    public static void dropDatabase(){
+        var db = initDatabase();
         db.sql("drop table if exists follower").execute();
         db.sql("drop table if exists message").execute();
         db.sql("drop table if exists user").execute();
@@ -84,23 +64,12 @@ public class DB {
         db.sql("ALTER TABLE follower ADD FOREIGN KEY (whoId) REFERENCES user(id)").execute();
         db.sql("ALTER TABLE follower ADD FOREIGN KEY (whomId) REFERENCES user(id)").execute();
     }
+
     public static void addIndexes(Database db){
         //indexes on references is created automatically
         addIndex(db, "messagePubDate",  "message",  "pubDate");
         addIndex(db, "userUsername",    "user",     "Username");
         addIndex(db, "followerWhoWhom", "follower", "whoId, whomId");
-    }
-    private static void addIndex(Database db, String indexName, String table, String attributes){
-        //indexes on references is created automatically
-        try {
-            db.sql("CREATE INDEX "+indexName+" ON "+table+" ("+attributes+");").execute();
-        } catch (Exception e) {
-            if (!e.getMessage().equals("Duplicate key name '"+indexName+"'")) {
-                logger.log(Level.INFO,e.getMessage());
-            }
-        }
-
-
     }
 
     public static String getDatabase() {
@@ -135,5 +104,42 @@ public class DB {
         }
         instance.close();
         instance = null;
+    }
+
+    private static void setPropertyUrl(String url){
+        System.setProperty("norm.jdbcUrl", url);
+    }
+
+    private static void setSystemProperties() {
+        if(connectionString != null) {
+            setPropertyUrl("jdbc:" + connectionString);
+        } else {
+            setPropertyUrl("jdbc:mysql://" + IP + ":" + PORT + "/" + database + "?allowPublicKeyRetrieval=true&useSSL=false");
+        }
+        System.setProperty("norm.user", user);
+        System.setProperty("norm.password", pw);
+    }
+
+    private static void addIndex(Database db, String indexName, String table, String attributes){
+        //indexes on references is created automatically
+        try {
+            db.sql("CREATE INDEX "+indexName+" ON "+table+" ("+attributes+");").execute();
+        } catch (Exception e) {
+            if (!e.getMessage().equals("Duplicate key name '"+indexName+"'")) {
+                logger.log(Level.INFO,e.getMessage());
+            }
+        }
+    }
+
+    private static void setConnectionString(String connectionString) {
+        DB.connectionString = connectionString;
+    }
+
+    private static void setUser(String user) {
+        DB.user = user;
+    }
+
+    private static void setPassword(String pw) {
+        DB.pw = pw;
     }
 }

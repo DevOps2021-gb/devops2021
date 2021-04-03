@@ -1,6 +1,5 @@
-import errorhandling.Failure;
-import errorhandling.Result;
-import errorhandling.Success;
+package errorhandling;
+
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -9,7 +8,7 @@ class ErrrorhandlingTests {
     @Test
     void test_Success() {
         Result<Integer> v = new Success<>(2);
-        Assertions.assertEquals(true, v.isSuccess());
+        Assertions.assertTrue(v.isSuccess());
         Assertions.assertEquals((Integer) 2, v.get());
         try {
             v.getFailureMessage();
@@ -20,7 +19,7 @@ class ErrrorhandlingTests {
     @Test
     void test_Failure() {
         var v1 = new Failure<Integer>(new IndexOutOfBoundsException("test"));
-        Assertions.assertEquals(true, !v1.isSuccess());
+        Assertions.assertFalse(v1.isSuccess());
         Assertions.assertEquals(IndexOutOfBoundsException.class, v1.getException().getClass());
         Assertions.assertEquals("test", v1.getFailureMessage());
         try {
@@ -31,7 +30,7 @@ class ErrrorhandlingTests {
         Assertions.assertEquals(v1.getException().toString(), v1.toString());
 
         var v2 = new Failure<Integer>("test");
-        Assertions.assertEquals(true, !v2.isSuccess());
+        Assertions.assertFalse(v2.isSuccess());
         Assertions.assertEquals(Exception.class, v2.getException().getClass());
         Assertions.assertEquals("test", v2.getFailureMessage());
         try {
