@@ -82,7 +82,7 @@ public class UserService {
 
         if (isUserLoggedIn(request)) {
             response.redirect("/");
-            return null;
+            return "";
         }
 
         var loginResult = UserRepository.queryLogin(username, password);
@@ -91,7 +91,7 @@ public class UserService {
             request.session().attribute(USER_ID, UserRepository.getUserId(username).get());
             request.session().attribute(FLASH, "You were logged in");
             response.redirect("/");
-            return null;
+            return "";
         } else {
             Failure<Boolean> error = (Failure<Boolean>) loginResult;
             HashMap<String, Object> context = new HashMap<>();
@@ -172,7 +172,7 @@ public class UserService {
             return followOrUnfollow(unfollow.get(), FollowerRepository::unfollowUser, userIdResult, response);
         } else {
             response.status(HttpStatus.BAD_REQUEST_400);
-            return null;
+            return "";
         }
 
     }
@@ -229,6 +229,6 @@ public class UserService {
             response.redirect("/login");
         }
 
-        return null;
+        return "";
     }
 }

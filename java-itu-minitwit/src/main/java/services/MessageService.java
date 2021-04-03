@@ -94,7 +94,14 @@ public class MessageService {
             userId = getSessionUserId(request);
         }
         else {
-            userId = UserRepository.getUserId(username).get();
+            var userIdRes = UserRepository.getUserId(username);
+
+            if (!userIdRes.isSuccess()) {
+                response.status(HttpStatus.NO_CONTENT_204);
+                return;
+            }
+
+            userId = userIdRes.get();
         }
 
         var rs = MessageRepository.addMessage(content, userId);
@@ -105,9 +112,16 @@ public class MessageService {
                 var message = "Your message was recorded";
                 logger.log(Level.INFO,message);
                 request.session().attribute(FLASH, message);
+                response.redirect("/");
+            }
+        } else {
+            if (isRequestFromSimulator(request)) {
+                response.status(HttpStatus.FORBIDDEN_403);
+            } else {
+                response.redirect("/");
             }
         }
-        response.redirect("/");
+
     }
 
     public static List<Tweet> tweetsFromListOfHashMap(List<HashMap> result){

@@ -22,32 +22,27 @@ public class Endpoints {
     private static final String MSGS_USERNAME = "/msgs/:username";
     private static final String LOGIN = "/login";
 
-    private static final String[] entryPointsGetOrder     = new String[]{"/latest", "/msgs", MSGS_USERNAME, FLLWS_USERNAME, "/", "/metrics", "/public", LOGIN, REGISTER, "/logout", "/:username/follow", "/:username/unfollow","/:username"};
-    private static final String[] entryPointsPostOrder    = new String[]{MSGS_USERNAME,FLLWS_USERNAME,"/add_message",LOGIN,REGISTER};
+    public static void registerEndpoints(){
 
-    private static final Map<String, BiFunction<Request, Response, Object>> endpointsGet = new HashMap<>();
-    private static final Map<String, BiFunction<Request, Response, Object>> endpointsPost =new HashMap<>();
+        Spark.post(MSGS_USERNAME,             Endpoints::addMessage);
+        Spark.post(FLLWS_USERNAME,            Endpoints::postFollow);
+        Spark.post("/add_message",       Endpoints::addMessage);
+        Spark.post(LOGIN,                     Endpoints::login);
+        Spark.post(REGISTER,                  Endpoints::register);
 
-    private static void setUpEntryPointsMap(){
-        endpointsGet.put("/latest",              Endpoints::getLatest);
-        endpointsGet.put("/msgs",                Endpoints::messages);
-        endpointsGet.put(MSGS_USERNAME,          Endpoints::messagesPerUser);
-        endpointsGet.put(FLLWS_USERNAME,         Endpoints::getFollow);
-        endpointsGet.put("/",                    Endpoints::timeline);
-        endpointsGet.put("/metrics",             Endpoints::metrics);
-        endpointsGet.put("/public",              Endpoints::publicTimeline);
-        endpointsGet.put(LOGIN,               Endpoints::loginGet);
-        endpointsGet.put(REGISTER,              (req, res)-> Presentation.renderTemplate(MessageService.REGISTER_HTML));
-        endpointsGet.put("/logout",              Endpoints::logout);
-        endpointsGet.put("/:username/follow",    Endpoints::followUser);
-        endpointsGet.put("/:username/unfollow",  Endpoints::unfollowUser);
-        endpointsGet.put("/:username",           Endpoints::userTimeline);
-
-        endpointsPost.put(MSGS_USERNAME,         Endpoints::addMessage);
-        endpointsPost.put(FLLWS_USERNAME,        Endpoints::postFollow);
-        endpointsPost.put("/add_message",        Endpoints::addMessage);
-        endpointsPost.put(LOGIN,                 Endpoints::login);
-        endpointsPost.put(REGISTER,              Endpoints::register);
+        Spark.get("/latest",             Endpoints::getLatest);
+        Spark.get("/msgs",               Endpoints::messages);
+        Spark.get(MSGS_USERNAME,              Endpoints::messagesPerUser);
+        Spark.get(FLLWS_USERNAME,             Endpoints::getFollow);
+        Spark.get("/",                   Endpoints::timeline);
+        Spark.get("/metrics",            Endpoints::metrics);
+        Spark.get("/public",             Endpoints::publicTimeline);
+        Spark.get(LOGIN,                      Endpoints::loginGet);
+        Spark.get(REGISTER,                   (req, res)-> Presentation.renderTemplate(MessageService.REGISTER_HTML));
+        Spark.get("/logout",             Endpoints::logout);
+        Spark.get("/:username/follow",   Endpoints::followUser);
+        Spark.get("/:username/unfollow", Endpoints::unfollowUser);
+        Spark.get("/:username",          Endpoints::userTimeline);
     }
 
     public static Object getLatest(Request request, Response response) {
@@ -84,17 +79,17 @@ public class Endpoints {
 
     public static Object logout(Request request, Response response) {
         UserService.logout(request, response);
-        return null;
+        return "";
     }
 
     public static Object followUser(Request request, Response response) {
         UserService.followUser(request, response);
-        return null;
+        return "";
     }
 
     public static Object unfollowUser(Request request, Response response) {
         UserService.unfollowUser(request, response);
-        return null;
+        return "";
     }
 
     public static Object userTimeline(Request request, Response response) {
@@ -103,7 +98,7 @@ public class Endpoints {
 
     public static Object addMessage(Request request, Response response) {
         MessageService.addMessage(request, response);
-        return null;
+        return "";
     }
 
     public static Object postFollow(Request request, Response response) {
@@ -118,20 +113,12 @@ public class Endpoints {
         return UserService.register(request, response);
     }
 
-    public static void registerEndpoints() {
-        setUpEntryPointsMap();
-        for(String point : entryPointsGetOrder) {
-            Spark.get(point, (req, res)-> endpointsGet.get(point).apply(req, res));
-        }
-        for(String point : entryPointsPostOrder) {
-            Spark.post(point, (req, res)-> endpointsPost.get(point).apply(req, res));
-        }
-    }
-
     public static void registerHooks() {
         Spark.before((request, response) -> {
-            //LogService.processRequest();
+            LogService.processRequest();
             //LogService.logRequest(request);
+
+            if (request.requestMethod().equals("GET")) return;
 
             Integer userId = Requests.getSessionUserId(request);
             if (userId != null) {
@@ -142,13 +129,13 @@ public class Endpoints {
             }
         });
 
-        Spark.notFound((req, res) -> {
-            res.type(JSON.APPLICATION_JSON);
+        Spark.notFound((request, response) -> {
+            response.type(JSON.APPLICATION_JSON);
             return JSON.respond404();
         });
 
-        Spark.internalServerError((req, res) -> {
-            res.type(JSON.APPLICATION_JSON);
+        Spark.internalServerError((request, response) -> {
+            response.type(JSON.APPLICATION_JSON);
             return JSON.respond500();
         });
     }

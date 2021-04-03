@@ -32,7 +32,7 @@ public class JSON {
     }
 
     public static String respond404Message(String error) {
-        return "{\"message\":\"404 not found\", \"error_msg\": "+ error + "}";
+        return "{\"message\":\"203\", \"error_msg\": "+ error + "}";
     }
 
     public static String respondLatest(int latest) {
