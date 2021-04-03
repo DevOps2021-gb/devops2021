@@ -1,33 +1,33 @@
+package persistence;
 
 import org.junit.jupiter.api.Assertions;
 import services.LogService;
-import persistence.FollowerRepository;
-import persistence.MessageRepository;
 import org.junit.jupiter.api.Test;
+import testUtilities.DatabaseTestBase;
 
-class FollowerTests extends DatabaseTestBase{
+class FollowerRepositoryTests extends DatabaseTestBase {
     @Test
     void testGetFollowing() {
         var id1 = this.registerLoginGetID("foo", "default",  null);
         var id2 = this.registerLoginGetID("bar", "1234",  null);
         var id3 = this.registerLoginGetID("brian", "q123",  null);
-        Assertions.assertEquals(true, FollowerRepository.countFollowers().get() == 0);
+        Assertions.assertEquals(0, (long) FollowerRepository.countFollowers().get());
         LogService.processFollowers();
-        Assertions.assertEquals(true, LogService.getFollowers() == 0);
+        Assertions.assertEquals(0, LogService.getFollowers());
         var rs1 = FollowerRepository.followUser(id1.get(), "bar");
-        Assertions.assertEquals(true, rs1.isSuccess());
+        Assertions.assertTrue(rs1.isSuccess());
         Assertions.assertEquals(true, FollowerRepository.isFollowing(id1.get(), id2.get()).get());
-        Assertions.assertEquals(true, FollowerRepository.countFollowers().get() == 1);
+        Assertions.assertEquals(1, (long) FollowerRepository.countFollowers().get());
         LogService.processFollowers();
-        Assertions.assertEquals(true, LogService.getFollowers() == 1);
+        Assertions.assertEquals(1, LogService.getFollowers());
         var rs2 = FollowerRepository.followUser(id1.get(), "brian");
-        Assertions.assertEquals(true, rs2.isSuccess());
+        Assertions.assertTrue(rs2.isSuccess());
         Assertions.assertEquals(true, FollowerRepository.isFollowing(id1.get(), id3.get()).get());
-        Assertions.assertEquals(true, FollowerRepository.countFollowers().get() == 2);
+        Assertions.assertEquals(2, (long) FollowerRepository.countFollowers().get());
         LogService.processFollowers();
-        Assertions.assertEquals(true, LogService.getFollowers() == 2);
+        Assertions.assertEquals(2, LogService.getFollowers());
         var rs = FollowerRepository.getFollowing(id1.get());
-        Assertions.assertEquals(true, rs.isSuccess());
+        Assertions.assertTrue(rs.isSuccess());
         Assertions.assertEquals("bar", rs.get().get(0).getUsername());
         Assertions.assertEquals("brian", rs.get().get(1).getUsername());
     }
@@ -41,20 +41,20 @@ class FollowerTests extends DatabaseTestBase{
         var id3 = this.registerLoginGetID("brian", "q123", null);
         this.addMessage("the message by bar", id2.get());
         var rs1 = FollowerRepository.followUser(id1.get(), "bar");
-        Assertions.assertEquals(true, rs1.isSuccess());
+        Assertions.assertTrue(rs1.isSuccess());
         var rs2 = FollowerRepository.followUser(id1.get(), "brian");
-        Assertions.assertEquals(true, rs2.isSuccess());
+        Assertions.assertTrue(rs2.isSuccess());
         Assertions.assertEquals(true, FollowerRepository.isFollowing(id1.get(), id2.get()).get());
         Assertions.assertEquals(true, FollowerRepository.isFollowing(id1.get(), id3.get()).get());
         var rsUnfollow1 = FollowerRepository.unfollowUser(id1.get(), "bar");
-        Assertions.assertEquals(true, rsUnfollow1.isSuccess());
-        Assertions.assertEquals(true, !FollowerRepository.isFollowing(id1.get(), id2.get()).get());
+        Assertions.assertTrue(rsUnfollow1.isSuccess());
+        Assertions.assertFalse(FollowerRepository.isFollowing(id1.get(), id2.get()).get());
         var rsUnfollow2 = FollowerRepository.unfollowUser(id1.get(), "brian");
-        Assertions.assertEquals(true, rsUnfollow2.isSuccess());
-        Assertions.assertEquals(true, !FollowerRepository.isFollowing(id1.get(), id3.get()).get());
+        Assertions.assertTrue(rsUnfollow2.isSuccess());
+        Assertions.assertFalse(FollowerRepository.isFollowing(id1.get(), id3.get()).get());
         var rs = FollowerRepository.getFollowing(id1.get());
-        Assertions.assertEquals(true, rs.isSuccess());
-        Assertions.assertEquals(true, rs.get().size() == 0);
+        Assertions.assertTrue(rs.isSuccess());
+        Assertions.assertEquals(0, rs.get().size());
     }
 
     @Test
@@ -67,16 +67,16 @@ class FollowerTests extends DatabaseTestBase{
         this.addMessage("the message by Biran v1", id3.get());
         this.addMessage("the message by Biran v2", id3.get());
         var rTweets = MessageRepository.getPersonalTweetsById(id1.get());
-        Assertions.assertEquals(true, rTweets.isSuccess());
-        Assertions.assertEquals(true, rTweets.get().size() == 1);
+        Assertions.assertTrue(rTweets.isSuccess());
+        Assertions.assertEquals(1, rTweets.get().size());
         Assertions.assertEquals("foo", rTweets.get().get(0).getUsername());
         Assertions.assertEquals("the message by foo", rTweets.get().get(0).getText());
         var rs1 = FollowerRepository.followUser(id1.get(), "bar");
         var rs2 = FollowerRepository.followUser(id1.get(), "brian");
-        Assertions.assertEquals(true, rs1.isSuccess());
-        Assertions.assertEquals(true, rs2.isSuccess());
+        Assertions.assertTrue(rs1.isSuccess());
+        Assertions.assertTrue(rs2.isSuccess());
         rTweets = MessageRepository.getPersonalTweetsById(id1.get());
-        Assertions.assertEquals(true, rTweets.isSuccess());
+        Assertions.assertTrue(rTweets.isSuccess());
         Assertions.assertEquals("brian", rTweets.get().get(0).getUsername());
         Assertions.assertEquals("the message by Biran v2", rTweets.get().get(0).getText());
         Assertions.assertEquals("brian", rTweets.get().get(1).getUsername());
@@ -86,5 +86,4 @@ class FollowerTests extends DatabaseTestBase{
         Assertions.assertEquals("foo", rTweets.get().get(3).getUsername());
         Assertions.assertEquals("the message by foo", rTweets.get().get(3).getText());
     }
-
 }

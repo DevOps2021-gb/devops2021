@@ -70,15 +70,15 @@ public class MessageService {
         if (!userIdResult.isSuccess()) {
             response.status(HttpStatus.NOT_FOUND_404);
             response.type(JSON.APPLICATION_JSON);
-            return JSON.MESSAGE404_NOT_FOUND;
+            return JSON.respond404();
         } else {
             var tweets = MessageRepository.getTweetsByUsername(username).get();
             return JSON.tweetsToJSONResponse(tweets, response);
         }
     }
     /*
-Registers a new message for the user.
- */
+    Registers a new message for the user.
+     */
     public static void addMessage(Request request, Response response) {
         updateLatest(request);
 
@@ -117,7 +117,7 @@ Registers a new message for the user.
             String username     = (String) hm.get(USERNAME);
             String text         = (String) hm.get("text");
             String pubDate      = Formatting.formatDatetime((long) hm.get("pubDate") + "").get();
-            String profilePic   = Hashing.gravatarUrl(email);
+            String profilePic   = Hashing.getGravatarUrl(email);
             tweets.add(new Tweet(email, username, text, pubDate, profilePic));
         }
         return tweets;
