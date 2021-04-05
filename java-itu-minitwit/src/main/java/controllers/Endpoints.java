@@ -1,17 +1,21 @@
 package controllers;
 
+import io.prometheus.client.exporter.common.TextFormat;
+import model.DTO;
 import services.*;
 import persistence.UserRepository;
 import utilities.JSON;
 import utilities.Requests;
+import utilities.Responses;
 import view.Presentation;
 import spark.Request;
 import spark.Response;
 import spark.Spark;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.function.BiFunction;
+import static services.MessageService.CONTENT;
+import static services.MessageService.USERNAME;
+import static utilities.Requests.getParamFromRequest;
+import static utilities.Requests.getParamsFromRequest;
 
 public class Endpoints {
 
@@ -22,8 +26,12 @@ public class Endpoints {
     private static final String MSGS_USERNAME = "/msgs/:username";
     private static final String LOGIN = "/login";
 
-    public static void registerEndpoints(){
+    public static void register() {
+        registerEndpoints();
+        registerHooks();
+    }
 
+    private static void registerEndpoints(){
         Spark.post(MSGS_USERNAME,             Endpoints::addMessage);
         Spark.post(FLLWS_USERNAME,            Endpoints::postFollow);
         Spark.post("/add_message",       Endpoints::addMessage);
@@ -45,78 +53,151 @@ public class Endpoints {
         Spark.get("/:username",          Endpoints::userTimeline);
     }
 
-    public static Object getLatest(Request request, Response response) {
-        return MessageService.getLatest(response);
+    private static Object getLatest(Request request, Response response) {
+        response.type(JSON.APPLICATION_JSON);
+        return Responses.respondLatest();
     }
 
-    public static Object messages(Request request, Response response) {
-        return MessageService.getMessages(request, response);
+    private static Object messages(Request request, Response response) {
+        DTO dto = new DTO();
+        dto.latest = request.queryParams("latest");
+        dto.authorization = request.headers("Authorization");
+        dto.response = response;
+
+        return MessageService.getMessages(dto);
     }
 
-    public static Object messagesPerUser(Request request, Response response) {
-        return MessageService.messagesPerUser(request, response);
+    private static Object messagesPerUser(Request request, Response response) {
+        DTO dto = new DTO();
+        dto.latest = request.queryParams("latest");
+        dto.authorization = request.headers("Authorization");
+        dto.username = getParamFromRequest(":username", request).get();
+        dto.response = response;
+
+        return MessageService.messagesPerUser(dto);
     }
 
-    public static Object getFollow(Request request, Response response) {
-        return UserService.getFollow(request, response);
+    private static Object getFollow(Request request, Response response) {
+        DTO dto = new DTO();
+        dto.latest = request.queryParams("latest");
+        dto.authorization = request.headers("Authorization");
+        dto.username = getParamFromRequest(":username", request).get();
+        dto.response = response;
+
+        return UserService.getFollow(dto);
     }
 
     public static Object timeline(Request request, Response response) {
-        return TimelineService.timeline(request, response);
+        DTO dto = new DTO();
+        dto.request = request;
+        dto.response = response;
+        dto.latest = request.queryParams("latest");
+
+        return TimelineService.timeline(dto);
     }
 
-    public static Object metrics(Request request, Response response) {
-        return MetricsService.metrics(response);
+    private static Object metrics(Request request, Response response) {
+        response.type(TextFormat.CONTENT_TYPE_004);
+        return MetricsService.metrics();
     }
 
-    public static Object publicTimeline(Request request, Response response) {
-        return TimelineService.publicTimeline(request);
+    private static Object publicTimeline(Request request, Response response) {
+        DTO dto = new DTO();
+        dto.request = request;
+        dto.latest = request.queryParams("latest");
+
+        return TimelineService.publicTimeline(dto);
     }
 
-    public static Object loginGet(Request request, Response response) {
-        return UserService.loginGet(request);
+    private static Object loginGet(Request request, Response response) {
+        DTO dto = new DTO();
+        dto.request = request;
+
+        return UserService.loginGet(dto);
     }
 
-    public static Object logout(Request request, Response response) {
-        UserService.logout(request, response);
+    private static Object logout(Request request, Response response) {
+        DTO dto = new DTO();
+        dto.request = request;
+        dto.response = response;
+
+        UserService.logout(dto);
         return "";
     }
 
-    public static Object followUser(Request request, Response response) {
-        UserService.followUser(request, response);
+    private static Object followUser(Request request, Response response) {
+        DTO dto = new DTO();
+        dto.request = request;
+        dto.response = response;
+        dto.latest = request.queryParams("latest");
+
+        UserService.followUser(dto);
         return "";
     }
 
-    public static Object unfollowUser(Request request, Response response) {
-        UserService.unfollowUser(request, response);
+    private static Object unfollowUser(Request request, Response response) {
+        DTO dto = new DTO();
+        dto.request = request;
+        dto.response = response;
+        dto.latest = request.queryParams("latest");
+
+        UserService.unfollowUser(dto);
         return "";
     }
 
-    public static Object userTimeline(Request request, Response response) {
-        return TimelineService.userTimeline(request);
+    private static Object userTimeline(Request request, Response response) {
+        DTO dto = new DTO();
+        dto.latest = request.queryParams("latest");
+
+        return TimelineService.userTimeline(dto);
     }
 
-    public static Object addMessage(Request request, Response response) {
-        MessageService.addMessage(request, response);
+    private static Object addMessage(Request request, Response response) {
+        var params = getParamsFromRequest(request, USERNAME, CONTENT);
+
+        DTO dto = new DTO();
+        dto.latest = request.queryParams("latest");
+        dto.authorization = request.headers("Authorization");
+        dto.username = params.get(USERNAME) != null ? params.get(USERNAME) : params.get(":username");
+        dto.content = params.get(CONTENT);
+        dto.request = request;
+        dto.response = response;
+
+        MessageService.addMessage(dto);
         return "";
     }
 
-    public static Object postFollow(Request request, Response response) {
-        return UserService.postFollow(request, response);
+    private static Object postFollow(Request request, Response response) {
+        DTO dto = new DTO();
+        dto.username = getParamFromRequest(":username", request).get();
+        dto.follow = getParamFromRequest("follow", request);
+        dto.unfollow = getParamFromRequest("unfollow", request);
+        dto.response = response;
+
+        return UserService.postFollow(dto);
     }
 
-    public static Object login(Request request, Response response) {
-        return UserService.login(request, response);
+    private static Object login(Request request, Response response) {
+        DTO dto = new DTO();
+        dto.request = request;
+        dto.response = response;
+        dto.latest = request.queryParams("latest");
+
+        return UserService.login(dto);
     }
 
-    public static Object register(Request request, Response response) {
-        return UserService.register(request, response);
+    private static Object register(Request request, Response response) {
+        DTO dto = new DTO();
+        dto.request = request;
+        dto.response = response;
+        dto.latest = request.queryParams("latest");
+
+        return UserService.register(dto);
     }
 
-    public static void registerHooks() {
+    private static void registerHooks() {
         Spark.before((request, response) -> {
             LogService.processRequest();
-            //LogService.logRequest(request);
 
             if (request.requestMethod().equals("GET")) return;
 
@@ -131,12 +212,12 @@ public class Endpoints {
 
         Spark.notFound((request, response) -> {
             response.type(JSON.APPLICATION_JSON);
-            return JSON.respond404();
+            return Responses.respond404();
         });
 
         Spark.internalServerError((request, response) -> {
             response.type(JSON.APPLICATION_JSON);
-            return JSON.respond500();
+            return Responses.respond500();
         });
     }
 }

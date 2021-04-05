@@ -9,17 +9,13 @@ import static spark.Spark.threadPool;
 public class Main {
     public static void main(String[] args) {
         try {
-
             staticFiles.location("/");
-            Endpoints.registerEndpoints();
-            Endpoints.registerHooks();
+            initializeThreads();
+            Endpoints.register();
 
             if (args.length > 0) {
                 DB.setDatabaseParameters(args[0], args[1], args[2]);
             }
-
-            int maxThreads = 4;
-            threadPool(maxThreads);
 
             //Add indexes to make sure they exits
             DB.addIndexes(DB.initDatabase());
@@ -28,5 +24,10 @@ public class Main {
         } catch (Exception e) {
             LogService.logError(e);
         }
+    }
+
+    private static void initializeThreads() {
+        int maxThreads = 8;
+        threadPool(maxThreads);
     }
 }

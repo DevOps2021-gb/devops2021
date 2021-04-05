@@ -6,9 +6,7 @@ import errorhandling.Failure;
 import errorhandling.Result;
 import errorhandling.Success;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.eclipse.jetty.http.HttpStatus;
 import spark.Request;
-import spark.Response;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -18,15 +16,8 @@ public class Requests {
 
     private Requests() {}
 
-    public static boolean isRequestFromSimulator(Request request) {
-        var fromSimulator = request.headers("Authorization");
-        return fromSimulator != null && fromSimulator.equals("Basic c2ltdWxhdG9yOnN1cGVyX3NhZmUh");
-    }
-
-    public static Object notFromSimulatorResponse(Response response) {
-        response.status(HttpStatus.FORBIDDEN_403);
-        response.type(JSON.APPLICATION_JSON);
-        return JSON.respond403Message("You are not authorized to use this resource!");
+    public static boolean isFromSimulator(String authorization) {
+        return authorization != null && authorization.equals("Basic c2ltdWxhdG9yOnN1cGVyX3NhZmUh");
     }
 
     public static boolean isUserLoggedIn(Request request) {

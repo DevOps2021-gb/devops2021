@@ -1,6 +1,7 @@
 package services;
 
 import errorhandling.Result;
+import model.DTO;
 import model.Tweet;
 import model.User;
 import persistence.FollowerRepository;
@@ -24,9 +25,9 @@ public class TimelineService {
     /*
     Displays the latest messages of all users.
     */
-    public static Object publicTimeline(Request request) {
-        updateLatest(request);
-        var loggedInUser = getSessionUserId(request);
+    public static Object publicTimeline(DTO dto) {
+        updateLatest(dto.latest);
+        var loggedInUser = getSessionUserId(dto.request);
 
         HashMap<String, Object> context = new HashMap<>();
         var rsTweets = MessageRepository.publicTimeline();
@@ -38,7 +39,7 @@ public class TimelineService {
             context.put(USERNAME, user.get().getUsername());
             context.put(USER, user.get().getUsername());
         } else {
-            context.put(FLASH, getSessionFlash(request));
+            context.put(FLASH, getSessionFlash(dto.request));
         }
 
         return Presentation.renderTemplate(TIMELINE_HTML, context);
@@ -49,19 +50,19 @@ public class TimelineService {
     redirect to the public timeline.  This timeline shows the user's
     messages as well as all the messages of followed users.
      */
-    public static Object timeline(Request request, Response response) {
-        updateLatest(request);
+    public static Object timeline(DTO dto) {
+        updateLatest(dto.latest);
 
-        if (!isUserLoggedIn(request)) {
-            return publicTimeline(request);
+        if (!isUserLoggedIn(dto.request)) {
+            return publicTimeline(dto);
         }
 
-        if (getSessionUserId(request) == null) {
-            response.redirect("/public");
+        if (getSessionUserId(dto.request) == null) {
+            dto.response.redirect("/public");
             return "";
         }
         HashMap<String, Object> context = new HashMap<>();
-        var user = UserRepository.getUserById(getSessionUserId(request));
+        var user = UserRepository.getUserById(getSessionUserId(dto.request));
         if (user.isSuccess()) {
             context.put(USERNAME, user.get().getUsername());
             context.put(USER, user.get().getUsername());
@@ -70,19 +71,18 @@ public class TimelineService {
         var rsTweets = MessageRepository.getPersonalTweetsById(user.get().id);
         addListOfTweetsToContext(context, MESSAGES, rsTweets);
         context.put(TITLE, "My Timeline");
-        context.put(FLASH, getSessionFlash(request));
+        context.put(FLASH, getSessionFlash(dto.request));
         return Presentation.renderTemplate(TIMELINE_HTML, context);
     }
 
     /*
 Display's a users tweets.
 */
-    public static Object userTimeline(Request request) {
-        updateLatest(request);
+    public static Object userTimeline(DTO dto) {
+        updateLatest(dto.latest);
 
-        var username = getParamFromRequest(":username", request).get();
+        var username = getParamFromRequest(":username", dto.request).get();
 
-        //TODO handle this
         if (username.equals("favicon.ico")) return "";
 
         HashMap<String, Object> context = new HashMap<>();
@@ -93,8 +93,8 @@ Display's a users tweets.
 
         var rsTweets = MessageRepository.getTweetsByUsername(username);
         addListOfTweetsToContext(context, MESSAGES, rsTweets);
-        if (isUserLoggedIn(request)) {
-            var userId = getSessionUserId(request);
+        if (isUserLoggedIn(dto.request)) {
+            var userId = getSessionUserId(dto.request);
             var loggedInUser = UserRepository.getUserById(userId);
             context.put(USERNAME, loggedInUser.get().getUsername());
             context.put(USER, loggedInUser.get().id);
@@ -103,7 +103,7 @@ Display's a users tweets.
             if(rsIsFollowing.isSuccess()) {
                 context.put("followed", rsIsFollowing.get());
             }
-            context.put(FLASH, getSessionFlash(request));
+            context.put(FLASH, getSessionFlash(dto.request));
         } else {
             context.put(USERNAME, username);
         }
