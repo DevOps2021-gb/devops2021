@@ -67,7 +67,6 @@ public class UserService {
     }
 
     public static void logout(Request request, Response response) {
-        logger.log(Level.INFO, "You were logged out");
         request.session().removeAttribute(USER_ID);
         request.session().attribute(FLASH, "You were logged out");
         response.redirect("/public");

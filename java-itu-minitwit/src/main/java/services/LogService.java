@@ -18,38 +18,37 @@ import io.prometheus.client.Counter;
 import io.prometheus.client.Gauge;
 import spark.Request;
 import spark.Response;
+import utilities.JSON;
+import utilities.Requests;
 
 public class LogService {
     private static final long LOGGING_PERIOD_SECONDS = 15;
+
     private static final OperatingSystemMXBean operatingSystemMXBean = ManagementFactory.getOperatingSystemMXBean();
-    private static final Gauge cpuLoad = Gauge.build()
-        .name("CPU_load").help("CPU load on server.").register();
-    private static final Counter requests = Counter.build()
-        .name("requests_total").help("Total requests.").register();
-    private static final Gauge users = Gauge.build()
-        .name("users_total").help("Total amount of users.").register();
-    private static final Gauge followers = Gauge.build()
-        .name("followers_total").help("Total amount of followers.").register();
-    private static final Gauge messages = Gauge.build()
-        .name("messages_total").help("Total amount of messages.").register();
+    private static final Gauge cpuLoad = Gauge.build().name("CPU_load").help("CPU load on server.").register();
+    private static final Counter requests = Counter.build().name("requests_total").help("Total requests.").register();
+    private static final Gauge users = Gauge.build().name("users_total").help("Total amount of users.").register();
+    private static final Gauge followers = Gauge.build().name("followers_total").help("Total amount of followers.").register();
+    private static final Gauge messages = Gauge.build().name("messages_total").help("Total amount of messages.").register();
+
     private static final Map<String, Gauge> responseTimeEndPoints = new HashMap<>();
     private static final Logger logger = Logger.getLogger(LogService.class.getSimpleName());
 
-    private LogService() {
-    }
+    private LogService() {}
 
     public static void logError(Exception e) {
-        logger.log(Level.INFO,e.getMessage());
+        logger.log(Level.INFO, "Exception :: " + e.getMessage());
     }
 
     public static void logRequest(Request request) {
         if (request.url().contains("favicon.ico")) return;
 
-        if (request.params().size() == 0) {
-            logger.log(Level.INFO, request.requestMethod() + " " + request.url());
-        } else {
-            logger.log(Level.INFO, request.requestMethod() + " with args " + request.params().toString().replaceAll("[\n\r\t]", "_"));
-        }
+        var params = Requests.getParamsFromRequest(request);
+        var body = JSON.formatToJson(params);
+        var message = "Message :: " + request.requestMethod() + " " + request.url();
+        if (!body.equals("")) message += " body: " + body;
+
+        logger.log(Level.INFO, message);
     }
 
     private static void setEndpoints(String[] endpoints, String namePrefix, String helpPrefix) {

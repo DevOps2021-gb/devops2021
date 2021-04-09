@@ -22,6 +22,11 @@ public class Endpoints {
     private static final String MSGS_USERNAME = "/msgs/:username";
     private static final String LOGIN = "/login";
 
+    public static void init() {
+        Endpoints.registerEndpoints();
+        Endpoints.registerHooks();
+    }
+
     public static void registerEndpoints(){
 
         Spark.post(MSGS_USERNAME,             Endpoints::addMessage);
@@ -116,9 +121,10 @@ public class Endpoints {
     public static void registerHooks() {
         Spark.before((request, response) -> {
             LogService.processRequest();
-            //LogService.logRequest(request);
 
             if (request.requestMethod().equals("GET")) return;
+
+            LogService.logRequest(request);
 
             Integer userId = Requests.getSessionUserId(request);
             if (userId != null) {

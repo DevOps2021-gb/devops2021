@@ -7,6 +7,7 @@ import errorhandling.Failure;
 import errorhandling.Result;
 import errorhandling.Success;
 import com.dieselpoint.norm.Database;
+import services.LogService;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -126,7 +127,7 @@ public class DB {
             db.sql("CREATE INDEX "+indexName+" ON "+table+" ("+attributes+");").execute();
         } catch (Exception e) {
             if (!e.getMessage().equals("Duplicate key name '"+indexName+"'")) {
-                logger.log(Level.INFO,e.getMessage());
+                LogService.logError(e);
             }
         }
     }
