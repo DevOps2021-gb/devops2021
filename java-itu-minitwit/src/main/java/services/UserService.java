@@ -2,6 +2,8 @@ package services;
 
 import model.dto.DTO;
 import model.User;
+import model.dto.MessagesPerUserDTO;
+import model.dto.PostFollowDTO;
 import repository.FollowerRepository;
 import repository.UserRepository;
 import errorhandling.Failure;
@@ -128,7 +130,7 @@ public class UserService {
         return "";
     }
 
-    public static Object getFollow(DTO dto) {
+    public static Object getFollow(MessagesPerUserDTO dto) {
         updateLatest(dto.latest);
 
         if (!isFromSimulator(dto.authorization)) {
@@ -149,7 +151,7 @@ public class UserService {
         return Responses.respondFollow(new JSONArray(following.stream().map(User::getUsername)));
     }
 
-    public static Object postFollow(DTO dto) {
+    public static Object postFollow(PostFollowDTO dto) {
         updateLatest(dto.latest);
 
         if (!isFromSimulator(dto.authorization)) {

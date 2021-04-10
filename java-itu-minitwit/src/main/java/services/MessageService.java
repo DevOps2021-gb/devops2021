@@ -1,7 +1,9 @@
 package services;
 
+import model.dto.AddMessageDTO;
 import model.dto.DTO;
 import model.Tweet;
+import model.dto.MessagesPerUserDTO;
 import repository.MessageRepository;
 import repository.UserRepository;
 import utilities.Formatting;
@@ -52,7 +54,7 @@ public class MessageService {
         return JSON.tweetsToJSONResponse(tweets, dto.response);
     }
 
-    public static Object messagesPerUser(DTO dto) {
+    public static Object messagesPerUser(MessagesPerUserDTO dto) {
         updateLatest(dto.latest);
 
         if (!isFromSimulator(dto.authorization)) {
@@ -73,7 +75,7 @@ public class MessageService {
     /*
     Registers a new message for the user.
      */
-    public static void addMessage(DTO dto) {
+    public static void addMessage(AddMessageDTO dto) {
         updateLatest(dto.latest);
         Integer userId;
         if(dto.username == null){

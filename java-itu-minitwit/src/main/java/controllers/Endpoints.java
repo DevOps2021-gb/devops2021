@@ -1,7 +1,7 @@
 package controllers;
 
 import io.prometheus.client.exporter.common.TextFormat;
-import model.dto.DTO;
+import model.dto.*;
 import repository.UserRepository;
 import services.*;
 import utilities.JSON;
@@ -74,7 +74,7 @@ public class Endpoints {
     }
 
     private static Object messages(Request request, Response response) {
-        DTO dto = new DTO();
+        var dto = new DTO();
         dto.latest = request.queryParams("latest");
         dto.authorization = request.headers("Authorization");
         dto.response = response;
@@ -83,7 +83,7 @@ public class Endpoints {
     }
 
     private static Object messagesPerUser(Request request, Response response) {
-        DTO dto = new DTO();
+        var dto = new MessagesPerUserDTO();
         dto.latest = request.queryParams("latest");
         dto.authorization = request.headers("Authorization");
         dto.username = getParam(":username", request).get();
@@ -93,7 +93,7 @@ public class Endpoints {
     }
 
     private static Object getFollow(Request request, Response response) {
-        DTO dto = new DTO();
+        var dto = new MessagesPerUserDTO();
         dto.latest = request.queryParams("latest");
         dto.authorization = request.headers("Authorization");
         dto.username = getParam(":username", request).get();
@@ -171,7 +171,7 @@ public class Endpoints {
     private static Object addMessage(Request request, Response response) {
         var params = getBody(request, USERNAME, CONTENT);
 
-        DTO dto = new DTO();
+        var dto = new AddMessageDTO();
         dto.latest = request.queryParams("latest");
         dto.authorization = request.headers("Authorization");
         dto.username = params.get(USERNAME) != null ? params.get(USERNAME) : params.get(":username");
@@ -184,7 +184,7 @@ public class Endpoints {
     }
 
     private static Object postFollow(Request request, Response response) {
-        DTO dto = new DTO();
+        var dto = new PostFollowDTO();
         dto.username = getParam(":username", request).get();
         dto.follow = getParam("follow", request);
         dto.unfollow = getParam("unfollow", request);
