@@ -8,8 +8,6 @@ import utilities.Formatting;
 import utilities.Hashing;
 import utilities.JSON;
 import org.eclipse.jetty.http.HttpStatus;
-import spark.Request;
-import spark.Response;
 import utilities.Responses;
 
 import java.util.ArrayList;
@@ -42,7 +40,6 @@ public class MessageService {
     public static final String MESSAGES = "messages";
     public static final String TITLE    = "title";
     public static final String CONTENT  = "content";
-    private static final Logger logger  = Logger.getLogger(MessageService.class.getSimpleName());
 
     public static Object getMessages(DTO dto) {
         updateLatest(dto.latest);
@@ -102,12 +99,9 @@ public class MessageService {
                 dto.response.status(HttpStatus.NO_CONTENT_204);
             } else {
                 var message = "Your message was recorded";
-                logger.log(Level.INFO,message);
+                LogService.log(MessageService.class, message);
                 dto.request.session().attribute(FLASH, message);
                 dto.response.redirect("/");
-                LogService.log(MessageService.class, message);
-                request.session().attribute(FLASH, message);
-                response.redirect("/");
             }
         } else {
             if (isFromSimulator(dto.authorization)) {

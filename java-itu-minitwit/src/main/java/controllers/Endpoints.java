@@ -2,6 +2,7 @@ package controllers;
 
 import io.prometheus.client.exporter.common.TextFormat;
 import model.DTO;
+import repository.UserRepository;
 import services.*;
 import utilities.JSON;
 import utilities.Requests;
@@ -41,7 +42,7 @@ public class Endpoints {
         registerHooks();
     }
 
-    public static void registerEndpoints(){
+    private static void registerEndpoints(){
         var postEndpoints = new String[] {MSGS_USERNAME, FLLWS_USERNAME, ADD_MESSAGE, LOGIN, REGISTER};
         var getEndpoints  = new String[] {LATESTS, MESSAGES, MSGS_USERNAME, FLLWS_USERNAME, TIMELINE, METRICS, PUBLIC_TIMELINE, LOGIN, REGISTER, LOGOUT, FOLLOW, UNFOLLOW, USER_TIMELINE};
         MaintenanceService.setEndpointsToLog(getEndpoints, postEndpoints);
@@ -101,7 +102,7 @@ public class Endpoints {
         return UserService.getFollow(dto);
     }
 
-    public static Object timeline(Request request, Response response) {
+    private static Object timeline(Request request, Response response) {
         DTO dto = new DTO();
         dto.request = request;
         dto.response = response;

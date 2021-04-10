@@ -14,20 +14,20 @@ public class LogService {
     public static void logError(Exception e, Class theClass) {
         String className = theClass.getSimpleName();
         Logger logger    = Logger.getLogger(theClass.getSimpleName());
-        String msg       = new StringBuilder(className).append(" : Exception ::").append(e.getMessage()).toString();
+        String msg       = className + " : Exception ::" + e.getMessage();
         logger.log(Level.WARNING, msg);
     }
 
     public static void logErrorWithMessage(Exception e, String message, Class theClass) {
         String className = theClass.getSimpleName();
         Logger logger    = Logger.getLogger(className);
-        String msg       = new StringBuilder(className).append(message).append("  :  ").append(e.getMessage()).toString();
+        String msg       = className + message + "  :  " + e.getMessage();
         logger.log(Level.WARNING, msg);
     }
     public static void log(Class theClass, String message) {
         String className = theClass.getSimpleName();
         Logger logger    = Logger.getLogger(className);
-        String msg       = new StringBuilder(className).append("  :  ").append(message).toString();
+        String msg       = className + "  :  " + message;
         logger.log(Level.INFO, msg);
     }
 

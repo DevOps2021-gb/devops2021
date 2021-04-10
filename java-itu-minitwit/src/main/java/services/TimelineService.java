@@ -8,8 +8,6 @@ import repository.FollowerRepository;
 import repository.MessageRepository;
 import repository.UserRepository;
 import view.Presentation;
-import spark.Request;
-import spark.Response;
 
 import java.util.ArrayList;
 import java.util.HashMap;

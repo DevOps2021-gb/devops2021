@@ -12,14 +12,11 @@ import utilities.Responses;
 import view.Presentation;
 import org.eclipse.jetty.http.HttpStatus;
 import org.json.JSONArray;
-import spark.Request;
 import spark.Response;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.function.BiFunction;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import static services.MessageService.*;
 import static services.MetricsService.updateLatest;
@@ -32,7 +29,6 @@ public class UserService {
 
     private static final String USR_NAME = ":username";
     public static int latest = 147371;
-    private static final Logger logger = Logger.getLogger(UserService.class.getSimpleName());
 
     private UserService() {}
 
@@ -70,7 +66,7 @@ public class UserService {
     }
 
     public static void logout(DTO dto) {
-        logger.log(UserService.class, Level.INFO, "You were logged out");
+        LogService.log(UserService.class, "You were logged out");
         dto.request.session().removeAttribute(USER_ID);
         dto.request.session().attribute(FLASH, "You were logged out");
         dto.response.redirect("/public");
