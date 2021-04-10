@@ -9,10 +9,6 @@ import spark.Request;
 import spark.Response;
 import spark.Spark;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.function.BiFunction;
-
 public class Endpoints {
 
     private Endpoints() {}
@@ -134,8 +130,8 @@ public class Endpoints {
 
     public static void registerHooks() {
         Spark.before((request, response) -> {
-            LogService.processRequest();
-            //LogService.logRequest(request);
+            MaintenanceService.processRequest();
+            //LogService.logRequest(request, Endpoints.class);
 
             if (request.requestMethod().equals("GET")) return;
 

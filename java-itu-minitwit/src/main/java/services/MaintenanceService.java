@@ -20,17 +20,14 @@ import spark.Response;
 
 public class MaintenanceService {
     private static final long LOGGING_PERIOD_SECONDS = 15;
+
     private static final OperatingSystemMXBean operatingSystemMXBean = ManagementFactory.getOperatingSystemMXBean();
-    private static final Gauge cpuLoad = Gauge.build()
-        .name("CPU_load").help("CPU load on server.").register();
-    private static final Counter requests = Counter.build()
-        .name("requests_total").help("Total requests.").register();
-    private static final Gauge users = Gauge.build()
-        .name("users_total").help("Total amount of users.").register();
-    private static final Gauge followers = Gauge.build()
-        .name("followers_total").help("Total amount of followers.").register();
-    private static final Gauge messages = Gauge.build()
-        .name("messages_total").help("Total amount of messages.").register();
+    private static final Gauge cpuLoad      = Gauge.build().name("CPU_load").help("CPU load on server.").register();
+    private static final Counter requests   = Counter.build().name("requests_total").help("Total requests.").register();
+    private static final Gauge users        = Gauge.build().name("users_total").help("Total amount of users.").register();
+    private static final Gauge followers    = Gauge.build().name("followers_total").help("Total amount of followers.").register();
+    private static final Gauge messages     = Gauge.build().name("messages_total").help("Total amount of messages.").register();
+
     private static final Map<String, Gauge> responseTimeEndPoints = new HashMap<>();
 
     private MaintenanceService() {
