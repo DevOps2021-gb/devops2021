@@ -1,7 +1,7 @@
 package controllers;
 
 import io.prometheus.client.exporter.common.TextFormat;
-import model.DTO;
+import model.dto.DTO;
 import repository.UserRepository;
 import services.*;
 import utilities.JSON;
@@ -14,8 +14,8 @@ import spark.Spark;
 
 import static services.MessageService.CONTENT;
 import static services.MessageService.USERNAME;
-import static utilities.Requests.getParamFromRequest;
-import static utilities.Requests.getParamsFromRequest;
+import static utilities.Requests.getParam;
+import static utilities.Requests.getBody;
 
 public class Endpoints {
 
@@ -86,7 +86,7 @@ public class Endpoints {
         DTO dto = new DTO();
         dto.latest = request.queryParams("latest");
         dto.authorization = request.headers("Authorization");
-        dto.username = getParamFromRequest(":username", request).get();
+        dto.username = getParam(":username", request).get();
         dto.response = response;
 
         return MessageService.messagesPerUser(dto);
@@ -96,7 +96,7 @@ public class Endpoints {
         DTO dto = new DTO();
         dto.latest = request.queryParams("latest");
         dto.authorization = request.headers("Authorization");
-        dto.username = getParamFromRequest(":username", request).get();
+        dto.username = getParam(":username", request).get();
         dto.response = response;
 
         return UserService.getFollow(dto);
@@ -163,12 +163,13 @@ public class Endpoints {
     private static Object userTimeline(Request request, Response response) {
         DTO dto = new DTO();
         dto.latest = request.queryParams("latest");
+        dto.request = request;
 
         return TimelineService.userTimeline(dto);
     }
 
     private static Object addMessage(Request request, Response response) {
-        var params = getParamsFromRequest(request, USERNAME, CONTENT);
+        var params = getBody(request, USERNAME, CONTENT);
 
         DTO dto = new DTO();
         dto.latest = request.queryParams("latest");
@@ -184,9 +185,9 @@ public class Endpoints {
 
     private static Object postFollow(Request request, Response response) {
         DTO dto = new DTO();
-        dto.username = getParamFromRequest(":username", request).get();
-        dto.follow = getParamFromRequest("follow", request);
-        dto.unfollow = getParamFromRequest("unfollow", request);
+        dto.username = getParam(":username", request).get();
+        dto.follow = getParam("follow", request);
+        dto.unfollow = getParam("unfollow", request);
         dto.response = response;
 
         return UserService.postFollow(dto);
@@ -206,6 +207,7 @@ public class Endpoints {
         dto.request = request;
         dto.response = response;
         dto.latest = request.queryParams("latest");
+        dto.authorization = request.headers("Authorization");
 
         return UserService.register(dto);
     }
@@ -213,6 +215,7 @@ public class Endpoints {
     private static void registerHooks() {
         Spark.before((request, response) -> {
             MaintenanceService.processRequest();
+            //LogService.logRequest(request, Endpoints.class);
 
             if (request.requestMethod().equals("GET")) return;
 

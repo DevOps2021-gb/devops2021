@@ -35,10 +35,15 @@ public class LogService {
         if (request.url().contains("favicon.ico")) return;
 
         Logger logger = Logger.getLogger(theClass.getSimpleName());
-        var params = Requests.getParamsFromRequest(request);
+        var params = Requests.getBody(request);
+        var queryParams = Requests.getHeaders(request);
+
         var body = JSON.formatToJson(params);
+        var headers = JSON.formatToJson(queryParams);
+
         var message = new StringBuilder(theClass.getSimpleName()).append(" : Message :: ").append(request.requestMethod()).append(" ").append(request.url());
         if (!body.equals("")) message.append(" body: ").append(body);
+        if (!headers.equals("")) message.append(" headers: ").append(headers);
         logger.log(Level.INFO, message.toString());
     }
 }

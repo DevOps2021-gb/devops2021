@@ -1,6 +1,6 @@
 package services;
 
-import model.DTO;
+import model.dto.DTO;
 import model.User;
 import repository.FollowerRepository;
 import repository.UserRepository;
@@ -75,7 +75,7 @@ public class UserService {
     public static Object login(DTO dto) {
         updateLatest(dto.latest);
 
-        var params = getParamsFromRequest(dto.request, USERNAME, PASSWORD);
+        var params = getBody(dto.request, USERNAME, PASSWORD);
         String username = params.get(USERNAME);
         String password = params.get(PASSWORD);
 
@@ -102,7 +102,7 @@ public class UserService {
     private static void followOrUnfollow(DTO dto, BiFunction<Integer, String, Result<String>> query, String flashMessage){
         updateLatest(dto.latest);
 
-        var params = getParamsFromRequest(dto.request, USERNAME);
+        var params = getBody(dto.request, USERNAME);
         String profileUsername = params.get(USERNAME) != null ? params.get(USERNAME) : params.get(USR_NAME);
 
         if (!isUserLoggedIn(dto.request)) {
@@ -183,13 +183,15 @@ public class UserService {
     public static Object register(DTO dto) {
         updateLatest(dto.latest);
 
-        var params = getParamsFromRequest(dto.request, USERNAME, EMAIL, PASSWORD, "password2");
+        var params = getBody(dto.request, USERNAME, EMAIL, PASSWORD, "password2");
         String username = params.get(USERNAME);
         String email = params.get(EMAIL).replace("%40", "@");
         String password1 = params.get(PASSWORD);
         String password2 = params.get("password2");
 
-        if (isFromSimulator(dto.authorization) && password1 == null && password2 == null) {
+        boolean isFromSimulator = isFromSimulator(dto.authorization);
+
+        if (isFromSimulator && password1 == null && password2 == null) {
             password1 = params.get("pwd");
             password2 = password1;
         }
@@ -201,7 +203,7 @@ public class UserService {
         var isValid = validateUserCredentials(username, email, password1, password2);
 
         if (!isValid.isSuccess()) {
-            if (isFromSimulator(dto.authorization)) {
+            if (isFromSimulator) {
                 dto.response.status(HttpStatus.BAD_REQUEST_400);
                 dto.response.type(JSON.APPLICATION_JSON);
                 return Responses.respond404Message(isValid.getFailureMessage());
@@ -216,7 +218,7 @@ public class UserService {
 
         UserRepository.addUser(username, email, password1);
 
-        if (isFromSimulator(dto.authorization)) {
+        if (isFromSimulator) {
             dto.response.status(HttpStatus.NO_CONTENT_204);
         } else {
             dto.request.session().attribute(FLASH, "You were successfully registered and can login now");

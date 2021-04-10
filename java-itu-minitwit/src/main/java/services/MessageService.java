@@ -1,6 +1,6 @@
 package services;
 
-import model.DTO;
+import model.dto.DTO;
 import model.Tweet;
 import repository.MessageRepository;
 import repository.UserRepository;

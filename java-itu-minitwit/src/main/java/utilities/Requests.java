@@ -34,11 +34,35 @@ public class Requests {
         return msg;
     }
 
-    public static Map<String,String> getParamsFromRequest(Request request, String ... args){
+    public static Map<String,String> getBody(Request request, String ... args){
         Map<String, String> map = new HashMap<>(request.params());
         addFromParams(map, request, args);
         addFromBody(map, request);
         return map;
+    }
+
+    public static Map<String, String> getHeaders(Request request, String ... args) {
+        Map<String, String> map = new HashMap<>();
+        if (args.length == 0) {
+            for (String p : request.queryParams()) {
+                map.put(p, request.queryParams(p));
+            }
+        } else {
+            for (String arg: args) {
+                map.put(arg, request.queryParams(arg));
+            }
+        }
+        return map;
+    }
+
+    public static Result<String> getParam(String param, Request request) {
+        var params = getBody(request);
+
+        if (params.containsKey(param)) {
+            return new Success<>(params.get(param));
+        } else {
+            return new Failure<>(param + " was not found in request");
+        }
     }
 
     private static void addFromParams(Map<String, String> map, Request request, String[] args) {
@@ -70,16 +94,6 @@ public class Requests {
             map.putAll(temp);
         } catch (IOException e) {
             LogService.logError(e, Request.class);
-        }
-    }
-
-    public static Result<String> getParamFromRequest(String param, Request request) {
-        var params = getParamsFromRequest(request);
-
-        if (params.containsKey(param)) {
-            return new Success<>(params.get(param));
-        } else {
-            return new Failure<>(param + " was not found in request");
         }
     }
 }

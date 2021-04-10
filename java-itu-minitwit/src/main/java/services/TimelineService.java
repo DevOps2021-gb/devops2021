@@ -1,7 +1,7 @@
 package services;
 
 import errorhandling.Result;
-import model.DTO;
+import model.dto.DTO;
 import model.Tweet;
 import model.User;
 import repository.FollowerRepository;
@@ -79,7 +79,7 @@ Display's a users tweets.
     public static Object userTimeline(DTO dto) {
         updateLatest(dto.latest);
 
-        var username = getParamFromRequest(":username", dto.request).get();
+        var username = dto.request.params().get(":username");
 
         if (username.equals("favicon.ico")) return "";
 
