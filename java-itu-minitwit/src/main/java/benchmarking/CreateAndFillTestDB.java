@@ -4,8 +4,6 @@ import persistence.DB;
 import persistence.FollowerRepository;
 import persistence.MessageRepository;
 import persistence.UserRepository;
-
-import java.util.Arrays;
 import java.util.Random;
 
 import static persistence.DB.setDatabaseParameters;

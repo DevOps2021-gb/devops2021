@@ -19,19 +19,22 @@ public class Main {
                 DB.setDatabaseParameters(args[0], args[1], args[2]);
             }
 
-            try {
-            int maxThreads = 4;
-                threadPool(maxThreads);
-            } catch (IllegalStateException e) {
-                LogService.logError(e, Main.class);
-            }
+            setMaxThreads();
             //Add indexes to make sure they exits
-            DB.dropDatabase();
             DB.addIndexes(DB.initDatabase());
 
 
             MaintenanceService.startSchedules();
         } catch (Exception e) {
+            LogService.logError(e, Main.class);
+        }
+    }
+
+    private static void setMaxThreads () {
+        try {
+            int maxThreads = 4;
+            threadPool(maxThreads);
+        } catch (IllegalStateException e) {
             LogService.logError(e, Main.class);
         }
     }

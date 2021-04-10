@@ -1,11 +1,12 @@
 package services;
 
 import spark.Request;
-
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class LogService {
+    private LogService() {
+    }
 
     public static void logError(Exception e, Class theClass) {
         String className = theClass.getSimpleName();
@@ -15,23 +16,28 @@ public class LogService {
 
     public static void logErrorWithMessage(Exception e, String message, Class theClass) {
         String className = theClass.getSimpleName();
-        Logger logger = Logger.getLogger(className);
-        logger.log(Level.WARNING, new StringBuilder(className).append(message).append("  :  ").append(e.getMessage()).toString());
+        Logger logger    = Logger.getLogger(className);
+        String msg       = new StringBuilder(className).append(message).append("  :  ").append(e.getMessage()).toString();
+        logger.log(Level.WARNING, msg);
     }
     public static void log(Class theClass, String message) {
         String className = theClass.getSimpleName();
-        Logger logger = Logger.getLogger(className);
-        logger.log(Level.INFO, new StringBuilder(className).append("  :  ").append(message).toString());
+        Logger logger    = Logger.getLogger(className);
+        String msg       = new StringBuilder(className).append("  :  ").append(message).toString()
+        logger.log(Level.INFO, msg);
     }
 
     public static void logRequest(Request request, Class theClass) {
         if (request.url().contains("favicon.ico")) return;
 
         Logger logger = Logger.getLogger(theClass.getSimpleName());
+        var sb = new StringBuilder(request.requestMethod()).append(" ");
         if (request.params().size() == 0) {
-            logger.log(Level.INFO, request.requestMethod() + " " + request.url());
+            sb.append(request.url());
         } else {
-            logger.log(Level.INFO, request.requestMethod() + " with args " + request.params().toString().replaceAll("[\n\r\t]", "_"));
+            sb.append("with args ").append(request.params().toString().replaceAll("[\n\r\t]", "_"));
         }
+        String msg = sb.toString();
+        logger.log(Level.INFO, msg);
     }
 }
