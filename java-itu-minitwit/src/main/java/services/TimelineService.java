@@ -1,9 +1,12 @@
 package services;
 
 import errorhandling.Result;
-import model.dto.DTO;
 import model.Tweet;
 import model.User;
+import model.dto.MessagesPerUserDTO;
+import model.dto.PublicTimelineDTO;
+import model.dto.TimelineDTO;
+import model.dto.UserDTO;
 import repository.FollowerRepository;
 import repository.MessageRepository;
 import repository.UserRepository;
@@ -23,21 +26,20 @@ public class TimelineService {
     /*
     Displays the latest messages of all users.
     */
-    public static Object publicTimeline(DTO dto) {
+    public static Object publicTimeline(PublicTimelineDTO dto) {
         updateLatest(dto.latest);
-        var loggedInUser = getSessionUserId(dto.request);
 
         HashMap<String, Object> context = new HashMap<>();
         var rsTweets = MessageRepository.publicTimeline();
         addListOfTweetsToContext(context, MESSAGES, rsTweets);
         context.put(ENDPOINT, "publicTimeline");
         context.put(TITLE, "Public Timeline");
-        if(loggedInUser != null) {
-            var user = UserRepository.getUserById(loggedInUser);
+        if(dto.loggedInUser != null) {
+            var user = UserRepository.getUserById(dto.loggedInUser);
             context.put(USERNAME, user.get().getUsername());
             context.put(USER, user.get().getUsername());
         } else {
-            context.put(FLASH, getSessionFlash(dto.request));
+            context.put(FLASH, dto.flash);
         }
 
         return Presentation.renderTemplate(TIMELINE_HTML, context);
@@ -48,19 +50,15 @@ public class TimelineService {
     redirect to the public timeline.  This timeline shows the user's
     messages as well as all the messages of followed users.
      */
-    public static Object timeline(DTO dto) {
+    public static Object timeline(TimelineDTO dto) {
         updateLatest(dto.latest);
 
-        if (!isUserLoggedIn(dto.request)) {
-            return publicTimeline(dto);
-        }
-
-        if (getSessionUserId(dto.request) == null) {
+        if (dto.userId == null) {
             dto.response.redirect("/public");
             return "";
         }
         HashMap<String, Object> context = new HashMap<>();
-        var user = UserRepository.getUserById(getSessionUserId(dto.request));
+        var user = UserRepository.getUserById(dto.userId);
         if (user.isSuccess()) {
             context.put(USERNAME, user.get().getUsername());
             context.put(USER, user.get().getUsername());
@@ -69,41 +67,38 @@ public class TimelineService {
         var rsTweets = MessageRepository.getPersonalTweetsById(user.get().id);
         addListOfTweetsToContext(context, MESSAGES, rsTweets);
         context.put(TITLE, "My Timeline");
-        context.put(FLASH, getSessionFlash(dto.request));
+        context.put(FLASH, dto.flash);
         return Presentation.renderTemplate(TIMELINE_HTML, context);
     }
 
     /*
 Display's a users tweets.
 */
-    public static Object userTimeline(DTO dto) {
+    public static Object userTimeline(MessagesPerUserDTO dto) {
         updateLatest(dto.latest);
 
-        var username = dto.request.params().get(":username");
-
-        if (username.equals("favicon.ico")) return "";
+        if (dto.username.equals("favicon.ico")) return "";
 
         HashMap<String, Object> context = new HashMap<>();
         context.put(ENDPOINT, "userTimeline");
 
-        var profileUser = UserRepository.getUser(username);
+        var profileUser = UserRepository.getUser(dto.username);
         addUserToContext(context, profileUser);
 
-        var rsTweets = MessageRepository.getTweetsByUsername(username);
+        var rsTweets = MessageRepository.getTweetsByUsername(dto.username);
         addListOfTweetsToContext(context, MESSAGES, rsTweets);
-        if (isUserLoggedIn(dto.request)) {
-            var userId = getSessionUserId(dto.request);
-            var loggedInUser = UserRepository.getUserById(userId);
+        if (isUserLoggedIn(dto.userId)) {
+            var loggedInUser = UserRepository.getUserById(dto.userId);
             context.put(USERNAME, loggedInUser.get().getUsername());
             context.put(USER, loggedInUser.get().id);
-            context.put(USER_ID, userId);
+            context.put(USER_ID, dto.userId);
             var rsIsFollowing = FollowerRepository.isFollowing(loggedInUser.get().id, profileUser.get().id);
             if(rsIsFollowing.isSuccess()) {
                 context.put("followed", rsIsFollowing.get());
             }
-            context.put(FLASH, getSessionFlash(dto.request));
+            context.put(FLASH, dto.flash);
         } else {
-            context.put(USERNAME, username);
+            context.put(USERNAME, dto.username);
         }
         return Presentation.renderTemplate(TIMELINE_HTML, context);
     }

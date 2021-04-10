@@ -1,6 +1,7 @@
 package controllers;
 
 import io.prometheus.client.exporter.common.TextFormat;
+import model.User;
 import model.dto.*;
 import repository.UserRepository;
 import services.*;
@@ -12,14 +13,18 @@ import spark.Request;
 import spark.Response;
 import spark.Spark;
 
-import static services.MessageService.CONTENT;
-import static services.MessageService.USERNAME;
-import static utilities.Requests.getParam;
-import static utilities.Requests.getBody;
+import java.sql.Time;
+import java.util.HashMap;
+
+import static services.MessageService.*;
+import static services.MessageService.PASSWORD;
+import static utilities.Requests.*;
 
 public class Endpoints {
 
     private Endpoints() {}
+
+    private static final String USR_NAME = ":username";
 
     private static final String REGISTER        = "/register";
     private static final String FLLWS_USERNAME  = "/fllws/:username";
@@ -103,10 +108,15 @@ public class Endpoints {
     }
 
     private static Object timeline(Request request, Response response) {
-        DTO dto = new DTO();
-        dto.request = request;
+        var dto = new TimelineDTO();
         dto.response = response;
         dto.latest = request.queryParams("latest");
+        dto.userId = getSessionUserId(request);
+        dto.flash = getSessionFlash(request);
+
+        if (!isUserLoggedIn(dto.userId)) {
+            return publicTimeline(request, response);
+        }
 
         return TimelineService.timeline(dto);
     }
@@ -117,53 +127,61 @@ public class Endpoints {
     }
 
     private static Object publicTimeline(Request request, Response response) {
-        DTO dto = new DTO();
-        dto.request = request;
+        var dto = new PublicTimelineDTO();
         dto.latest = request.queryParams("latest");
+        dto.loggedInUser = getSessionUserId(request);
+        dto.flash = getSessionFlash(request);
 
         return TimelineService.publicTimeline(dto);
     }
 
     private static Object loginGet(Request request, Response response) {
-        DTO dto = new DTO();
-        dto.request = request;
-
-        return UserService.loginGet(dto);
+        HashMap<String, Object> context = new HashMap<>();
+        context.put(FLASH, getSessionFlash(request));
+        return Presentation.renderTemplate(LOGIN_HTML, context);
     }
 
     private static Object logout(Request request, Response response) {
-        DTO dto = new DTO();
-        dto.request = request;
-        dto.response = response;
-
-        UserService.logout(dto);
+        request.session().removeAttribute(USER_ID);
+        request.session().attribute(FLASH, "You were logged out");
+        response.redirect("/public");
         return "";
     }
 
     private static Object followUser(Request request, Response response) {
-        DTO dto = new DTO();
+        var dto = new FollowOrUnfollowDTO();
         dto.request = request;
         dto.response = response;
         dto.latest = request.queryParams("latest");
+        dto.userId = getSessionUserId(request);
+
+        var params = getBody(request, USERNAME);
+        dto.profileUsername = params.get(USERNAME) != null ? params.get(USERNAME) : params.get(USR_NAME);
 
         UserService.followUser(dto);
         return "";
     }
 
     private static Object unfollowUser(Request request, Response response) {
-        DTO dto = new DTO();
+        var dto = new FollowOrUnfollowDTO();
         dto.request = request;
         dto.response = response;
         dto.latest = request.queryParams("latest");
+        dto.userId = getSessionUserId(request);
+
+        var params = getBody(request, USERNAME);
+        dto.profileUsername = params.get(USERNAME) != null ? params.get(USERNAME) : params.get(USR_NAME);
 
         UserService.unfollowUser(dto);
         return "";
     }
 
     private static Object userTimeline(Request request, Response response) {
-        DTO dto = new DTO();
+        var dto = new MessagesPerUserDTO();
         dto.latest = request.queryParams("latest");
-        dto.request = request;
+        dto.username = request.params().get(":username");
+        dto.userId = getSessionUserId(request);
+        dto.flash = getSessionFlash(request);
 
         return TimelineService.userTimeline(dto);
     }
@@ -176,8 +194,9 @@ public class Endpoints {
         dto.authorization = request.headers("Authorization");
         dto.username = params.get(USERNAME) != null ? params.get(USERNAME) : params.get(":username");
         dto.content = params.get(CONTENT);
-        dto.request = request;
         dto.response = response;
+        dto.request = request;
+        dto.userId = getSessionUserId(request);
 
         MessageService.addMessage(dto);
         return "";
@@ -194,20 +213,32 @@ public class Endpoints {
     }
 
     private static Object login(Request request, Response response) {
-        DTO dto = new DTO();
+        var dto = new LoginDTO();
         dto.request = request;
         dto.response = response;
         dto.latest = request.queryParams("latest");
+        dto.userId = getSessionUserId(request);
+
+        var params = getBody(request, USERNAME, PASSWORD);
+        dto.username = params.get(USERNAME);
+        dto.password = params.get(PASSWORD);
 
         return UserService.login(dto);
     }
 
     private static Object register(Request request, Response response) {
-        DTO dto = new DTO();
-        dto.request = request;
+        var dto = new RegisterDTO();
         dto.response = response;
         dto.latest = request.queryParams("latest");
         dto.authorization = request.headers("Authorization");
+        dto.userId = getSessionUserId(request);
+
+        var params = getBody(request, USERNAME, EMAIL, PASSWORD, "password2");
+        dto.username = params.get(USERNAME);
+        dto.email = params.get(EMAIL).replace("%40", "@");
+        dto.password1 = params.get(PASSWORD);
+        dto.password2 = params.get("password2");
+        dto.pwd = params.get("pwd");
 
         return UserService.register(dto);
     }

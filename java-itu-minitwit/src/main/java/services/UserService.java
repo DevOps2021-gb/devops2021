@@ -1,9 +1,7 @@
 package services;
 
-import model.dto.DTO;
+import model.dto.*;
 import model.User;
-import model.dto.MessagesPerUserDTO;
-import model.dto.PostFollowDTO;
 import repository.FollowerRepository;
 import repository.UserRepository;
 import errorhandling.Failure;
@@ -29,7 +27,7 @@ import static utilities.Responses.return404;
 
 public class UserService {
 
-    private static final String USR_NAME = ":username";
+
     public static int latest = 147371;
 
     private UserService() {}
@@ -37,14 +35,14 @@ public class UserService {
     /*
     Adds the current user as follower of the given user.
      */
-    public static void followUser(DTO dto) {
+    public static void followUser(FollowOrUnfollowDTO dto) {
         followOrUnfollow(dto, FollowerRepository::followUser, "You are now following ");
     }
 
     /*
     Removes the current user as follower of the given user.
      */
-    public static void unfollowUser(DTO dto) {
+    public static void unfollowUser(FollowOrUnfollowDTO dto) {
         followOrUnfollow(dto, FollowerRepository::unfollowUser, "You are no longer following ");
     }
 
@@ -67,29 +65,18 @@ public class UserService {
         return new Failure<>(error);
     }
 
-    public static void logout(DTO dto) {
-        LogService.log(UserService.class, "You were logged out");
-        dto.request.session().removeAttribute(USER_ID);
-        dto.request.session().attribute(FLASH, "You were logged out");
-        dto.response.redirect("/public");
-    }
-
-    public static Object login(DTO dto) {
+    public static Object login(LoginDTO dto) {
         updateLatest(dto.latest);
 
-        var params = getBody(dto.request, USERNAME, PASSWORD);
-        String username = params.get(USERNAME);
-        String password = params.get(PASSWORD);
-
-        if (isUserLoggedIn(dto.request)) {
+        if (isUserLoggedIn(dto.userId)) {
             dto.response.redirect("/");
             return "";
         }
 
-        var loginResult = UserRepository.queryLogin(username, password);
+        var loginResult = UserRepository.queryLogin(dto.username, dto.password);
 
         if (loginResult.isSuccess()) {
-            dto.request.session().attribute(USER_ID, UserRepository.getUserId(username).get());
+            dto.request.session().attribute(USER_ID, UserRepository.getUserId(dto.username).get());
             dto.request.session().attribute(FLASH, "You were logged in");
             dto.response.redirect("/");
             return "";
@@ -101,24 +88,21 @@ public class UserService {
         }
     }
 
-    private static void followOrUnfollow(DTO dto, BiFunction<Integer, String, Result<String>> query, String flashMessage){
+    private static void followOrUnfollow(FollowOrUnfollowDTO dto, BiFunction<Integer, String, Result<String>> query, String flashMessage){
         updateLatest(dto.latest);
 
-        var params = getBody(dto.request, USERNAME);
-        String profileUsername = params.get(USERNAME) != null ? params.get(USERNAME) : params.get(USR_NAME);
-
-        if (!isUserLoggedIn(dto.request)) {
+        if (!isUserLoggedIn(dto.userId)) {
             halt(401, "You need to sign in to unfollow a user");
         }
 
-        var rs = query.apply(getSessionUserId(dto.request), profileUsername);
+        var rs = query.apply(getSessionUserId(dto.request), dto.profileUsername);
         if (rs.isSuccess()) {
-            dto.request.session().attribute(FLASH, flashMessage + profileUsername);
+            dto.request.session().attribute(FLASH, flashMessage + dto.profileUsername);
         }
         else {
             halt(404, rs.toString());
         }
-        dto.response.redirect("/" + profileUsername);
+        dto.response.redirect("/" + dto.profileUsername);
     }
 
     private static Object followOrUnfollow (String user, BiFunction<Integer, String, Result<String>> query, Result<Integer> userIdResult, Response response){
@@ -173,36 +157,21 @@ public class UserService {
 
     }
 
-    /*
- Get endpoint for login, needed to show flash message
-  */
-    public static Object loginGet(DTO dto) {
-        HashMap<String, Object> context = new HashMap<>();
-        context.put(FLASH, getSessionFlash(dto.request));
-        return Presentation.renderTemplate(LOGIN_HTML, context);
-    }
-
-    public static Object register(DTO dto) {
+    public static Object register(RegisterDTO dto) {
         updateLatest(dto.latest);
-
-        var params = getBody(dto.request, USERNAME, EMAIL, PASSWORD, "password2");
-        String username = params.get(USERNAME);
-        String email = params.get(EMAIL).replace("%40", "@");
-        String password1 = params.get(PASSWORD);
-        String password2 = params.get("password2");
 
         boolean isFromSimulator = isFromSimulator(dto.authorization);
 
-        if (isFromSimulator && password1 == null && password2 == null) {
-            password1 = params.get("pwd");
-            password2 = password1;
+        if (isFromSimulator && dto.password1 == null && dto.password2 == null) {
+            dto.password1 = dto.pwd;
+            dto.password2 = dto.password1;
         }
 
-        if (isUserLoggedIn(dto.request)) {
+        if (isUserLoggedIn(dto.userId)) {
             return Presentation.renderTemplate(TIMELINE_HTML);
         }
 
-        var isValid = validateUserCredentials(username, email, password1, password2);
+        var isValid = validateUserCredentials(dto.username, dto.email, dto.password1, dto.password2);
 
         if (!isValid.isSuccess()) {
             if (isFromSimulator) {
@@ -212,13 +181,13 @@ public class UserService {
             } else {
                 HashMap<String, Object> context = new HashMap<>();
                 context.put(ERROR, isValid.getFailureMessage());
-                context.put(USERNAME, username);
-                context.put(EMAIL, email);
+                context.put(USERNAME, dto.username);
+                context.put(EMAIL, dto.email);
                 return Presentation.renderTemplate(REGISTER_HTML, context);
             }
         }
 
-        UserRepository.addUser(username, email, password1);
+        UserRepository.addUser(dto.username, dto.email, dto.password1);
 
         if (isFromSimulator) {
             dto.response.status(HttpStatus.NO_CONTENT_204);

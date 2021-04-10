@@ -77,12 +77,12 @@ public class MessageService {
      */
     public static void addMessage(AddMessageDTO dto) {
         updateLatest(dto.latest);
-        Integer userId;
+
         if(dto.username == null){
-            if (!isUserLoggedIn(dto.request)) {
+
+            if (!isUserLoggedIn(dto.userId)) {
                 halt(401, "You need to sign in to post a message");
             }
-            userId = getSessionUserId(dto.request);
         }
         else {
             var userIdRes = UserRepository.getUserId(dto.username);
@@ -92,17 +92,15 @@ public class MessageService {
                 return;
             }
 
-            userId = userIdRes.get();
+            dto.userId = userIdRes.get();
         }
 
-        var rs = MessageRepository.addMessage(dto.content, userId);
+        var rs = MessageRepository.addMessage(dto.content, dto.userId);
         if (rs.isSuccess()){
             if (isFromSimulator(dto.authorization)) {
                 dto.response.status(HttpStatus.NO_CONTENT_204);
             } else {
-                var message = "Your message was recorded";
-                LogService.log(MessageService.class, message);
-                dto.request.session().attribute(FLASH, message);
+                dto.request.session().attribute(FLASH, "Your message was recorded");
                 dto.response.redirect("/");
             }
         } else {

@@ -8,5 +8,4 @@ public class DTO {
     public String authorization;    //request.headers("Authorization")
     public Request request;
     public Response response;
-
 }

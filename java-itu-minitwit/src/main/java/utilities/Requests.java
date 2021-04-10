@@ -20,8 +20,8 @@ public class Requests {
         return authorization != null && authorization.equals("Basic c2ltdWxhdG9yOnN1cGVyX3NhZmUh");
     }
 
-    public static boolean isUserLoggedIn(Request request) {
-        return getSessionUserId(request) != null;
+    public static boolean isUserLoggedIn(Integer userid) {
+        return userid != null;
     }
 
     public static Integer getSessionUserId(Request request) {
