@@ -3,7 +3,6 @@ package controllers;
 import io.prometheus.client.exporter.common.TextFormat;
 import model.DTO;
 import services.*;
-import persistence.UserRepository;
 import utilities.JSON;
 import utilities.Requests;
 import utilities.Responses;
@@ -21,36 +20,51 @@ public class Endpoints {
 
     private Endpoints() {}
 
-    private static final String REGISTER = "/register";
-    private static final String FLLWS_USERNAME = "/fllws/:username";
-    private static final String MSGS_USERNAME = "/msgs/:username";
-    private static final String LOGIN = "/login";
+    private static final String REGISTER        = "/register";
+    private static final String FLLWS_USERNAME  = "/fllws/:username";
+    private static final String MSGS_USERNAME   = "/msgs/:username";
+    private static final String LOGIN           = "/login";
+    private static final String ADD_MESSAGE     = "/add_message";
+
+    private static final String LATESTS         = "/latest";
+    private static final String MESSAGES        = "/msgs";
+    private static final String TIMELINE        = "/";
+    private static final String PUBLIC_TIMELINE = "/public";
+    private static final String USER_TIMELINE   = "/:username";
+    private static final String METRICS         = "/metrics";
+    private static final String LOGOUT          = "/logout";
+    private static final String FOLLOW          = "/:username/follow";
+    private static final String UNFOLLOW        = "/:username/unfollow";
 
     public static void register() {
         registerEndpoints();
         registerHooks();
     }
 
-    private static void registerEndpoints(){
-        Spark.post(MSGS_USERNAME,             Endpoints::addMessage);
-        Spark.post(FLLWS_USERNAME,            Endpoints::postFollow);
-        Spark.post("/add_message",       Endpoints::addMessage);
-        Spark.post(LOGIN,                     Endpoints::login);
-        Spark.post(REGISTER,                  Endpoints::register);
+    public static void registerEndpoints(){
+        var postEndpoints = new String[] {MSGS_USERNAME, FLLWS_USERNAME, ADD_MESSAGE, LOGIN, REGISTER};
+        var getEndpoints  = new String[] {LATESTS, MESSAGES, MSGS_USERNAME, FLLWS_USERNAME, TIMELINE, METRICS, PUBLIC_TIMELINE, LOGIN, REGISTER, LOGOUT, FOLLOW, UNFOLLOW, USER_TIMELINE};
+        MaintenanceService.setEndpointsToLog(getEndpoints, postEndpoints);
 
-        Spark.get("/latest",             Endpoints::getLatest);
-        Spark.get("/msgs",               Endpoints::messages);
-        Spark.get(MSGS_USERNAME,              Endpoints::messagesPerUser);
-        Spark.get(FLLWS_USERNAME,             Endpoints::getFollow);
-        Spark.get("/",                   Endpoints::timeline);
-        Spark.get("/metrics",            Endpoints::metrics);
-        Spark.get("/public",             Endpoints::publicTimeline);
-        Spark.get(LOGIN,                      Endpoints::loginGet);
-        Spark.get(REGISTER,                   (req, res)-> Presentation.renderTemplate(MessageService.REGISTER_HTML));
-        Spark.get("/logout",             Endpoints::logout);
-        Spark.get("/:username/follow",   Endpoints::followUser);
-        Spark.get("/:username/unfollow", Endpoints::unfollowUser);
-        Spark.get("/:username",          Endpoints::userTimeline);
+        Spark.post(MSGS_USERNAME,             (req, res)-> MaintenanceService.benchMarkEndpoint(new ResReqSparkWrapper(req, res, false), MSGS_USERNAME, Endpoints::addMessage));
+        Spark.post(FLLWS_USERNAME,            (req, res)-> MaintenanceService.benchMarkEndpoint(new ResReqSparkWrapper(req, res, false), FLLWS_USERNAME, Endpoints::postFollow));
+        Spark.post(ADD_MESSAGE,               (req, res)-> MaintenanceService.benchMarkEndpoint(new ResReqSparkWrapper(req, res, false), ADD_MESSAGE, Endpoints::addMessage));
+        Spark.post(LOGIN,                     (req, res)-> MaintenanceService.benchMarkEndpoint(new ResReqSparkWrapper(req, res, false), LOGIN, Endpoints::login));
+        Spark.post(REGISTER,                  (req, res)-> MaintenanceService.benchMarkEndpoint(new ResReqSparkWrapper(req, res, false), REGISTER, Endpoints::register));
+
+        Spark.get(LATESTS,                    (req, res)-> MaintenanceService.benchMarkEndpoint(new ResReqSparkWrapper(req, res, true), LATESTS, Endpoints::getLatest));
+        Spark.get(MESSAGES,                   (req, res)-> MaintenanceService.benchMarkEndpoint(new ResReqSparkWrapper(req, res, true), MESSAGES, Endpoints::messages));
+        Spark.get(MSGS_USERNAME,              (req, res)-> MaintenanceService.benchMarkEndpoint(new ResReqSparkWrapper(req, res, true), MSGS_USERNAME, Endpoints::messagesPerUser));
+        Spark.get(FLLWS_USERNAME,             (req, res)-> MaintenanceService.benchMarkEndpoint(new ResReqSparkWrapper(req, res, true), FLLWS_USERNAME, Endpoints::getFollow));
+        Spark.get(TIMELINE,                   (req, res)-> MaintenanceService.benchMarkEndpoint(new ResReqSparkWrapper(req, res, true), TIMELINE, Endpoints::timeline));
+        Spark.get(METRICS,                    (req, res)-> MaintenanceService.benchMarkEndpoint(new ResReqSparkWrapper(req, res, true), METRICS, Endpoints::metrics));
+        Spark.get(PUBLIC_TIMELINE,            (req, res)-> MaintenanceService.benchMarkEndpoint(new ResReqSparkWrapper(req, res, true), PUBLIC_TIMELINE, Endpoints::publicTimeline));
+        Spark.get(LOGIN,                      (req, res)-> MaintenanceService.benchMarkEndpoint(new ResReqSparkWrapper(req, res, true), LOGIN, Endpoints::loginGet));
+        Spark.get(REGISTER,                   (req, res)-> MaintenanceService.benchMarkEndpoint(new ResReqSparkWrapper(req, res, true), REGISTER, (req2, res2) -> Presentation.renderTemplate(MessageService.REGISTER_HTML)));
+        Spark.get(LOGOUT,                     (req, res)-> MaintenanceService.benchMarkEndpoint(new ResReqSparkWrapper(req, res, true), LOGOUT, Endpoints::logout));
+        Spark.get(FOLLOW,                     (req, res)-> MaintenanceService.benchMarkEndpoint(new ResReqSparkWrapper(req, res, true), FOLLOW, Endpoints::followUser));
+        Spark.get(UNFOLLOW,                   (req, res)-> MaintenanceService.benchMarkEndpoint(new ResReqSparkWrapper(req, res, true), UNFOLLOW, Endpoints::unfollowUser));
+        Spark.get(USER_TIMELINE,              (req, res)-> MaintenanceService.benchMarkEndpoint(new ResReqSparkWrapper(req, res, true), USER_TIMELINE, Endpoints::userTimeline));
     }
 
     private static Object getLatest(Request request, Response response) {
@@ -197,7 +211,7 @@ public class Endpoints {
 
     private static void registerHooks() {
         Spark.before((request, response) -> {
-            LogService.processRequest();
+            MaintenanceService.processRequest();
 
             if (request.requestMethod().equals("GET")) return;
 

@@ -2,8 +2,8 @@ package services;
 
 import model.DTO;
 import model.User;
-import persistence.FollowerRepository;
-import persistence.UserRepository;
+import repository.FollowerRepository;
+import repository.UserRepository;
 import errorhandling.Failure;
 import errorhandling.Result;
 import errorhandling.Success;
@@ -70,7 +70,7 @@ public class UserService {
     }
 
     public static void logout(DTO dto) {
-        logger.log(Level.INFO, "You were logged out");
+        logger.log(UserService.class, Level.INFO, "You were logged out");
         dto.request.session().removeAttribute(USER_ID);
         dto.request.session().attribute(FLASH, "You were logged out");
         dto.response.redirect("/public");

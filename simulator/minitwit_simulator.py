@@ -103,6 +103,8 @@ def get_actions():
 
 
 def main(host):
+    print ("Started simulator")
+    completed = 0
     for action, delay in get_actions():
         try:
             # SWITCH ON TYPE
@@ -345,6 +347,9 @@ def main(host):
             )
 
         sleep(delay / (1000 * 100000))
+        completed += 1
+        if(completed%25==0):
+            print(completed)
 
 
 if __name__ == "__main__":

@@ -2,8 +2,8 @@ package services;
 
 import model.DTO;
 import model.Tweet;
-import persistence.MessageRepository;
-import persistence.UserRepository;
+import repository.MessageRepository;
+import repository.UserRepository;
 import utilities.Formatting;
 import utilities.Hashing;
 import utilities.JSON;
@@ -15,8 +15,6 @@ import utilities.Responses;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 
 import static services.MetricsService.updateLatest;
@@ -107,6 +105,9 @@ public class MessageService {
                 logger.log(Level.INFO,message);
                 dto.request.session().attribute(FLASH, message);
                 dto.response.redirect("/");
+                LogService.log(MessageService.class, message);
+                request.session().attribute(FLASH, message);
+                response.redirect("/");
             }
         } else {
             if (isFromSimulator(dto.authorization)) {
@@ -115,6 +116,7 @@ public class MessageService {
                 dto.response.redirect("/");
             }
         }
+
     }
 
     public static List<Tweet> tweetsFromListOfHashMap(List<HashMap> result){

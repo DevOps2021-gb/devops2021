@@ -69,7 +69,7 @@ public class Requests {
             Map<String, String> temp = mapper.readValue(request.body(), Map.class);
             map.putAll(temp);
         } catch (IOException e) {
-            LogService.logError(e);
+            LogService.logError(e, Request.class);
         }
     }
 

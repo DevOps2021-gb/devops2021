@@ -10,6 +10,7 @@ import spark.Response;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class JSON {
 
@@ -39,5 +40,24 @@ public class JSON {
             response.type(JSON.APPLICATION_JSON);
             return json;
         }
+    }
+
+    public static String formatToJson(Map<String, String> hm) {
+        var sb = new StringBuilder();
+
+        int size = hm.keySet().size();
+        int c = 0;
+
+        sb.append("{");
+        for (var entry : hm.entrySet()) {
+            sb.append(entry.getKey()).append(": ").append(entry.getValue().replaceAll("[\n\r\t]", "_"));
+
+            if (c != size -1) sb.append(", ");
+
+            c++;
+        }
+        sb.append("}");
+
+        return sb.toString();
     }
 }
