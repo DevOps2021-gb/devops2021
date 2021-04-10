@@ -9,40 +9,50 @@ import spark.Request;
 import spark.Response;
 import spark.Spark;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.function.BiFunction;
-
 public class Endpoints {
 
     private Endpoints() {}
 
-    private static final String REGISTER = "/register";
-    private static final String FLLWS_USERNAME = "/fllws/:username";
-    private static final String MSGS_USERNAME = "/msgs/:username";
-    private static final String LOGIN = "/login";
+    private static final String REGISTER        = "/register";
+    private static final String FLLWS_USERNAME  = "/fllws/:username";
+    private static final String MSGS_USERNAME   = "/msgs/:username";
+    private static final String LOGIN           = "/login";
+    private static final String ADD_MESSAGE     = "/add_message";
+
+    private static final String LATESTS         = "/latest";
+    private static final String MESSAGES        = "/msgs";
+    private static final String TIMELINE        = "/";
+    private static final String PUBLIC_TIMELINE = "/public";
+    private static final String USER_TIMELINE   = "/:username";
+    private static final String METRICS         = "/metrics";
+    private static final String LOGOUT          = "/logout";
+    private static final String FOLLOW          = "/:username/follow";
+    private static final String UNFOLLOW        = "/:username/unfollow";
 
     public static void registerEndpoints(){
+        var postEndpoints = new String[] {MSGS_USERNAME, FLLWS_USERNAME, ADD_MESSAGE, LOGIN, REGISTER};
+        var getEndpoints  = new String[] {LATESTS, MESSAGES, MSGS_USERNAME, FLLWS_USERNAME, TIMELINE, METRICS, PUBLIC_TIMELINE, LOGIN, REGISTER, LOGOUT, FOLLOW, UNFOLLOW, USER_TIMELINE};
+        MaintenanceService.setEndpointsToLog(getEndpoints, postEndpoints);
 
         Spark.post(MSGS_USERNAME,             Endpoints::addMessage);
         Spark.post(FLLWS_USERNAME,            Endpoints::postFollow);
-        Spark.post("/add_message",       Endpoints::addMessage);
+        Spark.post(ADD_MESSAGE,               Endpoints::addMessage);
         Spark.post(LOGIN,                     Endpoints::login);
         Spark.post(REGISTER,                  Endpoints::register);
 
-        Spark.get("/latest",             Endpoints::getLatest);
-        Spark.get("/msgs",               Endpoints::messages);
+        Spark.get(LATESTS,                    Endpoints::getLatest);
+        Spark.get(MESSAGES,                   Endpoints::messages);
         Spark.get(MSGS_USERNAME,              Endpoints::messagesPerUser);
         Spark.get(FLLWS_USERNAME,             Endpoints::getFollow);
-        Spark.get("/",                   Endpoints::timeline);
-        Spark.get("/metrics",            Endpoints::metrics);
-        Spark.get("/public",             Endpoints::publicTimeline);
+        Spark.get(TIMELINE,                   Endpoints::timeline);
+        Spark.get(METRICS,                    Endpoints::metrics);
+        Spark.get(PUBLIC_TIMELINE,            Endpoints::publicTimeline);
         Spark.get(LOGIN,                      Endpoints::loginGet);
         Spark.get(REGISTER,                   (req, res)-> Presentation.renderTemplate(MessageService.REGISTER_HTML));
-        Spark.get("/logout",             Endpoints::logout);
-        Spark.get("/:username/follow",   Endpoints::followUser);
-        Spark.get("/:username/unfollow", Endpoints::unfollowUser);
-        Spark.get("/:username",          Endpoints::userTimeline);
+        Spark.get(LOGOUT,                     Endpoints::logout);
+        Spark.get(FOLLOW,                     Endpoints::followUser);
+        Spark.get(UNFOLLOW,                   Endpoints::unfollowUser);
+        Spark.get(USER_TIMELINE,              Endpoints::userTimeline);
     }
 
     public static Object getLatest(Request request, Response response) {
@@ -115,8 +125,8 @@ public class Endpoints {
 
     public static void registerHooks() {
         Spark.before((request, response) -> {
-            LogService.processRequest();
-            //LogService.logRequest(request);
+            MaintenanceService.processRequest();
+            LogService.logRequest(request, Endpoints.class);
 
             if (request.requestMethod().equals("GET")) return;
 

@@ -39,7 +39,7 @@ public class Hashing {
             String hashString = Base64.getEncoder().encodeToString(hashBytes);
             return new Success<>(hashString);
         } catch (NoSuchAlgorithmException e) {
-            LogService.logError(e);
+            LogService.logError(e, Hashing.class);
             return new Failure<>(e);
         }
     }

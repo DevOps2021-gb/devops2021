@@ -2,6 +2,7 @@ package main;
 
 import controllers.Endpoints;
 import services.LogService;
+import services.MaintenanceService;
 import persistence.DB;
 import static spark.Spark.staticFiles;
 import static spark.Spark.threadPool;
@@ -18,15 +19,20 @@ public class Main {
                 DB.setDatabaseParameters(args[0], args[1], args[2]);
             }
 
+            try {
             int maxThreads = 4;
-            threadPool(maxThreads);
-
+                threadPool(maxThreads);
+            } catch (IllegalStateException e) {
+                LogService.logError(e, Main.class);
+            }
             //Add indexes to make sure they exits
+            DB.dropDatabase();
             DB.addIndexes(DB.initDatabase());
 
-            LogService.startSchedules();
+
+            MaintenanceService.startSchedules();
         } catch (Exception e) {
-            LogService.logError(e);
+            LogService.logError(e, Main.class);
         }
     }
 }

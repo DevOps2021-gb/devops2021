@@ -1,7 +1,7 @@
 package persistence;
 
 import org.junit.jupiter.api.Assertions;
-import services.LogService;
+import services.MaintenanceService;
 import org.junit.jupiter.api.Test;
 import testUtilities.DatabaseTestBase;
 
@@ -12,20 +12,20 @@ class FollowerRepositoryTests extends DatabaseTestBase {
         var id2 = this.registerLoginGetID("bar", "1234",  null);
         var id3 = this.registerLoginGetID("brian", "q123",  null);
         Assertions.assertEquals(0, (long) FollowerRepository.countFollowers().get());
-        LogService.processFollowers();
-        Assertions.assertEquals(0, LogService.getFollowers());
+        MaintenanceService.processFollowers();
+        Assertions.assertEquals(0, MaintenanceService.getFollowers());
         var rs1 = FollowerRepository.followUser(id1.get(), "bar");
         Assertions.assertTrue(rs1.isSuccess());
         Assertions.assertEquals(true, FollowerRepository.isFollowing(id1.get(), id2.get()).get());
         Assertions.assertEquals(1, (long) FollowerRepository.countFollowers().get());
-        LogService.processFollowers();
-        Assertions.assertEquals(1, LogService.getFollowers());
+        MaintenanceService.processFollowers();
+        Assertions.assertEquals(1, MaintenanceService.getFollowers());
         var rs2 = FollowerRepository.followUser(id1.get(), "brian");
         Assertions.assertTrue(rs2.isSuccess());
         Assertions.assertEquals(true, FollowerRepository.isFollowing(id1.get(), id3.get()).get());
         Assertions.assertEquals(2, (long) FollowerRepository.countFollowers().get());
-        LogService.processFollowers();
-        Assertions.assertEquals(2, LogService.getFollowers());
+        MaintenanceService.processFollowers();
+        Assertions.assertEquals(2, MaintenanceService.getFollowers());
         var rs = FollowerRepository.getFollowing(id1.get());
         Assertions.assertTrue(rs.isSuccess());
         Assertions.assertEquals("bar", rs.get().get(0).getUsername());

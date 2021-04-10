@@ -69,7 +69,6 @@ public class CreateAndFillTestDB {
         for(int i=0; i<count; i++) {
             users[i] = "paul"+i;
         }
-        System.out.println(Arrays.toString(users));
         return users;
     }
     public static int getRandomID(int count){
