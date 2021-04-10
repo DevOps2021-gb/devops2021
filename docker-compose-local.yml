@@ -13,7 +13,7 @@ services:
         networks:
             - main
     minitwit:
-        image: mertz/minitwit:latest
+        image: minitwit-local
         container_name: minitwit
         ports:
             - "4567:4567"
