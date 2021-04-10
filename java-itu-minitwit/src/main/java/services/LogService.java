@@ -23,7 +23,7 @@ public class LogService {
     public static void log(Class theClass, String message) {
         String className = theClass.getSimpleName();
         Logger logger    = Logger.getLogger(className);
-        String msg       = new StringBuilder(className).append("  :  ").append(message).toString()
+        String msg       = new StringBuilder(className).append("  :  ").append(message).toString();
         logger.log(Level.INFO, msg);
     }
 
