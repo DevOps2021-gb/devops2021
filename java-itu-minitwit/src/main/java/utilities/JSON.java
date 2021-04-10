@@ -81,8 +81,8 @@ public class JSON {
         int c = 0;
 
         sb.append("{");
-        for (var key : hm.keySet()) {
-            sb.append(key).append(": ").append(hm.get(key).replaceAll("[\n\r\t]", "_"));
+        for (var entry : hm.entrySet()) {
+            sb.append(entry.getKey()).append(": ").append(entry.getValue().replaceAll("[\n\r\t]", "_"));
 
             if (c != size -1) sb.append(", ");
 

@@ -1,14 +1,12 @@
 package benchmarking;
 
-import persistence.DB;
-import persistence.FollowerRepository;
-import persistence.MessageRepository;
-import persistence.UserRepository;
-
-import java.util.Arrays;
+import repository.DB;
+import repository.FollowerRepository;
+import repository.MessageRepository;
+import repository.UserRepository;
 import java.util.Random;
 
-import static persistence.DB.setDatabaseParameters;
+import static repository.DB.setDatabaseParameters;
 
 public class CreateAndFillTestDB {
 
@@ -69,7 +67,6 @@ public class CreateAndFillTestDB {
         for(int i=0; i<count; i++) {
             users[i] = "paul"+i;
         }
-        System.out.println(Arrays.toString(users));
         return users;
     }
     public static int getRandomID(int count){

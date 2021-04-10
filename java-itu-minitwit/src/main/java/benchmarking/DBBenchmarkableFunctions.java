@@ -1,8 +1,8 @@
 package benchmarking;
 
-import persistence.FollowerRepository;
-import persistence.MessageRepository;
-import persistence.UserRepository;
+import repository.FollowerRepository;
+import repository.MessageRepository;
+import repository.UserRepository;
 import java.util.Random;
 
 public class DBBenchmarkableFunctions {

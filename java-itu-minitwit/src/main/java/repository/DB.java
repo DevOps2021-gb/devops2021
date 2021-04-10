@@ -1,4 +1,4 @@
-package persistence;
+package repository;
 
 import model.Follower;
 import model.Message;
@@ -9,9 +9,6 @@ import errorhandling.Success;
 import com.dieselpoint.norm.Database;
 import services.LogService;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 public class DB {
     private static Database instance;
     static final int PORT                  = 3306;
@@ -20,7 +17,6 @@ public class DB {
     private static String user             = "root";
     private static String pw               = "root";
     private static String connectionString = null;
-    private static final Logger logger = Logger.getLogger(DB.class.getSimpleName());
 
     private DB() {}
 
@@ -127,7 +123,7 @@ public class DB {
             db.sql("CREATE INDEX "+indexName+" ON "+table+" ("+attributes+");").execute();
         } catch (Exception e) {
             if (!e.getMessage().equals("Duplicate key name '"+indexName+"'")) {
-                LogService.logError(e);
+                LogService.logError(e, DB.class);
             }
         }
     }

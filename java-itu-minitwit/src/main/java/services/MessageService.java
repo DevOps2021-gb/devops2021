@@ -1,8 +1,8 @@
 package services;
 
 import model.Tweet;
-import persistence.MessageRepository;
-import persistence.UserRepository;
+import repository.MessageRepository;
+import repository.UserRepository;
 import utilities.Formatting;
 import utilities.Hashing;
 import utilities.JSON;
@@ -12,8 +12,6 @@ import spark.Response;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 
 import static services.MetricsService.updateLatest;
@@ -41,7 +39,6 @@ public class MessageService {
     public static final String MESSAGES = "messages";
     public static final String TITLE    = "title";
     public static final String CONTENT  = "content";
-    private static final Logger logger  = Logger.getLogger(MessageService.class.getSimpleName());
 
     public static Object getLatest(Response response) {
         response.type(JSON.APPLICATION_JSON);
@@ -110,7 +107,7 @@ public class MessageService {
                 response.status(HttpStatus.NO_CONTENT_204);
             } else {
                 var message = "Your message was recorded";
-                logger.log(Level.INFO,message);
+                LogService.log(MessageService.class, message);
                 request.session().attribute(FLASH, message);
                 response.redirect("/");
             }

@@ -1,4 +1,4 @@
-package persistence;
+package repository;
 
 import model.Follower;
 import model.User;
