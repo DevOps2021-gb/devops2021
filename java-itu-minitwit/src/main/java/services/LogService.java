@@ -10,8 +10,9 @@ public class LogService {
 
     public static void logError(Exception e, Class theClass) {
         String className = theClass.getSimpleName();
-        Logger logger = Logger.getLogger(theClass.getSimpleName());
-        logger.log(Level.WARNING, new StringBuilder(className).append(e.getMessage()).toString());
+        Logger logger    = Logger.getLogger(theClass.getSimpleName());
+        String msg       = new StringBuilder(className).append(e.getMessage()).toString();
+        logger.log(Level.WARNING, msg);
     }
 
     public static void logErrorWithMessage(Exception e, String message, Class theClass) {
