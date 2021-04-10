@@ -8,7 +8,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiFunction;
-
 import controllers.Endpoints;
 import controllers.ResReqSparkWrapper;
 import persistence.FollowerRepository;

@@ -9,6 +9,10 @@ import spark.Request;
 import spark.Response;
 import spark.Spark;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.BiFunction;
+
 public class Endpoints {
 
     private Endpoints() {}
@@ -28,6 +32,11 @@ public class Endpoints {
     private static final String LOGOUT          = "/logout";
     private static final String FOLLOW          = "/:username/follow";
     private static final String UNFOLLOW        = "/:username/unfollow";
+
+    public static void init() {
+        Endpoints.registerEndpoints();
+        Endpoints.registerHooks();
+    }
 
     public static void registerEndpoints(){
         var postEndpoints = new String[] {MSGS_USERNAME, FLLWS_USERNAME, ADD_MESSAGE, LOGIN, REGISTER};
@@ -125,8 +134,8 @@ public class Endpoints {
 
     public static void registerHooks() {
         Spark.before((request, response) -> {
-            MaintenanceService.processRequest();
-            //LogService.logRequest(request, Endpoints.class);
+            LogService.processRequest();
+            //LogService.logRequest(request);
 
             if (request.requestMethod().equals("GET")) return;
 
