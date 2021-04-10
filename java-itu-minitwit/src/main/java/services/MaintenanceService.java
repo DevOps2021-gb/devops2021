@@ -8,9 +8,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiFunction;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
+import controllers.Endpoints;
 import persistence.FollowerRepository;
 import persistence.MessageRepository;
 import persistence.UserRepository;
@@ -33,24 +32,28 @@ public class MaintenanceService {
     private static final Gauge messages = Gauge.build()
         .name("messages_total").help("Total amount of messages.").register();
     private static final Map<String, Gauge> responseTimeEndPoints = new HashMap<>();
-    private static final Logger logger = Logger.getLogger(MaintenanceService.class.getSimpleName());
 
     private MaintenanceService() {
     }
 
-    private static void setEndpoints(String[] endpoints, String namePrefix, String helpPrefix) {
-        for (String key: endpoints){
-            String endPoint     = namePrefix + key.replace('/', '_');
-            String helpString   = helpPrefix + key;
+    private static void setEndpoints(String[] endpoints, Boolean isGet, String helpPrefix) {
+        for (String endpointOriginal: endpoints){
+            String endPoint     = endPointToString(endpointOriginal, isGet);
+            String helpString   = helpPrefix + endpointOriginal;
             Gauge gauge = Gauge.build()
                 .name(endPoint).help(helpString).register();
-            responseTimeEndPoints.put(key, gauge);
+            responseTimeEndPoints.put(endPoint, gauge);
         }
+    }
+    private static String endPointToString(String endPoint, Boolean isGet) {
+        String namePrefix = (isGet)? "response_time_get" : "response_time_post";
+        return new StringBuilder(namePrefix).append(endPoint.replace('/', '_')).toString();
+
     }
 
     public static void setEndpointsToLog(String[] endpointsGet, String[] endpointsPost) {
-        setEndpoints(endpointsGet,  "response_time_get",    "response time for get call: ");
-        setEndpoints(endpointsPost, "response_time_post",   "response time for post call: ");
+        setEndpoints(endpointsGet,  true,    "response time for get call: ");
+        setEndpoints(endpointsPost, false,   "response time for post call: ");
     }
 
     public static void startSchedules() {
@@ -98,10 +101,20 @@ public class MaintenanceService {
         return followers.get();
     }
 
-    public static Object benchMarkEndpoint(String endPointName, BiFunction<Request, Response, Object> endpoint, Request req, Response res) {
+    public static Object benchMarkEndpoint(Request req, Response res, Boolean isGet, String endPointName, BiFunction<Request, Response, Object> endpoint) {
         var startTime = System.currentTimeMillis();
-        Object result = endpoint.apply(req, res);
-        MaintenanceService.logResponseTimeEndpoint(endPointName, System.currentTimeMillis() - startTime);
+        Object result = null;
+        try {
+            result = endpoint.apply(req, res);
+        } catch (Exception e) {
+            LogService.logErrorWithMessage(e, new StringBuilder("Endpoint error ").append(endPointName).toString(), Endpoints.class);
+        }
+        var endTime   = System.currentTimeMillis();
+        try {
+            MaintenanceService.logResponseTimeEndpoint(endPointToString(endPointName, isGet), endTime - startTime);
+        } catch (Exception e) {
+            LogService.logErrorWithMessage(e, new StringBuilder("Endpoint logging error ").append(endPointName).toString(), MaintenanceService.class);
+        }
         return result;
     }
 

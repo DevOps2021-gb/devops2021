@@ -26,7 +26,6 @@ public class Main {
                 LogService.logError(e, Main.class);
             }
             //Add indexes to make sure they exits
-            DB.dropDatabase();
             DB.addIndexes(DB.initDatabase());
 
 
