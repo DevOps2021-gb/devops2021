@@ -10,6 +10,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.BiFunction;
 
 import controllers.Endpoints;
+import controllers.ResReqSparkWrapper;
 import persistence.FollowerRepository;
 import persistence.MessageRepository;
 import persistence.UserRepository;
@@ -46,7 +47,7 @@ public class MaintenanceService {
         }
     }
     private static String endPointToString(String endPoint, Boolean isGet) {
-        String namePrefix = (isGet)? "response_time_get" : "response_time_post";
+        String namePrefix = (isGet.equals(true))? "response_time_get" : "response_time_post";
         return new StringBuilder(namePrefix).append(endPoint.replace('/', '_')).toString();
 
     }
@@ -101,17 +102,17 @@ public class MaintenanceService {
         return followers.get();
     }
 
-    public static Object benchMarkEndpoint(Request req, Response res, Boolean isGet, String endPointName, BiFunction<Request, Response, Object> endpoint) {
+    public static Object benchMarkEndpoint(ResReqSparkWrapper rrw, String endPointName, BiFunction<Request, Response, Object> endpoint) {
         var startTime = System.currentTimeMillis();
         Object result = null;
         try {
-            result = endpoint.apply(req, res);
+            result = endpoint.apply(rrw.req, rrw.res);
         } catch (Exception e) {
             LogService.logErrorWithMessage(e, new StringBuilder("Endpoint error ").append(endPointName).toString(), Endpoints.class);
         }
         var endTime   = System.currentTimeMillis();
         try {
-            MaintenanceService.logResponseTimeEndpoint(endPointToString(endPointName, isGet), endTime - startTime);
+            MaintenanceService.logResponseTimeEndpoint(endPointToString(endPointName, rrw.isGet), endTime - startTime);
         } catch (Exception e) {
             LogService.logErrorWithMessage(e, new StringBuilder("Endpoint logging error ").append(endPointName).toString(), MaintenanceService.class);
         }
