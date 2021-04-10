@@ -1,7 +1,6 @@
-package persistence;
+package repository;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import repository.DB;
 
 class DBTests {
 

@@ -2,7 +2,8 @@ package main;
 
 import controllers.Endpoints;
 import services.LogService;
-import persistence.DB;
+import services.MaintenanceService;
+import repository.DB;
 import static spark.Spark.staticFiles;
 import static spark.Spark.threadPool;
 
@@ -11,22 +12,28 @@ public class Main {
         try {
 
             staticFiles.location("/");
-            Endpoints.registerEndpoints();
-            Endpoints.registerHooks();
+            Endpoints.init();
 
             if (args.length > 0) {
                 DB.setDatabaseParameters(args[0], args[1], args[2]);
             }
 
-            int maxThreads = 4;
-            threadPool(maxThreads);
-
+            setMaxThreads();
             //Add indexes to make sure they exits
             DB.addIndexes(DB.initDatabase());
 
-            LogService.startSchedules();
+            MaintenanceService.startSchedules();
         } catch (Exception e) {
-            LogService.logError(e);
+            LogService.logError(e, Main.class);
+        }
+    }
+
+    private static void setMaxThreads () {
+        try {
+            int maxThreads = 8;
+            threadPool(maxThreads);
+        } catch (IllegalStateException e) {
+            LogService.logError(e, Main.class);
         }
     }
 }

@@ -19,7 +19,7 @@ public class Presentation {
             Jinjava jinjava = new Jinjava();
             return jinjava.render(Resources.toString(Resources.getResource(template), StandardCharsets.UTF_8), context);
         } catch (IOException e) {
-            LogService.logError(e);
+            LogService.logError(e, Presentation.class);
             return new Failure<>(e);
         }
     }

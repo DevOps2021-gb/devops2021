@@ -1,8 +1,8 @@
 package services;
 
 import model.User;
-import persistence.FollowerRepository;
-import persistence.UserRepository;
+import repository.FollowerRepository;
+import repository.UserRepository;
 import errorhandling.Failure;
 import errorhandling.Result;
 import errorhandling.Success;
@@ -16,8 +16,6 @@ import spark.Response;
 import java.util.HashMap;
 import java.util.List;
 import java.util.function.BiFunction;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import static services.MessageService.*;
 import static services.MetricsService.updateLatest;
@@ -29,8 +27,6 @@ public class UserService {
 
     private static final String USR_NAME = ":username";
     public static int latest = 147371;
-    private static final Logger logger = Logger.getLogger(UserService.class.getSimpleName());
-
     private UserService() {}
 
     /*
@@ -67,7 +63,7 @@ public class UserService {
     }
 
     public static void logout(Request request, Response response) {
-        logger.log(Level.INFO, "You were logged out");
+        LogService.log(UserService.class, "You were logged out");
         request.session().removeAttribute(USER_ID);
         request.session().attribute(FLASH, "You were logged out");
         response.redirect("/public");

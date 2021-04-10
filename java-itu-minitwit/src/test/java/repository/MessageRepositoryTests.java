@@ -1,8 +1,8 @@
-package persistence;
+package repository;
 
 import org.junit.jupiter.api.Assertions;
 import testUtilities.DatabaseTestBase;
-import services.LogService;
+import services.MaintenanceService;
 import org.junit.jupiter.api.Test;
 import utilities.Hashing;
 
@@ -33,19 +33,19 @@ class MessageRepositoryTests extends DatabaseTestBase {
     @Test
     void testGetPersonalTweetsById() {
         Assertions.assertEquals(true, MessageRepository.countMessages().get() == 0);
-        LogService.processMessages();
-        Assertions.assertEquals(true, (int) LogService.getMessages() == 0);
+        MaintenanceService.processMessages();
+        Assertions.assertEquals(true, (int) MaintenanceService.getMessages() == 0);
         var id1 = this.registerLoginGetID("foo", "default",  null);
         this.addMessage("the message by foo", id1.get());
         Assertions.assertEquals(true, MessageRepository.countMessages().get() == 1);
-        LogService.processMessages();
-        Assertions.assertEquals(true, LogService.getMessages() == 1);
+        MaintenanceService.processMessages();
+        Assertions.assertEquals(true, MaintenanceService.getMessages() == 1);
         this.logout();
         var id2 = this.registerLoginGetID("bar","default",  null);
         this.addMessage("the message by bar", id2.get());
         Assertions.assertEquals(true, MessageRepository.countMessages().get() == 2);
-        LogService.processMessages();
-        Assertions.assertEquals(true, (int) LogService.getMessages() == 2);
+        MaintenanceService.processMessages();
+        Assertions.assertEquals(true, (int) MaintenanceService.getMessages() == 2);
         var rs = MessageRepository.getPersonalTweetsById(id1.get());
         Assertions.assertEquals(true, rs.isSuccess());
         var tweet1 = rs.get().get(0);

@@ -2,6 +2,7 @@ package services;
 
 import io.prometheus.client.CollectorRegistry;
 import io.prometheus.client.exporter.common.TextFormat;
+import main.Main;
 import spark.Request;
 import spark.Response;
 
@@ -18,7 +19,7 @@ public class MetricsService {
         try {
             TextFormat.write004(writer, CollectorRegistry.defaultRegistry.metricFamilySamples());
         } catch (IOException e) {
-            LogService.logError(e);
+            LogService.logError(e, Main.class);
         }
         return writer.toString();
     }
@@ -29,7 +30,7 @@ public class MetricsService {
             try {
                 UserService.latest = Integer.parseInt(requestLatest);
             } catch (NumberFormatException e) {
-                LogService.logError(e);
+                LogService.logError(e, Main.class);
             }
         }
     }

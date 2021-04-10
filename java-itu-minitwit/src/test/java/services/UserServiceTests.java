@@ -2,7 +2,7 @@ package services;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import persistence.UserRepository;
+import repository.UserRepository;
 import testUtilities.DatabaseTestBase;
 
 class UserServiceTests extends DatabaseTestBase {
@@ -12,8 +12,8 @@ class UserServiceTests extends DatabaseTestBase {
         Assertions.assertTrue(result.isSuccess());
         Assertions.assertEquals("OK", result.get());
         Assertions.assertEquals(1, (long) UserRepository.countUsers().get());
-        LogService.processUsers();
-        Assertions.assertEquals(1, LogService.getUsers());
+        MaintenanceService.processUsers();
+        Assertions.assertEquals(1, MaintenanceService.getUsers());
 
         result = UserService.validateUserCredentials("user1", "test@test.dk", "q123", "q123");
         Assertions.assertFalse(result.isSuccess());

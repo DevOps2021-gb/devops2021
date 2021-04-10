@@ -1,7 +1,7 @@
 package services;
 
 import org.junit.jupiter.api.Assertions;
-import persistence.MessageRepository;
+import repository.MessageRepository;
 import org.junit.jupiter.api.Test;
 import testUtilities.DatabaseTestBase;
 
