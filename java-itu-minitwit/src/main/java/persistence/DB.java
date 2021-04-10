@@ -123,7 +123,7 @@ public class DB {
             db.sql("CREATE INDEX "+indexName+" ON "+table+" ("+attributes+");").execute();
         } catch (Exception e) {
             if (!e.getMessage().equals("Duplicate key name '"+indexName+"'")) {
-                LogService.log(DB.class, e.getMessage());
+                LogService.logError(e, DB.class);
             }
         }
     }
