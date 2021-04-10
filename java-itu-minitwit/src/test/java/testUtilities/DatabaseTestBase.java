@@ -1,9 +1,9 @@
 package testUtilities;
 
 import org.junit.jupiter.api.Assertions;
-import persistence.DB;
-import persistence.MessageRepository;
-import persistence.UserRepository;
+import repository.DB;
+import repository.MessageRepository;
+import repository.UserRepository;
 import errorhandling.Result;
 import errorhandling.Success;
 import org.junit.jupiter.api.BeforeEach;

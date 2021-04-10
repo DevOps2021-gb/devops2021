@@ -1,8 +1,8 @@
 package services;
 
 import model.User;
-import persistence.FollowerRepository;
-import persistence.UserRepository;
+import repository.FollowerRepository;
+import repository.UserRepository;
 import errorhandling.Failure;
 import errorhandling.Result;
 import errorhandling.Success;

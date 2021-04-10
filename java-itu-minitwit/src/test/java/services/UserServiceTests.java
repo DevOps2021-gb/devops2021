@@ -2,7 +2,7 @@ package services;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import persistence.UserRepository;
+import repository.UserRepository;
 import testUtilities.DatabaseTestBase;
 
 class UserServiceTests extends DatabaseTestBase {

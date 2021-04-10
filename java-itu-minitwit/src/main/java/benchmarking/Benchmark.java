@@ -2,7 +2,7 @@ package benchmarking;
 // Simple microbenchmark setups
 // sestoft@itu.dk * 2013-06-02, 2015-09-15
 
-import persistence.DB;
+import repository.DB;
 import services.LogService;
 
 import java.util.function.IntToDoubleFunction;

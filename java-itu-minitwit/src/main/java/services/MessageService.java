@@ -1,8 +1,8 @@
 package services;
 
 import model.Tweet;
-import persistence.MessageRepository;
-import persistence.UserRepository;
+import repository.MessageRepository;
+import repository.UserRepository;
 import utilities.Formatting;
 import utilities.Hashing;
 import utilities.JSON;

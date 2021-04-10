@@ -1,12 +1,12 @@
 package benchmarking;
 
-import persistence.DB;
-import persistence.FollowerRepository;
-import persistence.MessageRepository;
-import persistence.UserRepository;
+import repository.DB;
+import repository.FollowerRepository;
+import repository.MessageRepository;
+import repository.UserRepository;
 import java.util.Random;
 
-import static persistence.DB.setDatabaseParameters;
+import static repository.DB.setDatabaseParameters;
 
 public class CreateAndFillTestDB {
 

@@ -3,7 +3,7 @@ package main;
 import controllers.Endpoints;
 import services.LogService;
 import services.MaintenanceService;
-import persistence.DB;
+import repository.DB;
 import static spark.Spark.staticFiles;
 import static spark.Spark.threadPool;
 

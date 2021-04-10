@@ -1,4 +1,4 @@
-package persistence;
+package repository;
 
 import org.junit.jupiter.api.Assertions;
 import services.MaintenanceService;
