@@ -9,7 +9,7 @@ import static utilities.Session.getSessionResponse;
 
 public class Responses {
 
-    private Responses() {};
+    private Responses() {}
 
     private static final String MESSAGE404_NOT_FOUND = "{\"message\":\"404 not found\"}";
     private static final String MESSAGE500_SERVER_ERROR = "{\"message\":\"500 server error\"}";

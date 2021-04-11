@@ -25,6 +25,8 @@ public class Endpoints {
     private Endpoints() {}
 
     private static final String USR_NAME = ":username";
+    private static final String LATEST = "latest";
+    private static final String AUTHORIZATION = "Authorization";
 
     private static final String REGISTER        = "/register";
     private static final String FLLWS_USERNAME  = "/fllws/:username";
@@ -80,33 +82,33 @@ public class Endpoints {
 
     private static Object messages(Request request, Response response) {
         var dto = new DTO();
-        dto.latest = request.queryParams("latest");
-        dto.authorization = request.headers("Authorization");
+        dto.latest = request.queryParams(LATEST);
+        dto.authorization = request.headers(AUTHORIZATION);
 
         return MessageService.getMessages(dto);
     }
 
     private static Object messagesPerUser(Request request, Response response) {
         var dto = new MessagesPerUserDTO();
-        dto.latest = request.queryParams("latest");
-        dto.authorization = request.headers("Authorization");
-        dto.username = getParam(":username", request).get();
+        dto.latest = request.queryParams(LATEST);
+        dto.authorization = request.headers(AUTHORIZATION);
+        dto.username = getParam(USR_NAME, request).get();
 
         return MessageService.messagesPerUser(dto);
     }
 
     private static Object getFollow(Request request, Response response) {
         var dto = new MessagesPerUserDTO();
-        dto.latest = request.queryParams("latest");
-        dto.authorization = request.headers("Authorization");
-        dto.username = getParam(":username", request).get();
+        dto.latest = request.queryParams(LATEST);
+        dto.authorization = request.headers(AUTHORIZATION);
+        dto.username = getParam(USR_NAME, request).get();
 
         return UserService.getFollow(dto);
     }
 
     private static Object timeline(Request request, Response response) {
         var dto = new TimelineDTO();
-        dto.latest = request.queryParams("latest");
+        dto.latest = request.queryParams(LATEST);
         dto.userId = getSessionUserId();
         dto.flash = getSessionFlash(request);
 
@@ -124,7 +126,7 @@ public class Endpoints {
 
     private static Object publicTimeline(Request request, Response response) {
         var dto = new PublicTimelineDTO();
-        dto.latest = request.queryParams("latest");
+        dto.latest = request.queryParams(LATEST);
         dto.loggedInUser = getSessionUserId();
         dto.flash = getSessionFlash(request);
 
@@ -140,13 +142,13 @@ public class Endpoints {
     private static Object logout(Request request, Response response) {
         request.session().removeAttribute(USER_ID);
         request.session().attribute(FLASH, "You were logged out");
-        response.redirect("/public");
+        response.redirect(PUBLIC_TIMELINE);
         return "";
     }
 
     private static Object followUser(Request request, Response response) {
         var dto = new FollowOrUnfollowDTO();
-        dto.latest = request.queryParams("latest");
+        dto.latest = request.queryParams(LATEST);
         dto.userId = getSessionUserId();
 
         var params = getFromBody(request, USERNAME);
@@ -158,7 +160,7 @@ public class Endpoints {
 
     private static Object unfollowUser(Request request, Response response) {
         var dto = new FollowOrUnfollowDTO();
-        dto.latest = request.queryParams("latest");
+        dto.latest = request.queryParams(LATEST);
         dto.userId = getSessionUserId();
 
         var params = getFromBody(request, USERNAME);
@@ -170,8 +172,8 @@ public class Endpoints {
 
     private static Object userTimeline(Request request, Response response) {
         var dto = new MessagesPerUserDTO();
-        dto.latest = request.queryParams("latest");
-        dto.username = request.params().get(":username");
+        dto.latest = request.queryParams(LATEST);
+        dto.username = request.params().get(USR_NAME);
         dto.userId = getSessionUserId();
         dto.flash = getSessionFlash(request);
 
@@ -182,9 +184,9 @@ public class Endpoints {
         var params = getFromBody(request, USERNAME, CONTENT);
 
         var dto = new AddMessageDTO();
-        dto.latest = request.queryParams("latest");
-        dto.authorization = request.headers("Authorization");
-        dto.username = params.get(USERNAME) != null ? params.get(USERNAME) : params.get(":username");
+        dto.latest = request.queryParams(LATEST);
+        dto.authorization = request.headers(AUTHORIZATION);
+        dto.username = params.get(USERNAME) != null ? params.get(USERNAME) : params.get(USR_NAME);
         dto.content = params.get(CONTENT);
         dto.userId = getSessionUserId();
 
@@ -194,7 +196,7 @@ public class Endpoints {
 
     private static Object postFollow(Request request, Response response) {
         var dto = new PostFollowDTO();
-        dto.username = getParam(":username", request).get();
+        dto.username = getParam(USR_NAME, request).get();
         dto.follow = getParam("follow", request);
         dto.unfollow = getParam("unfollow", request);
 
@@ -203,7 +205,7 @@ public class Endpoints {
 
     private static Object login(Request request, Response response) {
         var dto = new LoginDTO();
-        dto.latest = request.queryParams("latest");
+        dto.latest = request.queryParams(LATEST);
         dto.userId = getSessionUserId();
 
         var params = getFromBody(request, USERNAME, PASSWORD);
@@ -215,8 +217,8 @@ public class Endpoints {
 
     private static Object register(Request request, Response response) {
         var dto = new RegisterDTO();
-        dto.latest = request.queryParams("latest");
-        dto.authorization = request.headers("Authorization");
+        dto.latest = request.queryParams(LATEST);
+        dto.authorization = request.headers(AUTHORIZATION);
         dto.userId = getSessionUserId();
 
         var params = getFromBody(request, USERNAME, EMAIL, PASSWORD, "password2");
@@ -247,9 +249,7 @@ public class Endpoints {
             }
         });
 
-        Spark.after(((request, response) -> {
-            Session.clearSessionRequest();
-        }));
+        Spark.after(((request, response) -> Session.clearSessionRequest()));
 
         Spark.notFound((request, response) -> {
             response.type(JSON.APPLICATION_JSON);

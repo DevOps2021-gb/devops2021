@@ -5,6 +5,8 @@ import spark.Response;
 
 public class Session {
 
+    private Session() {}
+
     private static Request sessionRequest;
     private static Response sessionResponse;
 
