@@ -1,7 +1,6 @@
 package model.dto;
 
 public class RegisterDTO extends UserDTO {
-
     public String username;
     public String email;
     public String password1;

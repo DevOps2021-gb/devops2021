@@ -3,9 +3,9 @@ package utilities;
 import org.eclipse.jetty.http.HttpStatus;
 import org.json.JSONArray;
 import services.UserService;
-import spark.Response;
 
 import static utilities.JSON.APPLICATION_JSON;
+import static utilities.Session.getSessionResponse;
 
 public class Responses {
 
@@ -14,9 +14,9 @@ public class Responses {
     private static final String MESSAGE404_NOT_FOUND = "{\"message\":\"404 not found\"}";
     private static final String MESSAGE500_SERVER_ERROR = "{\"message\":\"500 server error\"}";
 
-    public static String notFromSimulatorResponse(Response response) {
-        response.status(HttpStatus.FORBIDDEN_403);
-        response.type(APPLICATION_JSON);
+    public static String notFromSimulatorResponse() {
+        Responses.setStatus(HttpStatus.FORBIDDEN_403);
+        Responses.setType(APPLICATION_JSON);
         return respond403Message("You are not authorized to use this resource!");
     }
 
@@ -44,9 +44,17 @@ public class Responses {
         return "{\"follows\": " + json + " }";
     }
 
-    public static String return404(Response response){
-        response.status(HttpStatus.NOT_FOUND_404);
-        response.type(APPLICATION_JSON);
+    public static String return404(){
+        Responses.setStatus(HttpStatus.NOT_FOUND_404);
+        Responses.setType(APPLICATION_JSON);
         return MESSAGE404_NOT_FOUND;
+    }
+
+    public static void setStatus(int status) {
+        getSessionResponse().status(status);
+    }
+
+    public static void setType(String type) {
+        getSessionResponse().type(type);
     }
 }

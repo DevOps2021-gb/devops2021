@@ -1,19 +1,19 @@
 package controllers;
 
 import io.prometheus.client.exporter.common.TextFormat;
-import model.User;
 import model.dto.*;
+import repository.FollowerRepository;
 import repository.UserRepository;
 import services.*;
 import utilities.JSON;
 import utilities.Requests;
 import utilities.Responses;
+import utilities.Session;
 import view.Presentation;
 import spark.Request;
 import spark.Response;
 import spark.Spark;
 
-import java.sql.Time;
 import java.util.HashMap;
 
 import static services.MessageService.*;
@@ -82,7 +82,6 @@ public class Endpoints {
         var dto = new DTO();
         dto.latest = request.queryParams("latest");
         dto.authorization = request.headers("Authorization");
-        dto.response = response;
 
         return MessageService.getMessages(dto);
     }
@@ -92,7 +91,6 @@ public class Endpoints {
         dto.latest = request.queryParams("latest");
         dto.authorization = request.headers("Authorization");
         dto.username = getParam(":username", request).get();
-        dto.response = response;
 
         return MessageService.messagesPerUser(dto);
     }
@@ -102,16 +100,14 @@ public class Endpoints {
         dto.latest = request.queryParams("latest");
         dto.authorization = request.headers("Authorization");
         dto.username = getParam(":username", request).get();
-        dto.response = response;
 
         return UserService.getFollow(dto);
     }
 
     private static Object timeline(Request request, Response response) {
         var dto = new TimelineDTO();
-        dto.response = response;
         dto.latest = request.queryParams("latest");
-        dto.userId = getSessionUserId(request);
+        dto.userId = getSessionUserId();
         dto.flash = getSessionFlash(request);
 
         if (!isUserLoggedIn(dto.userId)) {
@@ -129,7 +125,7 @@ public class Endpoints {
     private static Object publicTimeline(Request request, Response response) {
         var dto = new PublicTimelineDTO();
         dto.latest = request.queryParams("latest");
-        dto.loggedInUser = getSessionUserId(request);
+        dto.loggedInUser = getSessionUserId();
         dto.flash = getSessionFlash(request);
 
         return TimelineService.publicTimeline(dto);
@@ -150,29 +146,25 @@ public class Endpoints {
 
     private static Object followUser(Request request, Response response) {
         var dto = new FollowOrUnfollowDTO();
-        dto.request = request;
-        dto.response = response;
         dto.latest = request.queryParams("latest");
-        dto.userId = getSessionUserId(request);
+        dto.userId = getSessionUserId();
 
-        var params = getBody(request, USERNAME);
+        var params = getFromBody(request, USERNAME);
         dto.profileUsername = params.get(USERNAME) != null ? params.get(USERNAME) : params.get(USR_NAME);
 
-        UserService.followUser(dto);
+        UserService.followOrUnfollow(dto, FollowerRepository::followUser, "You are now following ");
         return "";
     }
 
     private static Object unfollowUser(Request request, Response response) {
         var dto = new FollowOrUnfollowDTO();
-        dto.request = request;
-        dto.response = response;
         dto.latest = request.queryParams("latest");
-        dto.userId = getSessionUserId(request);
+        dto.userId = getSessionUserId();
 
-        var params = getBody(request, USERNAME);
+        var params = getFromBody(request, USERNAME);
         dto.profileUsername = params.get(USERNAME) != null ? params.get(USERNAME) : params.get(USR_NAME);
 
-        UserService.unfollowUser(dto);
+        UserService.followOrUnfollow(dto, FollowerRepository::unfollowUser, "You are no longer following ");
         return "";
     }
 
@@ -180,23 +172,21 @@ public class Endpoints {
         var dto = new MessagesPerUserDTO();
         dto.latest = request.queryParams("latest");
         dto.username = request.params().get(":username");
-        dto.userId = getSessionUserId(request);
+        dto.userId = getSessionUserId();
         dto.flash = getSessionFlash(request);
 
         return TimelineService.userTimeline(dto);
     }
 
     private static Object addMessage(Request request, Response response) {
-        var params = getBody(request, USERNAME, CONTENT);
+        var params = getFromBody(request, USERNAME, CONTENT);
 
         var dto = new AddMessageDTO();
         dto.latest = request.queryParams("latest");
         dto.authorization = request.headers("Authorization");
         dto.username = params.get(USERNAME) != null ? params.get(USERNAME) : params.get(":username");
         dto.content = params.get(CONTENT);
-        dto.response = response;
-        dto.request = request;
-        dto.userId = getSessionUserId(request);
+        dto.userId = getSessionUserId();
 
         MessageService.addMessage(dto);
         return "";
@@ -207,19 +197,16 @@ public class Endpoints {
         dto.username = getParam(":username", request).get();
         dto.follow = getParam("follow", request);
         dto.unfollow = getParam("unfollow", request);
-        dto.response = response;
 
         return UserService.postFollow(dto);
     }
 
     private static Object login(Request request, Response response) {
         var dto = new LoginDTO();
-        dto.request = request;
-        dto.response = response;
         dto.latest = request.queryParams("latest");
-        dto.userId = getSessionUserId(request);
+        dto.userId = getSessionUserId();
 
-        var params = getBody(request, USERNAME, PASSWORD);
+        var params = getFromBody(request, USERNAME, PASSWORD);
         dto.username = params.get(USERNAME);
         dto.password = params.get(PASSWORD);
 
@@ -228,12 +215,11 @@ public class Endpoints {
 
     private static Object register(Request request, Response response) {
         var dto = new RegisterDTO();
-        dto.response = response;
         dto.latest = request.queryParams("latest");
         dto.authorization = request.headers("Authorization");
-        dto.userId = getSessionUserId(request);
+        dto.userId = getSessionUserId();
 
-        var params = getBody(request, USERNAME, EMAIL, PASSWORD, "password2");
+        var params = getFromBody(request, USERNAME, EMAIL, PASSWORD, "password2");
         dto.username = params.get(USERNAME);
         dto.email = params.get(EMAIL).replace("%40", "@");
         dto.password1 = params.get(PASSWORD);
@@ -245,12 +231,14 @@ public class Endpoints {
 
     private static void registerHooks() {
         Spark.before((request, response) -> {
+            Session.setSession(request, response);
+
             MaintenanceService.processRequest();
             //LogService.logRequest(request, Endpoints.class);
 
             if (request.requestMethod().equals("GET")) return;
 
-            Integer userId = Requests.getSessionUserId(request);
+            Integer userId = Requests.getSessionUserId();
             if (userId != null) {
                 var user = UserRepository.getUserById(userId);
                 if (user.isSuccess()) {
@@ -258,6 +246,10 @@ public class Endpoints {
                 }
             }
         });
+
+        Spark.after(((request, response) -> {
+            Session.clearSessionRequest();
+        }));
 
         Spark.notFound((request, response) -> {
             response.type(JSON.APPLICATION_JSON);

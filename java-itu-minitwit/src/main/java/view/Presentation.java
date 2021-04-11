@@ -4,6 +4,7 @@ import errorhandling.Failure;
 import com.google.common.io.Resources;
 import com.hubspot.jinjava.Jinjava;
 import services.LogService;
+import utilities.Session;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -26,5 +27,9 @@ public class Presentation {
 
     public static Object renderTemplate(String template) {
         return renderTemplate(template, new HashMap<>());
+    }
+
+    public static void redirect(String route) {
+        Session.getSessionResponse().redirect(route);
     }
 }

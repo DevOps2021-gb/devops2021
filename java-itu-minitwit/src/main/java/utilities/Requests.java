@@ -12,9 +12,19 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import static utilities.Session.getSessionRequest;
+
 public class Requests {
 
     private Requests() {}
+
+    public static void putAttribute(String attribute, Object value) {
+        getSessionRequest().session().attribute(attribute, value);
+    }
+
+    public static Object getAttribute(String attribute) {
+        return getSessionRequest().session().attribute(attribute);
+    }
 
     public static boolean isFromSimulator(String authorization) {
         return authorization != null && authorization.equals("Basic c2ltdWxhdG9yOnN1cGVyX3NhZmUh");
@@ -24,8 +34,8 @@ public class Requests {
         return userid != null;
     }
 
-    public static Integer getSessionUserId(Request request) {
-        return request.session().attribute(MessageService.USER_ID);
+    public static Integer getSessionUserId() {
+        return (Integer) getAttribute(MessageService.USER_ID);
     }
 
     public static Object getSessionFlash(Request request) {
@@ -34,14 +44,14 @@ public class Requests {
         return msg;
     }
 
-    public static Map<String,String> getBody(Request request, String ... args){
+    public static Map<String,String> getFromBody(Request request, String ... args){
         Map<String, String> map = new HashMap<>(request.params());
         addFromParams(map, request, args);
         addFromBody(map, request);
         return map;
     }
 
-    public static Map<String, String> getHeaders(Request request, String ... args) {
+    public static Map<String, String> getFromHeaders(Request request, String ... args) {
         Map<String, String> map = new HashMap<>();
         if (args.length == 0) {
             for (String p : request.queryParams()) {
@@ -56,7 +66,7 @@ public class Requests {
     }
 
     public static Result<String> getParam(String param, Request request) {
-        var params = getBody(request);
+        var params = getFromBody(request);
 
         if (params.containsKey(param)) {
             return new Success<>(params.get(param));

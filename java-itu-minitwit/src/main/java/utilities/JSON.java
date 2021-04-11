@@ -5,7 +5,6 @@ import model.Tweet;
 import org.eclipse.jetty.http.HttpStatus;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import spark.Response;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -22,7 +21,7 @@ public class JSON {
         return body.startsWith("{");
     }
 
-    public static Object tweetsToJSONResponse(List<Tweet> tweets, Response response) {
+    public static Object tweetsToJSONResponse(List<Tweet> tweets) {
         List<JSONObject> messages = new ArrayList<>();
         for (Tweet t : tweets) {
             HashMap<String, String> msg = new HashMap<>();
@@ -33,11 +32,11 @@ public class JSON {
         }
         var json = new JSONArray(messages);
         if (json.length() == 0) {
-            response.status(HttpStatus.NO_CONTENT_204);
+            Responses.setStatus(HttpStatus.NO_CONTENT_204);
             return "";
         } else {
-            response.status(HttpStatus.OK_200);
-            response.type(JSON.APPLICATION_JSON);
+            Responses.setStatus(HttpStatus.OK_200);
+            Responses.setType(JSON.APPLICATION_JSON);
             return json;
         }
     }

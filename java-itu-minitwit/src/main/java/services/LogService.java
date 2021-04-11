@@ -35,8 +35,8 @@ public class LogService {
         if (request.url().contains("favicon.ico")) return;
 
         Logger logger = Logger.getLogger(theClass.getSimpleName());
-        var params = Requests.getBody(request);
-        var queryParams = Requests.getHeaders(request);
+        var params = Requests.getFromBody(request);
+        var queryParams = Requests.getFromHeaders(request);
 
         var body = JSON.formatToJson(params);
         var headers = JSON.formatToJson(queryParams);

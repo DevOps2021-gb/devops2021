@@ -11,11 +11,11 @@ import utilities.Hashing;
 import utilities.JSON;
 import org.eclipse.jetty.http.HttpStatus;
 import utilities.Responses;
+import view.Presentation;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-
 
 import static services.MetricsService.updateLatest;
 import static utilities.Requests.*;
@@ -47,29 +47,29 @@ public class MessageService {
         updateLatest(dto.latest);
 
         if (!isFromSimulator(dto.authorization)) {
-            return Responses.notFromSimulatorResponse(dto.response);
+            return Responses.notFromSimulatorResponse();
         }
 
         var tweets = MessageRepository.publicTimeline().get();
-        return JSON.tweetsToJSONResponse(tweets, dto.response);
+        return JSON.tweetsToJSONResponse(tweets);
     }
 
     public static Object messagesPerUser(MessagesPerUserDTO dto) {
         updateLatest(dto.latest);
 
         if (!isFromSimulator(dto.authorization)) {
-            return Responses.notFromSimulatorResponse(dto.response);
+            return Responses.notFromSimulatorResponse();
         }
 
         var userIdResult = UserRepository.getUserId(dto.username);
 
         if (!userIdResult.isSuccess()) {
-            dto.response.status(HttpStatus.NOT_FOUND_404);
-            dto.response.type(JSON.APPLICATION_JSON);
+            Responses.setStatus(HttpStatus.NOT_FOUND_404);
+            Responses.setType(JSON.APPLICATION_JSON);
             return Responses.respond404();
         } else {
             var tweets = MessageRepository.getTweetsByUsername(dto.username).get();
-            return JSON.tweetsToJSONResponse(tweets, dto.response);
+            return JSON.tweetsToJSONResponse(tweets);
         }
     }
     /*
@@ -79,7 +79,6 @@ public class MessageService {
         updateLatest(dto.latest);
 
         if(dto.username == null){
-
             if (!isUserLoggedIn(dto.userId)) {
                 halt(401, "You need to sign in to post a message");
             }
@@ -88,7 +87,7 @@ public class MessageService {
             var userIdRes = UserRepository.getUserId(dto.username);
 
             if (!userIdRes.isSuccess()) {
-                dto.response.status(HttpStatus.NO_CONTENT_204);
+                Responses.setStatus(HttpStatus.NO_CONTENT_204);
                 return;
             }
 
@@ -98,16 +97,16 @@ public class MessageService {
         var rs = MessageRepository.addMessage(dto.content, dto.userId);
         if (rs.isSuccess()){
             if (isFromSimulator(dto.authorization)) {
-                dto.response.status(HttpStatus.NO_CONTENT_204);
+                Responses.setStatus(HttpStatus.NO_CONTENT_204);
             } else {
-                dto.request.session().attribute(FLASH, "Your message was recorded");
-                dto.response.redirect("/");
+                putAttribute(FLASH, "Your message was recorded");
+                Presentation.redirect("/");
             }
         } else {
             if (isFromSimulator(dto.authorization)) {
-                dto.response.status(HttpStatus.FORBIDDEN_403);
+                Responses.setStatus(HttpStatus.FORBIDDEN_403);
             } else {
-                dto.response.redirect("/");
+                Presentation.redirect("/");
             }
         }
 

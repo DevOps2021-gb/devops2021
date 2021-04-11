@@ -6,7 +6,6 @@ import model.User;
 import model.dto.MessagesPerUserDTO;
 import model.dto.PublicTimelineDTO;
 import model.dto.TimelineDTO;
-import model.dto.UserDTO;
 import repository.FollowerRepository;
 import repository.MessageRepository;
 import repository.UserRepository;
@@ -54,7 +53,7 @@ public class TimelineService {
         updateLatest(dto.latest);
 
         if (dto.userId == null) {
-            dto.response.redirect("/public");
+            Presentation.redirect("/public");
             return "";
         }
         HashMap<String, Object> context = new HashMap<>();
