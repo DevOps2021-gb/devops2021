@@ -130,6 +130,7 @@ public class UserService {
 
         var userIdResult = UserRepository.getUserId(dto.username);
 
+
         if (!userIdResult.isSuccess()) return404();
 
         if (dto.follow.isSuccess()) {

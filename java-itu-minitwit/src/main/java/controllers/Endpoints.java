@@ -199,6 +199,7 @@ public class Endpoints {
         dto.username = getParam(USR_NAME, request).get();
         dto.follow = getParam("follow", request);
         dto.unfollow = getParam("unfollow", request);
+        dto.authorization = request.headers(AUTHORIZATION);
 
         return UserService.postFollow(dto);
     }
@@ -207,6 +208,7 @@ public class Endpoints {
         var dto = new LoginDTO();
         dto.latest = request.queryParams(LATEST);
         dto.userId = getSessionUserId();
+        dto.authorization = request.headers(AUTHORIZATION);
 
         var params = getFromBody(request, USERNAME, PASSWORD);
         dto.username = params.get(USERNAME);
@@ -236,7 +238,7 @@ public class Endpoints {
             Session.setSession(request, response);
 
             MaintenanceService.processRequest();
-            //LogService.logRequest(request, Endpoints.class);
+            LogService.logRequest(request, Endpoints.class);
 
             if (request.requestMethod().equals("GET")) return;
 
@@ -248,8 +250,6 @@ public class Endpoints {
                 }
             }
         });
-
-        Spark.after(((request, response) -> Session.clearSessionRequest()));
 
         Spark.notFound((request, response) -> {
             response.type(JSON.APPLICATION_JSON);
