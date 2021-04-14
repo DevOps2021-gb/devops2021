@@ -6,35 +6,36 @@ import errorhandling.Failure;
 import errorhandling.Result;
 import errorhandling.Success;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.eclipse.jetty.http.HttpStatus;
 import spark.Request;
-import spark.Response;
 
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import static utilities.Session.getSessionRequest;
+
 public class Requests {
 
     private Requests() {}
 
-    public static boolean isRequestFromSimulator(Request request) {
-        var fromSimulator = request.headers("Authorization");
-        return fromSimulator != null && fromSimulator.equals("Basic c2ltdWxhdG9yOnN1cGVyX3NhZmUh");
+    public static void putAttribute(String attribute, Object value) {
+        getSessionRequest().session().attribute(attribute, value);
     }
 
-    public static Object notFromSimulatorResponse(Response response) {
-        response.status(HttpStatus.FORBIDDEN_403);
-        response.type(JSON.APPLICATION_JSON);
-        return JSON.respond403Message("You are not authorized to use this resource!");
+    public static Object getAttribute(String attribute) {
+        return getSessionRequest().session().attribute(attribute);
     }
 
-    public static boolean isUserLoggedIn(Request request) {
-        return getSessionUserId(request) != null;
+    public static boolean isFromSimulator(String authorization) {
+        return authorization != null && authorization.equals("Basic c2ltdWxhdG9yOnN1cGVyX3NhZmUh");
     }
 
-    public static Integer getSessionUserId(Request request) {
-        return request.session().attribute(MessageService.USER_ID);
+    public static boolean isUserLoggedIn(Integer userid) {
+        return userid != null;
+    }
+
+    public static Integer getSessionUserId() {
+        return (Integer) getAttribute(MessageService.USER_ID);
     }
 
     public static Object getSessionFlash(Request request) {
@@ -43,11 +44,35 @@ public class Requests {
         return msg;
     }
 
-    public static Map<String,String> getParamsFromRequest(Request request, String ... args){
+    public static Map<String,String> getFromBody(Request request, String ... args){
         Map<String, String> map = new HashMap<>(request.params());
         addFromParams(map, request, args);
         addFromBody(map, request);
         return map;
+    }
+
+    public static Map<String, String> getFromHeaders(Request request, String ... args) {
+        Map<String, String> map = new HashMap<>();
+        if (args.length == 0) {
+            for (String p : request.queryParams()) {
+                map.put(p, request.queryParams(p));
+            }
+        } else {
+            for (String arg: args) {
+                map.put(arg, request.queryParams(arg));
+            }
+        }
+        return map;
+    }
+
+    public static Result<String> getParam(String param, Request request) {
+        var params = getFromBody(request);
+
+        if (params.containsKey(param)) {
+            return new Success<>(params.get(param));
+        } else {
+            return new Failure<>(param + " was not found in request");
+        }
     }
 
     private static void addFromParams(Map<String, String> map, Request request, String[] args) {
@@ -79,16 +104,6 @@ public class Requests {
             map.putAll(temp);
         } catch (IOException e) {
             LogService.logError(e, Request.class);
-        }
-    }
-
-    public static Result<String> getParamFromRequest(String param, Request request) {
-        var params = getParamsFromRequest(request);
-
-        if (params.containsKey(param)) {
-            return new Success<>(params.get(param));
-        } else {
-            return new Failure<>(param + " was not found in request");
         }
     }
 }

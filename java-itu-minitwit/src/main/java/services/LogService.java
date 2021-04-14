@@ -14,20 +14,20 @@ public class LogService {
     public static void logError(Exception e, Class theClass) {
         String className = theClass.getSimpleName();
         Logger logger    = Logger.getLogger(theClass.getSimpleName());
-        String msg       = new StringBuilder(className).append(" : Exception ::").append(e.getMessage()).toString();
+        String msg       = className + " : Exception ::" + e.getMessage();
         logger.log(Level.WARNING, msg);
     }
 
     public static void logErrorWithMessage(Exception e, String message, Class theClass) {
         String className = theClass.getSimpleName();
         Logger logger    = Logger.getLogger(className);
-        String msg       = new StringBuilder(className).append(message).append("  :  ").append(e.getMessage()).toString();
+        String msg       = className + message + "  :  " + e.getMessage();
         logger.log(Level.WARNING, msg);
     }
     public static void log(Class theClass, String message) {
         String className = theClass.getSimpleName();
         Logger logger    = Logger.getLogger(className);
-        String msg       = new StringBuilder(className).append("  :  ").append(message).toString();
+        String msg       = className + "  :  " + message;
         logger.log(Level.INFO, msg);
     }
 
@@ -35,10 +35,15 @@ public class LogService {
         if (request.url().contains("favicon.ico")) return;
 
         Logger logger = Logger.getLogger(theClass.getSimpleName());
-        var params = Requests.getParamsFromRequest(request);
+        var params = Requests.getFromBody(request);
+        var queryParams = Requests.getFromHeaders(request);
+
         var body = JSON.formatToJson(params);
+        var headers = JSON.formatToJson(queryParams);
+
         var message = new StringBuilder(theClass.getSimpleName()).append(" : Message :: ").append(request.requestMethod()).append(" ").append(request.url());
         if (!body.equals("")) message.append(" body: ").append(body);
+        if (!headers.equals("")) message.append(" headers: ").append(headers);
         logger.log(Level.INFO, message.toString());
     }
 }

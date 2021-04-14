@@ -1,18 +1,21 @@
 package services;
 
+import model.dto.AddMessageDTO;
+import model.dto.DTO;
 import model.Tweet;
+import model.dto.MessagesPerUserDTO;
 import repository.MessageRepository;
 import repository.UserRepository;
 import utilities.Formatting;
 import utilities.Hashing;
 import utilities.JSON;
 import org.eclipse.jetty.http.HttpStatus;
-import spark.Request;
-import spark.Response;
+import utilities.Responses;
+import view.Presentation;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-
 
 import static services.MetricsService.updateLatest;
 import static utilities.Requests.*;
@@ -40,82 +43,70 @@ public class MessageService {
     public static final String TITLE    = "title";
     public static final String CONTENT  = "content";
 
-    public static Object getLatest(Response response) {
-        response.type(JSON.APPLICATION_JSON);
-        return JSON.respondLatest(UserService.latest);
-    }
+    public static Object getMessages(DTO dto) {
+        updateLatest(dto.latest);
 
-    public static Object getMessages(Request request, Response response) {
-        updateLatest(request);
-        if (!isRequestFromSimulator(request)) {
-            return notFromSimulatorResponse(response);
+        if (!isFromSimulator(dto.authorization)) {
+            return Responses.notFromSimulatorResponse();
         }
+
         var tweets = MessageRepository.publicTimeline().get();
-        return JSON.tweetsToJSONResponse(tweets, response);
+        return JSON.tweetsToJSONResponse(tweets);
     }
 
-    public static Object messagesPerUser(Request request, Response response) {
-        updateLatest(request);
+    public static Object messagesPerUser(MessagesPerUserDTO dto) {
+        updateLatest(dto.latest);
 
-        if (!isRequestFromSimulator(request)) {
-            return notFromSimulatorResponse(response);
+        if (!isFromSimulator(dto.authorization)) {
+            return Responses.notFromSimulatorResponse();
         }
 
-        var username = getParamFromRequest(":username", request).get();
-        var userIdResult = UserRepository.getUserId(username);
+        var userIdResult = UserRepository.getUserId(dto.username);
 
         if (!userIdResult.isSuccess()) {
-            response.status(HttpStatus.NOT_FOUND_404);
-            response.type(JSON.APPLICATION_JSON);
-            return JSON.respond404();
+            Responses.setStatus(HttpStatus.NOT_FOUND_404);
+            Responses.setType(JSON.APPLICATION_JSON);
+            return Responses.respond404();
         } else {
-            var tweets = MessageRepository.getTweetsByUsername(username).get();
-            return JSON.tweetsToJSONResponse(tweets, response);
+            var tweets = MessageRepository.getTweetsByUsername(dto.username).get();
+            return JSON.tweetsToJSONResponse(tweets);
         }
     }
     /*
     Registers a new message for the user.
      */
-    public static void addMessage(Request request, Response response) {
-        updateLatest(request);
+    public static void addMessage(AddMessageDTO dto) {
+        updateLatest(dto.latest);
 
-        var params = getParamsFromRequest(request, USERNAME, CONTENT);
-        String username = params.get(USERNAME) != null ? params.get(USERNAME) : params.get(":username");
-        String content = params.get(CONTENT);
-
-        Integer userId;
-        if(username == null){
-            if (!isUserLoggedIn(request)) {
+        if(dto.username == null){
+            if (!isUserLoggedIn(dto.userId)) {
                 halt(401, "You need to sign in to post a message");
             }
-            userId = getSessionUserId(request);
         }
         else {
-            var userIdRes = UserRepository.getUserId(username);
+            var userIdRes = UserRepository.getUserId(dto.username);
 
             if (!userIdRes.isSuccess()) {
-                response.status(HttpStatus.NO_CONTENT_204);
+                Responses.setStatus(HttpStatus.NO_CONTENT_204);
                 return;
             }
 
-            userId = userIdRes.get();
+            dto.userId = userIdRes.get();
         }
 
-        var rs = MessageRepository.addMessage(content, userId);
+        var rs = MessageRepository.addMessage(dto.content, dto.userId);
         if (rs.isSuccess()){
-            if (isRequestFromSimulator(request)) {
-                response.status(HttpStatus.NO_CONTENT_204);
+            if (isFromSimulator(dto.authorization)) {
+                Responses.setStatus(HttpStatus.NO_CONTENT_204);
             } else {
-                var message = "Your message was recorded";
-                LogService.log(MessageService.class, message);
-                request.session().attribute(FLASH, message);
-                response.redirect("/");
+                putAttribute(FLASH, "Your message was recorded");
+                Presentation.redirect("/");
             }
         } else {
-            if (isRequestFromSimulator(request)) {
-                response.status(HttpStatus.FORBIDDEN_403);
+            if (isFromSimulator(dto.authorization)) {
+                Responses.setStatus(HttpStatus.FORBIDDEN_403);
             } else {
-                response.redirect("/");
+                Presentation.redirect("/");
             }
         }
 
