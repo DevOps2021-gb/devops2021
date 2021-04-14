@@ -89,21 +89,24 @@ public class Endpoints {
     }
 
     private static Object messagesPerUser(Request request, Response response) {
-        var dto = new MessagesPerUserDTO();
-        dto.latest = request.queryParams(LATEST);
-        dto.authorization = request.headers(AUTHORIZATION);
-        dto.username = getParam(USR_NAME, request).get();
+        var dto = createMessagePerUserDTO(request);
 
         return MessageService.messagesPerUser(dto);
     }
 
     private static Object getFollow(Request request, Response response) {
+        var dto = createMessagePerUserDTO(request);
+
+        return UserService.getFollow(dto);
+    }
+
+    private static MessagesPerUserDTO createMessagePerUserDTO(Request request) {
         var dto = new MessagesPerUserDTO();
         dto.latest = request.queryParams(LATEST);
         dto.authorization = request.headers(AUTHORIZATION);
         dto.username = getParam(USR_NAME, request).get();
 
-        return UserService.getFollow(dto);
+        return dto;
     }
 
     private static Object timeline(Request request, Response response) {
