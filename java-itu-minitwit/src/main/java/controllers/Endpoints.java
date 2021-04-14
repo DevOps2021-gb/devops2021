@@ -147,18 +147,20 @@ public class Endpoints {
     }
 
     private static Object followUser(Request request, Response response) {
-        var dto = new FollowOrUnfollowDTO();
-        dto.latest = request.queryParams(LATEST);
-        dto.userId = getSessionUserId();
-
-        var params = getFromBody(request, USERNAME);
-        dto.profileUsername = params.get(USERNAME) != null ? params.get(USERNAME) : params.get(USR_NAME);
+        var dto = createFollowUnfollowDTO(request);
 
         UserService.followOrUnfollow(dto, FollowerRepository::followUser, "You are now following ");
         return "";
     }
 
     private static Object unfollowUser(Request request, Response response) {
+        var dto = createFollowUnfollowDTO(request);
+
+        UserService.followOrUnfollow(dto, FollowerRepository::unfollowUser, "You are no longer following ");
+        return "";
+    }
+
+    private static FollowOrUnfollowDTO createFollowUnfollowDTO(Request request) {
         var dto = new FollowOrUnfollowDTO();
         dto.latest = request.queryParams(LATEST);
         dto.userId = getSessionUserId();
@@ -166,8 +168,7 @@ public class Endpoints {
         var params = getFromBody(request, USERNAME);
         dto.profileUsername = params.get(USERNAME) != null ? params.get(USERNAME) : params.get(USR_NAME);
 
-        UserService.followOrUnfollow(dto, FollowerRepository::unfollowUser, "You are no longer following ");
-        return "";
+        return dto;
     }
 
     private static Object userTimeline(Request request, Response response) {
