@@ -89,24 +89,13 @@ public class Endpoints {
     }
 
     private static Object messagesPerUser(Request request, Response response) {
-        var dto = createMessagePerUserDTO(request);
-
+        var dto = MessagesPerUserDTO.fromRequest(request);
         return MessageService.messagesPerUser(dto);
     }
 
     private static Object getFollow(Request request, Response response) {
-        var dto = createMessagePerUserDTO(request);
-
+        var dto = MessagesPerUserDTO.fromRequest(request);
         return UserService.getFollow(dto);
-    }
-
-    private static MessagesPerUserDTO createMessagePerUserDTO(Request request) {
-        var dto = new MessagesPerUserDTO();
-        dto.latest = request.queryParams(LATEST);
-        dto.authorization = request.headers(AUTHORIZATION);
-        dto.username = getParam(USR_NAME, request).get();
-
-        return dto;
     }
 
     private static Object timeline(Request request, Response response) {
@@ -150,29 +139,18 @@ public class Endpoints {
     }
 
     private static Object followUser(Request request, Response response) {
-        var dto = createFollowUnfollowDTO(request);
-
+        var dto = FollowOrUnfollowDTO.fromRequest(request);
         UserService.followOrUnfollow(dto, FollowerRepository::followUser, "You are now following ");
         return "";
     }
 
     private static Object unfollowUser(Request request, Response response) {
-        var dto = createFollowUnfollowDTO(request);
-
+        var dto = FollowOrUnfollowDTO.fromRequest(request);
         UserService.followOrUnfollow(dto, FollowerRepository::unfollowUser, "You are no longer following ");
         return "";
     }
 
-    private static FollowOrUnfollowDTO createFollowUnfollowDTO(Request request) {
-        var dto = new FollowOrUnfollowDTO();
-        dto.latest = request.queryParams(LATEST);
-        dto.userId = getSessionUserId();
 
-        var params = getFromBody(request, USERNAME);
-        dto.profileUsername = params.get(USERNAME) != null ? params.get(USERNAME) : params.get(USR_NAME);
-
-        return dto;
-    }
 
     private static Object userTimeline(Request request, Response response) {
         var dto = new MessagesPerUserDTO();
