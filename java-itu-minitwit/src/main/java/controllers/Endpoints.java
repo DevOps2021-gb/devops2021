@@ -15,6 +15,7 @@ import spark.Response;
 import spark.Spark;
 
 import java.util.HashMap;
+import java.util.Locale;
 
 import static services.MessageService.*;
 import static services.MessageService.PASSWORD;
@@ -206,7 +207,7 @@ public class Endpoints {
         dto.userId = getSessionUserId();
 
         var params = getFromBody(request, USERNAME, EMAIL, PASSWORD, "password2");
-        dto.username = params.get(USERNAME);
+        dto.username = params.get(USERNAME).toLowerCase();      //TODO: Error1, probably not found by logging
         dto.email = params.get(EMAIL).replace("%40", "@");
         dto.password1 = params.get(PASSWORD);
         dto.password2 = params.get("password2");

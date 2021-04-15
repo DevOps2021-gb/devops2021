@@ -66,7 +66,7 @@ Displays the latest messages of all users.
                             "join follower f on f.whoId = ? and f.whomId = u.id " +
                             "where m.flagged = 0 " +
                             ") joined " +
-                            "order by joined.pubDate desc limit " + PER_PAGE;
+                            "order by joined.pubDate desc " + PER_PAGE;         //TODO: Error 2, probably found     remove limit
             var result = db.sql( query, userId, userId).results(HashMap.class);
             return new Success<>(MessageService.tweetsFromListOfHashMap(result));
         } catch (Exception e) {

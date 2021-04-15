@@ -26,7 +26,7 @@ public class MaintenanceService {
     private static final Counter requests   = Counter.build().name("requests_total").help("Total requests.").register();
     private static final Gauge users        = Gauge.build().name("users_total").help("Total amount of users.").register();
     private static final Gauge followers    = Gauge.build().name("followers_total").help("Total amount of followers.").register();
-    private static final Gauge messages     = Gauge.build().name("messages_total").help("Total amount of messages.").register();
+    private static final Gauge messages     = null;// Gauge.build().name("messages_total").help("Total amount of messages.").register();        //TODO: Exercise 3  shouldn't be null
 
     private static final Map<String, Gauge> responseTimeEndPoints = new HashMap<>();
 
@@ -58,10 +58,14 @@ public class MaintenanceService {
         executorService.scheduleAtFixedRate(MaintenanceService::logUserInformation, 1, LOGGING_PERIOD_SECONDS , TimeUnit.SECONDS);
     }
     private static void logUserInformation() {
-        processCpuLoad();
-        processUsers();
-        processFollowers();
-        processMessages();
+        try {
+            processCpuLoad();
+            processUsers();
+            processFollowers();
+            processMessages();
+        } catch (Exception e) {
+            LogService.logErrorWithMessage(e, "Maintenacne: scheduler thread", MaintenanceService.class);
+        }
     }
 
     public static void processRequest() {
