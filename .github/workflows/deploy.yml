@@ -76,4 +76,4 @@ jobs:
           username: ${{ secrets.SSH_USERNAME }} # user of the server we want to ssh into
           script: |
             wget https://raw.githubusercontent.com/DevOps2021-gb/devops2021/main/bootstrap.sh
-            ./bootstrap.sh
+            sh bootstrap.sh
