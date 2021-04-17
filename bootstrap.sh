@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 docker-compose down
 docker rmi mertz/minitwit:latest
@@ -9,7 +9,7 @@ rm nginx.conf
 rm .htpasswd
 rm setup_elk.sh
 
-if [ -e heartbeat.sh]; then
+if [[ -f heartbeat.sh ]]; then
 	sh heartbeat.sh &
 fi
 
