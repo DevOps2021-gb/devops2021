@@ -1,5 +1,3 @@
-#!/bin/bash
-
 docker-compose down
 docker rmi mertz/minitwit:latest
 rm docker-compose.yml
