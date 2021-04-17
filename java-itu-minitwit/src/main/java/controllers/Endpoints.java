@@ -1,17 +1,32 @@
 package controllers;
 
-import services.*;
+import io.prometheus.client.exporter.common.TextFormat;
+import model.dto.*;
+import repository.FollowerRepository;
 import repository.UserRepository;
+import services.*;
 import utilities.JSON;
 import utilities.Requests;
+import utilities.Responses;
+import utilities.Session;
 import view.Presentation;
 import spark.Request;
 import spark.Response;
 import spark.Spark;
 
+import java.util.HashMap;
+
+import static services.MessageService.*;
+import static services.MessageService.PASSWORD;
+import static utilities.Requests.*;
+
 public class Endpoints {
 
     private Endpoints() {}
+
+    private static final String USR_NAME = ":username";
+    private static final String LATEST = "latest";
+    private static final String AUTHORIZATION = "Authorization";
 
     private static final String REGISTER        = "/register";
     private static final String FLLWS_USERNAME  = "/fllws/:username";
@@ -29,12 +44,12 @@ public class Endpoints {
     private static final String FOLLOW          = "/:username/follow";
     private static final String UNFOLLOW        = "/:username/unfollow";
 
-    public static void init() {
-        Endpoints.registerEndpoints();
-        Endpoints.registerHooks();
+    public static void register() {
+        registerEndpoints();
+        registerHooks();
     }
 
-    public static void registerEndpoints(){
+    private static void registerEndpoints(){
         var postEndpoints = new String[] {MSGS_USERNAME, FLLWS_USERNAME, ADD_MESSAGE, LOGIN, REGISTER};
         var getEndpoints  = new String[] {LATESTS, MESSAGES, MSGS_USERNAME, FLLWS_USERNAME, TIMELINE, METRICS, PUBLIC_TIMELINE, LOGIN, REGISTER, LOGOUT, FOLLOW, UNFOLLOW, USER_TIMELINE};
         MaintenanceService.setEndpointsToLog(getEndpoints, postEndpoints);
@@ -60,82 +75,156 @@ public class Endpoints {
         Spark.get(USER_TIMELINE,              (req, res)-> MaintenanceService.benchMarkEndpoint(new ResReqSparkWrapper(req, res, true), USER_TIMELINE, Endpoints::userTimeline));
     }
 
-    public static Object getLatest(Request request, Response response) {
-        return MessageService.getLatest(response);
+    private static Object getLatest(Request request, Response response) {
+        response.type(JSON.APPLICATION_JSON);
+        return Responses.respondLatest();
     }
 
-    public static Object messages(Request request, Response response) {
-        return MessageService.getMessages(request, response);
+    private static Object messages(Request request, Response response) {
+        var dto = new DTO();
+        dto.latest = request.queryParams(LATEST);
+        dto.authorization = request.headers(AUTHORIZATION);
+
+        return MessageService.getMessages(dto);
     }
 
-    public static Object messagesPerUser(Request request, Response response) {
-        return MessageService.messagesPerUser(request, response);
+    private static Object messagesPerUser(Request request, Response response) {
+        var dto = MessagesPerUserDTO.fromRequest(request);
+        return MessageService.messagesPerUser(dto);
     }
 
-    public static Object getFollow(Request request, Response response) {
-        return UserService.getFollow(request, response);
+    private static Object getFollow(Request request, Response response) {
+        var dto = MessagesPerUserDTO.fromRequest(request);
+        return UserService.getFollow(dto);
     }
 
-    public static Object timeline(Request request, Response response) {
-        return TimelineService.timeline(request, response);
+    private static Object timeline(Request request, Response response) {
+        var dto = new TimelineDTO();
+        dto.latest = request.queryParams(LATEST);
+        dto.userId = getSessionUserId();
+        dto.flash = getSessionFlash(request);
+
+        if (!isUserLoggedIn(dto.userId)) {
+            return publicTimeline(request, response);
+        }
+
+        return TimelineService.timeline(dto);
     }
 
-    public static Object metrics(Request request, Response response) {
-        return MetricsService.metrics(response);
+    private static Object metrics(Request request, Response response) {
+        response.type(TextFormat.CONTENT_TYPE_004);
+        return MetricsService.metrics();
     }
 
-    public static Object publicTimeline(Request request, Response response) {
-        return TimelineService.publicTimeline(request);
+    private static Object publicTimeline(Request request, Response response) {
+        var dto = new PublicTimelineDTO();
+        dto.latest = request.queryParams(LATEST);
+        dto.loggedInUser = getSessionUserId();
+        dto.flash = getSessionFlash(request);
+
+        return TimelineService.publicTimeline(dto);
     }
 
-    public static Object loginGet(Request request, Response response) {
-        return UserService.loginGet(request);
+    private static Object loginGet(Request request, Response response) {
+        HashMap<String, Object> context = new HashMap<>();
+        context.put(FLASH, getSessionFlash(request));
+        return Presentation.renderTemplate(LOGIN_HTML, context);
     }
 
-    public static Object logout(Request request, Response response) {
-        UserService.logout(request, response);
+    private static Object logout(Request request, Response response) {
+        request.session().removeAttribute(USER_ID);
+        request.session().attribute(FLASH, "You were logged out");
+        response.redirect(PUBLIC_TIMELINE);
         return "";
     }
 
-    public static Object followUser(Request request, Response response) {
-        UserService.followUser(request, response);
+    private static Object followUser(Request request, Response response) {
+        var dto = FollowOrUnfollowDTO.fromRequest(request);
+        UserService.followOrUnfollow(dto, FollowerRepository::followUser, "You are now following ");
         return "";
     }
 
-    public static Object unfollowUser(Request request, Response response) {
-        UserService.unfollowUser(request, response);
+    private static Object unfollowUser(Request request, Response response) {
+        var dto = FollowOrUnfollowDTO.fromRequest(request);
+        UserService.followOrUnfollow(dto, FollowerRepository::unfollowUser, "You are no longer following ");
         return "";
     }
 
-    public static Object userTimeline(Request request, Response response) {
-        return TimelineService.userTimeline(request);
+
+
+    private static Object userTimeline(Request request, Response response) {
+        var dto = new MessagesPerUserDTO();
+        dto.latest = request.queryParams(LATEST);
+        dto.username = request.params().get(USR_NAME);
+        dto.userId = getSessionUserId();
+        dto.flash = getSessionFlash(request);
+
+        return TimelineService.userTimeline(dto);
     }
 
-    public static Object addMessage(Request request, Response response) {
-        MessageService.addMessage(request, response);
+    private static Object addMessage(Request request, Response response) {
+        var params = getFromBody(request, USERNAME, CONTENT);
+
+        var dto = new AddMessageDTO();
+        dto.latest = request.queryParams(LATEST);
+        dto.authorization = request.headers(AUTHORIZATION);
+        dto.username = params.get(USERNAME) != null ? params.get(USERNAME) : params.get(USR_NAME);
+        dto.content = params.get(CONTENT);
+        dto.userId = getSessionUserId();
+
+        MessageService.addMessage(dto);
         return "";
     }
 
-    public static Object postFollow(Request request, Response response) {
-        return UserService.postFollow(request, response);
+    private static Object postFollow(Request request, Response response) {
+        var dto = new PostFollowDTO();
+        dto.username = getParam(USR_NAME, request).get();
+        dto.follow = getParam("follow", request);
+        dto.unfollow = getParam("unfollow", request);
+        dto.authorization = request.headers(AUTHORIZATION);
+
+        return UserService.postFollow(dto);
     }
 
-    public static Object login(Request request, Response response) {
-        return UserService.login(request, response);
+    private static Object login(Request request, Response response) {
+        var dto = new LoginDTO();
+        dto.latest = request.queryParams(LATEST);
+        dto.userId = getSessionUserId();
+        dto.authorization = request.headers(AUTHORIZATION);
+
+        var params = getFromBody(request, USERNAME, PASSWORD);
+        dto.username = params.get(USERNAME);
+        dto.password = params.get(PASSWORD);
+
+        return UserService.login(dto);
     }
 
-    public static Object register(Request request, Response response) {
-        return UserService.register(request, response);
+    private static Object register(Request request, Response response) {
+        var dto = new RegisterDTO();
+        dto.latest = request.queryParams(LATEST);
+        dto.authorization = request.headers(AUTHORIZATION);
+        dto.userId = getSessionUserId();
+
+        var params = getFromBody(request, USERNAME, EMAIL, PASSWORD, "password2");
+        dto.username = params.get(USERNAME);
+        dto.email = params.get(EMAIL).replace("%40", "@");
+        dto.password1 = params.get(PASSWORD);
+        dto.password2 = params.get("password2");
+        dto.pwd = params.get("pwd");
+
+        return UserService.register(dto);
     }
 
-    public static void registerHooks() {
+    private static void registerHooks() {
         Spark.before((request, response) -> {
+            Session.setSession(request, response);
+
             MaintenanceService.processRequest();
             //LogService.logRequest(request, Endpoints.class);
 
             if (request.requestMethod().equals("GET")) return;
 
-            Integer userId = Requests.getSessionUserId(request);
+            Integer userId = Requests.getSessionUserId();
             if (userId != null) {
                 var user = UserRepository.getUserById(userId);
                 if (user.isSuccess()) {
@@ -146,12 +235,12 @@ public class Endpoints {
 
         Spark.notFound((request, response) -> {
             response.type(JSON.APPLICATION_JSON);
-            return JSON.respond404();
+            return Responses.respond404();
         });
 
         Spark.internalServerError((request, response) -> {
             response.type(JSON.APPLICATION_JSON);
-            return JSON.respond500();
+            return Responses.respond500();
         });
     }
 }

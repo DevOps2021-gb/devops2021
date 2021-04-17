@@ -3,8 +3,6 @@ package services;
 import io.prometheus.client.CollectorRegistry;
 import io.prometheus.client.exporter.common.TextFormat;
 import main.Main;
-import spark.Request;
-import spark.Response;
 
 import java.io.IOException;
 import java.io.StringWriter;
@@ -13,8 +11,7 @@ public class MetricsService {
 
     private MetricsService() {}
 
-    public static Object metrics(Response response) {
-        response.type(TextFormat.CONTENT_TYPE_004);
+    public static Object metrics() {
         final StringWriter writer = new StringWriter();
         try {
             TextFormat.write004(writer, CollectorRegistry.defaultRegistry.metricFamilySamples());
@@ -24,8 +21,7 @@ public class MetricsService {
         return writer.toString();
     }
 
-    public static void updateLatest(Request request) {
-        String requestLatest = request.queryParams("latest");
+    public static void updateLatest(String requestLatest) {
         if (requestLatest != null) {
             try {
                 UserService.latest = Integer.parseInt(requestLatest);

@@ -12,13 +12,13 @@ public class Main {
         try {
 
             staticFiles.location("/");
-            Endpoints.init();
+            setMaxThreads();
+            Endpoints.register();
 
             if (args.length > 0) {
                 DB.setDatabaseParameters(args[0], args[1], args[2]);
             }
 
-            setMaxThreads();
             //Add indexes to make sure they exits
             DB.addIndexes(DB.initDatabase());
 

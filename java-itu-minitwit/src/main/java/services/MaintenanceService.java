@@ -104,13 +104,13 @@ public class MaintenanceService {
         try {
             result = endpoint.apply(rrw.req, rrw.res);
         } catch (Exception e) {
-            LogService.logErrorWithMessage(e, new StringBuilder("Endpoint error ").append(endPointName).toString(), Endpoints.class);
+            LogService.logErrorWithMessage(e, "Endpoint error " + endPointName, Endpoints.class);
         }
         var endTime   = System.currentTimeMillis();
         try {
             MaintenanceService.logResponseTimeEndpoint(endPointToString(endPointName, rrw.isGet), endTime - startTime);
         } catch (Exception e) {
-            LogService.logErrorWithMessage(e, new StringBuilder("Endpoint logging error ").append(endPointName).toString(), MaintenanceService.class);
+            LogService.logErrorWithMessage(e, "Endpoint logging error " + endPointName, MaintenanceService.class);
         }
         return result;
     }
