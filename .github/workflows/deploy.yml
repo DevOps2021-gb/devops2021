@@ -95,7 +95,7 @@ jobs:
           key: ${{secrets.SSH_KEY}} # Private key of the server
           username: ${{ secrets.SSH_USERNAME }} # user of the server we want to ssh into
           script: |
-			docker-compose down
+            docker-compose down
             docker rmi mertz/minitwit:latest
             rm docker-compose.yml
             rm prometheus.yml
