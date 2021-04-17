@@ -45,9 +45,28 @@ jobs:
           key: ${{secrets.SSH_KEY}} # Private key of the server
           username: ${{ secrets.SSH_USERNAME }} # user of the server we want to ssh into
           script: |
-            rm bootstrap.sh
-            wget https://raw.githubusercontent.com/DevOps2021-gb/devops2021/main/bootstrap.sh
-            sh bootstrap.sh
+            docker-compose down
+            docker rmi mertz/minitwit:latest
+            rm docker-compose.yml
+            rm prometheus.yml
+            rm filebeat.yml
+            rm nginx.conf
+            rm .htpasswd
+            rm setup_elk.sh
+
+            if [[ -f heartbeat.sh ]]; then
+                sh heartbeat.sh &
+            fi
+
+            wget https://raw.githubusercontent.com/DevOps2021-gb/devops2021/main/docker-compose.yml
+            wget https://raw.githubusercontent.com/DevOps2021-gb/devops2021/main/prometheus.yml
+            wget https://raw.githubusercontent.com/DevOps2021-gb/devops2021/main/filebeat.yml
+            wget https://raw.githubusercontent.com/DevOps2021-gb/devops2021/main/nginx.conf
+            wget https://raw.githubusercontent.com/DevOps2021-gb/devops2021/main/.htpasswd
+            wget https://raw.githubusercontent.com/DevOps2021-gb/devops2021/main/setup_elk.sh
+            sudo chmod +x setup_elk.sh
+            source setup_elk.sh
+            docker-compose up -d --build
 
   pre-release:
     #https://github.com/marketplace/actions/automatic-releases
@@ -76,6 +95,25 @@ jobs:
           key: ${{secrets.SSH_KEY}} # Private key of the server
           username: ${{ secrets.SSH_USERNAME }} # user of the server we want to ssh into
           script: |
-            rm bootstrap.sh
-            wget https://raw.githubusercontent.com/DevOps2021-gb/devops2021/main/bootstrap.sh
-            sh bootstrap.sh
+            docker-compose down
+            docker rmi mertz/minitwit:latest
+            rm docker-compose.yml
+            rm prometheus.yml
+            rm filebeat.yml
+            rm nginx.conf
+            rm .htpasswd
+            rm setup_elk.sh
+
+            if [[ -f heartbeat.sh ]]; then
+                sh heartbeat.sh &
+            fi
+
+            wget https://raw.githubusercontent.com/DevOps2021-gb/devops2021/main/docker-compose.yml
+            wget https://raw.githubusercontent.com/DevOps2021-gb/devops2021/main/prometheus.yml
+            wget https://raw.githubusercontent.com/DevOps2021-gb/devops2021/main/filebeat.yml
+            wget https://raw.githubusercontent.com/DevOps2021-gb/devops2021/main/nginx.conf
+            wget https://raw.githubusercontent.com/DevOps2021-gb/devops2021/main/.htpasswd
+            wget https://raw.githubusercontent.com/DevOps2021-gb/devops2021/main/setup_elk.sh
+            sudo chmod +x setup_elk.sh
+            source setup_elk.sh
+            docker-compose up -d --build
