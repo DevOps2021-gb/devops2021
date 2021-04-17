@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 sudo chmod +x setup_elk.sh
 source setup_elk.sh
 
