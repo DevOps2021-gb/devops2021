@@ -45,6 +45,7 @@ jobs:
           key: ${{secrets.SSH_KEY}} # Private key of the server
           username: ${{ secrets.SSH_USERNAME }} # user of the server we want to ssh into
           script: |
+            rm bootstrap.sh
             wget https://raw.githubusercontent.com/DevOps2021-gb/devops2021/main/bootstrap.sh
             sh bootstrap.sh
 
@@ -75,5 +76,6 @@ jobs:
           key: ${{secrets.SSH_KEY}} # Private key of the server
           username: ${{ secrets.SSH_USERNAME }} # user of the server we want to ssh into
           script: |
+            rm bootstrap.sh
             wget https://raw.githubusercontent.com/DevOps2021-gb/devops2021/main/bootstrap.sh
             sh bootstrap.sh
