@@ -38,6 +38,9 @@ public class LogService {
         var params = Requests.getFromBody(request);
         var queryParams = Requests.getFromHeaders(request);
 
+        if (params.containsKey("password")) params.put("password", "REDACTED");
+        if (params.containsKey("password2")) params.put("password2", "REDACTED");
+
         var body = JSON.formatToJson(params);
         var headers = JSON.formatToJson(queryParams);
 
