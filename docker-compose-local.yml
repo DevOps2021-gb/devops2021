@@ -15,6 +15,9 @@ services:
     minitwit:
         image: minitwit-local
         container_name: minitwit
+        build:
+          context: .
+          dockerfile: Dockerfile-localDB
         ports:
             - "4567:4567"
         networks:
