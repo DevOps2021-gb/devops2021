@@ -220,7 +220,7 @@ public class Endpoints {
             Session.setSession(request, response);
 
             MaintenanceService.processRequest();
-            //LogService.logRequest(request, Endpoints.class);
+            LogService.logRequest(request, Endpoints.class);
 
             if (request.requestMethod().equals("GET")) return;
 
