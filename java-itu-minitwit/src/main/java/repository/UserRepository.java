@@ -6,11 +6,11 @@ import errorhandling.Result;
 import errorhandling.Success;
 import utilities.Hashing;
 
-public class UserRepository {
+public class UserRepository implements IUserRepository {
 
-    private UserRepository() {}
+    public UserRepository() {}
 
-    public static Result<Boolean> queryLogin(String username, String password) {
+    public Result<Boolean> queryLogin(String username, String password) {
         String error;
         var user = getUser(username);
         if (!user.isSuccess()) {
@@ -24,7 +24,7 @@ public class UserRepository {
         return new Failure<>(error);
     }
 
-    public static Result<String> addUser(String username, String email, String password1) {
+    public Result<String> addUser(String username, String email, String password1) {
         try {
             var db = DB.connectDb().get();
             db.insert(new User(username, email, Hashing.hash(password1).get()));
@@ -34,7 +34,7 @@ public class UserRepository {
         }
     }
 
-    public static Result<User> getUserById(int userId) {
+    public Result<User> getUserById(int userId) {
         var db = DB.connectDb().get();
         var result = db.where("id=?", userId).first(User.class);
 
@@ -46,7 +46,7 @@ public class UserRepository {
     /*
     Convenience method to look up the id for a username.
     */
-    public static Result<Integer> getUserId(String username) {
+    public Result<Integer> getUserId(String username) {
         var user = getUser(username);
 
         if (!user.isSuccess()) return new Failure<>(user.toString());
@@ -54,7 +54,7 @@ public class UserRepository {
         return new Success<>(user.get().id);
     }
 
-    public static Result<User> getUser(String username) {
+    public Result<User> getUser(String username) {
         var db = DB.connectDb().get();
         var result = db.table("user").where("username=?", username).first(User.class);
 
@@ -62,7 +62,7 @@ public class UserRepository {
 
         return new Success<>(result);
     }
-    public static Result<Long> countUsers() {
+    public Result<Long> countUsers() {
         var db = DB.connectDb().get();
         var result = db.sql("select count(*) from user").first(Long.class);
         return new Success<>(result);

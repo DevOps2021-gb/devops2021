@@ -2,8 +2,8 @@ package controllers;
 
 import io.prometheus.client.exporter.common.TextFormat;
 import model.dto.*;
-import repository.FollowerRepository;
-import repository.UserRepository;
+import repository.IFollowerRepository;
+import repository.IUserRepository;
 import services.*;
 import utilities.JSON;
 import utilities.Requests;
@@ -22,7 +22,27 @@ import static utilities.Requests.*;
 
 public class Endpoints {
 
-    private Endpoints() {}
+    private final IMessageService messageService;
+    private final IUserService userService;
+    private final ITimelineService timelineService;
+    private final IFollowerRepository followerRepository;
+    private final IUserRepository userRepository;
+    private final IMaintenanceService maintenanceService;
+
+    public Endpoints(
+            IMessageService _messageService,
+            IUserService _userService,
+            ITimelineService _timelineService,
+            IFollowerRepository _followerRepository,
+            IMaintenanceService _maintenanceService,
+            IUserRepository _userRepository) {
+        messageService = _messageService;
+        userService = _userService;
+        timelineService = _timelineService;
+        followerRepository = _followerRepository;
+        maintenanceService = _maintenanceService;
+        userRepository = _userRepository;
+    }
 
     private static final String USR_NAME = ":username";
     private static final String LATEST = "latest";
@@ -44,61 +64,61 @@ public class Endpoints {
     private static final String FOLLOW          = "/:username/follow";
     private static final String UNFOLLOW        = "/:username/unfollow";
 
-    public static void register() {
+    public void register() {
         registerEndpoints();
         registerHooks();
     }
 
-    private static void registerEndpoints(){
+    private void registerEndpoints(){
         var postEndpoints = new String[] {MSGS_USERNAME, FLLWS_USERNAME, ADD_MESSAGE, LOGIN, REGISTER};
         var getEndpoints  = new String[] {LATESTS, MESSAGES, MSGS_USERNAME, FLLWS_USERNAME, TIMELINE, METRICS, PUBLIC_TIMELINE, LOGIN, REGISTER, LOGOUT, FOLLOW, UNFOLLOW, USER_TIMELINE};
         MaintenanceService.setEndpointsToLog(getEndpoints, postEndpoints);
 
-        Spark.post(MSGS_USERNAME,             (req, res)-> MaintenanceService.benchMarkEndpoint(new ResReqSparkWrapper(req, res, false), MSGS_USERNAME, Endpoints::addMessage));
-        Spark.post(FLLWS_USERNAME,            (req, res)-> MaintenanceService.benchMarkEndpoint(new ResReqSparkWrapper(req, res, false), FLLWS_USERNAME, Endpoints::postFollow));
-        Spark.post(ADD_MESSAGE,               (req, res)-> MaintenanceService.benchMarkEndpoint(new ResReqSparkWrapper(req, res, false), ADD_MESSAGE, Endpoints::addMessage));
-        Spark.post(LOGIN,                     (req, res)-> MaintenanceService.benchMarkEndpoint(new ResReqSparkWrapper(req, res, false), LOGIN, Endpoints::login));
-        Spark.post(REGISTER,                  (req, res)-> MaintenanceService.benchMarkEndpoint(new ResReqSparkWrapper(req, res, false), REGISTER, Endpoints::register));
+        Spark.post(MSGS_USERNAME,             (req, res)-> MaintenanceService.benchMarkEndpoint(new ResReqSparkWrapper(req, res, false), MSGS_USERNAME, this::addMessage));
+        Spark.post(FLLWS_USERNAME,            (req, res)-> MaintenanceService.benchMarkEndpoint(new ResReqSparkWrapper(req, res, false), FLLWS_USERNAME, this::postFollow));
+        Spark.post(ADD_MESSAGE,               (req, res)-> MaintenanceService.benchMarkEndpoint(new ResReqSparkWrapper(req, res, false), ADD_MESSAGE, this::addMessage));
+        Spark.post(LOGIN,                     (req, res)-> MaintenanceService.benchMarkEndpoint(new ResReqSparkWrapper(req, res, false), LOGIN, this::login));
+        Spark.post(REGISTER,                  (req, res)-> MaintenanceService.benchMarkEndpoint(new ResReqSparkWrapper(req, res, false), REGISTER, this::register));
 
-        Spark.get(LATESTS,                    (req, res)-> MaintenanceService.benchMarkEndpoint(new ResReqSparkWrapper(req, res, true), LATESTS, Endpoints::getLatest));
-        Spark.get(MESSAGES,                   (req, res)-> MaintenanceService.benchMarkEndpoint(new ResReqSparkWrapper(req, res, true), MESSAGES, Endpoints::messages));
-        Spark.get(MSGS_USERNAME,              (req, res)-> MaintenanceService.benchMarkEndpoint(new ResReqSparkWrapper(req, res, true), MSGS_USERNAME, Endpoints::messagesPerUser));
-        Spark.get(FLLWS_USERNAME,             (req, res)-> MaintenanceService.benchMarkEndpoint(new ResReqSparkWrapper(req, res, true), FLLWS_USERNAME, Endpoints::getFollow));
-        Spark.get(TIMELINE,                   (req, res)-> MaintenanceService.benchMarkEndpoint(new ResReqSparkWrapper(req, res, true), TIMELINE, Endpoints::timeline));
-        Spark.get(METRICS,                    (req, res)-> MaintenanceService.benchMarkEndpoint(new ResReqSparkWrapper(req, res, true), METRICS, Endpoints::metrics));
-        Spark.get(PUBLIC_TIMELINE,            (req, res)-> MaintenanceService.benchMarkEndpoint(new ResReqSparkWrapper(req, res, true), PUBLIC_TIMELINE, Endpoints::publicTimeline));
-        Spark.get(LOGIN,                      (req, res)-> MaintenanceService.benchMarkEndpoint(new ResReqSparkWrapper(req, res, true), LOGIN, Endpoints::loginGet));
+        Spark.get(LATESTS,                    (req, res)-> MaintenanceService.benchMarkEndpoint(new ResReqSparkWrapper(req, res, true), LATESTS, this::getLatest));
+        Spark.get(MESSAGES,                   (req, res)-> MaintenanceService.benchMarkEndpoint(new ResReqSparkWrapper(req, res, true), MESSAGES, this::messages));
+        Spark.get(MSGS_USERNAME,              (req, res)-> MaintenanceService.benchMarkEndpoint(new ResReqSparkWrapper(req, res, true), MSGS_USERNAME, this::messagesPerUser));
+        Spark.get(FLLWS_USERNAME,             (req, res)-> MaintenanceService.benchMarkEndpoint(new ResReqSparkWrapper(req, res, true), FLLWS_USERNAME, this::getFollow));
+        Spark.get(TIMELINE,                   (req, res)-> MaintenanceService.benchMarkEndpoint(new ResReqSparkWrapper(req, res, true), TIMELINE, this::timeline));
+        Spark.get(METRICS,                    (req, res)-> MaintenanceService.benchMarkEndpoint(new ResReqSparkWrapper(req, res, true), METRICS, this::metrics));
+        Spark.get(PUBLIC_TIMELINE,            (req, res)-> MaintenanceService.benchMarkEndpoint(new ResReqSparkWrapper(req, res, true), PUBLIC_TIMELINE, this::publicTimeline));
+        Spark.get(LOGIN,                      (req, res)-> MaintenanceService.benchMarkEndpoint(new ResReqSparkWrapper(req, res, true), LOGIN, this::loginGet));
         Spark.get(REGISTER,                   (req, res)-> MaintenanceService.benchMarkEndpoint(new ResReqSparkWrapper(req, res, true), REGISTER, (req2, res2) -> Presentation.renderTemplate(MessageService.REGISTER_HTML)));
-        Spark.get(LOGOUT,                     (req, res)-> MaintenanceService.benchMarkEndpoint(new ResReqSparkWrapper(req, res, true), LOGOUT, Endpoints::logout));
-        Spark.get(FOLLOW,                     (req, res)-> MaintenanceService.benchMarkEndpoint(new ResReqSparkWrapper(req, res, true), FOLLOW, Endpoints::followUser));
-        Spark.get(UNFOLLOW,                   (req, res)-> MaintenanceService.benchMarkEndpoint(new ResReqSparkWrapper(req, res, true), UNFOLLOW, Endpoints::unfollowUser));
-        Spark.get(USER_TIMELINE,              (req, res)-> MaintenanceService.benchMarkEndpoint(new ResReqSparkWrapper(req, res, true), USER_TIMELINE, Endpoints::userTimeline));
+        Spark.get(LOGOUT,                     (req, res)-> MaintenanceService.benchMarkEndpoint(new ResReqSparkWrapper(req, res, true), LOGOUT, this::logout));
+        Spark.get(FOLLOW,                     (req, res)-> MaintenanceService.benchMarkEndpoint(new ResReqSparkWrapper(req, res, true), FOLLOW, this::followUser));
+        Spark.get(UNFOLLOW,                   (req, res)-> MaintenanceService.benchMarkEndpoint(new ResReqSparkWrapper(req, res, true), UNFOLLOW, this::unfollowUser));
+        Spark.get(USER_TIMELINE,              (req, res)-> MaintenanceService.benchMarkEndpoint(new ResReqSparkWrapper(req, res, true), USER_TIMELINE, this::userTimeline));
     }
 
-    private static Object getLatest(Request request, Response response) {
+    private Object getLatest(Request request, Response response) {
         response.type(JSON.APPLICATION_JSON);
         return Responses.respondLatest();
     }
 
-    private static Object messages(Request request, Response response) {
+    private Object messages(Request request, Response response) {
         var dto = new DTO();
         dto.latest = request.queryParams(LATEST);
         dto.authorization = request.headers(AUTHORIZATION);
 
-        return MessageService.getMessages(dto);
+        return messageService.getMessages(dto);
     }
 
-    private static Object messagesPerUser(Request request, Response response) {
+    private Object messagesPerUser(Request request, Response response) {
         var dto = MessagesPerUserDTO.fromRequest(request);
-        return MessageService.messagesPerUser(dto);
+        return messageService.messagesPerUser(dto);
     }
 
-    private static Object getFollow(Request request, Response response) {
+    private Object getFollow(Request request, Response response) {
         var dto = MessagesPerUserDTO.fromRequest(request);
-        return UserService.getFollow(dto);
+        return userService.getFollow(dto);
     }
 
-    private static Object timeline(Request request, Response response) {
+    private Object timeline(Request request, Response response) {
         var dto = new TimelineDTO();
         dto.latest = request.queryParams(LATEST);
         dto.userId = getSessionUserId();
@@ -108,61 +128,59 @@ public class Endpoints {
             return publicTimeline(request, response);
         }
 
-        return TimelineService.timeline(dto);
+        return timelineService.timeline(dto);
     }
 
-    private static Object metrics(Request request, Response response) {
+    private Object metrics(Request request, Response response) {
         response.type(TextFormat.CONTENT_TYPE_004);
         return MetricsService.metrics();
     }
 
-    private static Object publicTimeline(Request request, Response response) {
+    private Object publicTimeline(Request request, Response response) {
         var dto = new PublicTimelineDTO();
         dto.latest = request.queryParams(LATEST);
         dto.loggedInUser = getSessionUserId();
         dto.flash = getSessionFlash(request);
 
-        return TimelineService.publicTimeline(dto);
+        return timelineService.publicTimeline(dto);
     }
 
-    private static Object loginGet(Request request, Response response) {
+    private Object loginGet(Request request, Response response) {
         HashMap<String, Object> context = new HashMap<>();
         context.put(FLASH, getSessionFlash(request));
         return Presentation.renderTemplate(LOGIN_HTML, context);
     }
 
-    private static Object logout(Request request, Response response) {
+    private Object logout(Request request, Response response) {
         request.session().removeAttribute(USER_ID);
         request.session().attribute(FLASH, "You were logged out");
         response.redirect(PUBLIC_TIMELINE);
         return "";
     }
 
-    private static Object followUser(Request request, Response response) {
+    private Object followUser(Request request, Response response) {
         var dto = FollowOrUnfollowDTO.fromRequest(request);
-        UserService.followOrUnfollow(dto, FollowerRepository::followUser, "You are now following ");
+        userService.followOrUnfollow(dto, followerRepository::followUser, "You are now following ");
         return "";
     }
 
-    private static Object unfollowUser(Request request, Response response) {
+    private Object unfollowUser(Request request, Response response) {
         var dto = FollowOrUnfollowDTO.fromRequest(request);
-        UserService.followOrUnfollow(dto, FollowerRepository::unfollowUser, "You are no longer following ");
+        userService.followOrUnfollow(dto, followerRepository::unfollowUser, "You are no longer following ");
         return "";
     }
 
-
-
-    private static Object userTimeline(Request request, Response response) {
+    private Object userTimeline(Request request, Response response) {
         var dto = new MessagesPerUserDTO();
         dto.latest = request.queryParams(LATEST);
         dto.username = request.params().get(USR_NAME);
         dto.userId = getSessionUserId();
         dto.flash = getSessionFlash(request);
 
-        return TimelineService.userTimeline(dto);
+        return timelineService.userTimeline(dto);
     }
 
-    private static Object addMessage(Request request, Response response) {
+    private Object addMessage(Request request, Response response) {
         var params = getFromBody(request, USERNAME, CONTENT);
 
         var dto = new AddMessageDTO();
@@ -172,21 +190,21 @@ public class Endpoints {
         dto.content = params.get(CONTENT);
         dto.userId = getSessionUserId();
 
-        MessageService.addMessage(dto);
+        messageService.addMessage(dto);
         return "";
     }
 
-    private static Object postFollow(Request request, Response response) {
+    private Object postFollow(Request request, Response response) {
         var dto = new PostFollowDTO();
         dto.username = getParam(USR_NAME, request).get();
         dto.follow = getParam("follow", request);
         dto.unfollow = getParam("unfollow", request);
         dto.authorization = request.headers(AUTHORIZATION);
 
-        return UserService.postFollow(dto);
+        return userService.postFollow(dto);
     }
 
-    private static Object login(Request request, Response response) {
+    private Object login(Request request, Response response) {
         var dto = new LoginDTO();
         dto.latest = request.queryParams(LATEST);
         dto.userId = getSessionUserId();
@@ -196,10 +214,10 @@ public class Endpoints {
         dto.username = params.get(USERNAME);
         dto.password = params.get(PASSWORD);
 
-        return UserService.login(dto);
+        return userService.login(dto);
     }
 
-    private static Object register(Request request, Response response) {
+    private Object register(Request request, Response response) {
         var dto = new RegisterDTO();
         dto.latest = request.queryParams(LATEST);
         dto.authorization = request.headers(AUTHORIZATION);
@@ -212,21 +230,21 @@ public class Endpoints {
         dto.password2 = params.get("password2");
         dto.pwd = params.get("pwd");
 
-        return UserService.register(dto);
+        return userService.register(dto);
     }
 
-    private static void registerHooks() {
+    private void registerHooks() {
         Spark.before((request, response) -> {
             Session.setSession(request, response);
 
-            MaintenanceService.processRequest();
+            maintenanceService.processRequest();
             LogService.logRequest(request, Endpoints.class);
 
             if (request.requestMethod().equals("GET")) return;
 
             Integer userId = Requests.getSessionUserId();
             if (userId != null) {
-                var user = UserRepository.getUserById(userId);
+                var user = userRepository.getUserById(userId);
                 if (user.isSuccess()) {
                     request.session().attribute(MessageService.USER_ID, user.get().id);
                 }

@@ -1,26 +1,31 @@
 package repository;
 
-import services.MessageService;
+import services.IMessageService;
 import model.Message;
 import model.Tweet;
 import errorhandling.Failure;
 import errorhandling.Result;
 import errorhandling.Success;
+import utilities.Formatting;
 
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
-public class MessageRepository {
+public class MessageRepository implements IMessageRepository {
 
-    private MessageRepository() {}
+    private final IUserRepository userRepository;
+
+    public MessageRepository(IUserRepository _userRepository) {
+        userRepository = _userRepository;
+    }
 
     static final int PER_PAGE = 30;
 
     /*
     Registers a new message for the user.
     */
-    public static Result<Boolean> addMessage(String text, int loggedInUserId) {
+    public Result<Boolean> addMessage(String text, int loggedInUserId) {
         if (!text.equals("")) {
             try{
                 long timestamp = new Date().getTime();
@@ -38,19 +43,19 @@ public class MessageRepository {
     /*
 Displays the latest messages of all users.
 */
-    public static Result<List<Tweet>> publicTimeline() {
+    public Result<List<Tweet>> publicTimeline() {
         return getTweetsFromMessageUser("");
     }
 
-    public static Result<List<Tweet>> getTweetsByUsername(String username) {
-        var userId = UserRepository.getUserId(username);
+    public Result<List<Tweet>> getTweetsByUsername(String username) {
+        var userId = userRepository.getUserId(username);
         if (!userId.isSuccess()) {
             return new Failure<>(userId.getFailureMessage());
         }
         return getTweetsFromMessageUser("and u.id = ? ", userId.get());
     }
 
-    public static Result<List<Tweet>> getPersonalTweetsById(int userId) {
+    public Result<List<Tweet>> getPersonalTweetsById(int userId) {
         try{
             var db = DB.connectDb().get();
             String query =
@@ -68,13 +73,19 @@ Displays the latest messages of all users.
                             ") joined " +
                             "order by joined.pubDate desc limit " + PER_PAGE;
             var result = db.sql( query, userId, userId).results(HashMap.class);
-            return new Success<>(MessageService.tweetsFromListOfHashMap(result));
+            return new Success<>(Formatting.tweetsFromListOfHashMap(result));
         } catch (Exception e) {
             return new Failure<>(e);
         }
     }
 
-    private static Result<List<Tweet>> getTweetsFromMessageUser(String condition, Object... args){
+    public Result<Long> countMessages() {
+        var db = DB.connectDb().get();
+        var result = db.sql("select count(*) from message").first(Long.class);
+        return new Success<>(result);
+    }
+
+    private Result<List<Tweet>> getTweetsFromMessageUser(String condition, Object... args){
         try{
             var db = DB.connectDb().get();
             String query =
@@ -84,15 +95,9 @@ Displays the latest messages of all users.
                             condition + " " +
                             "order by m.pubDate desc limit " + PER_PAGE;
             var result = db.sql( query, args).results(HashMap.class);
-            return new Success<>(MessageService.tweetsFromListOfHashMap(result));
+            return new Success<>(Formatting.tweetsFromListOfHashMap(result));
         } catch (Exception e) {
             return new Failure<>(e);
         }
-    }
-
-    public static Result<Long> countMessages() {
-        var db = DB.connectDb().get();
-        var result = db.sql("select count(*) from message").first(Long.class);
-        return new Success<>(result);
     }
 }

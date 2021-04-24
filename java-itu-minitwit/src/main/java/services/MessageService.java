@@ -2,28 +2,27 @@ package services;
 
 import model.dto.AddMessageDTO;
 import model.dto.DTO;
-import model.Tweet;
 import model.dto.MessagesPerUserDTO;
-import repository.MessageRepository;
-import repository.UserRepository;
-import utilities.Formatting;
-import utilities.Hashing;
+import repository.IMessageRepository;
+import repository.IUserRepository;
 import utilities.JSON;
 import org.eclipse.jetty.http.HttpStatus;
 import utilities.Responses;
 import view.Presentation;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-
 import static services.MetricsService.updateLatest;
 import static utilities.Requests.*;
 import static spark.Spark.halt;
 
-public class MessageService {
+public class MessageService implements IMessageService {
 
-    private MessageService() {}
+    private final IMessageRepository messageRepository;
+    private final IUserRepository userRepository;
+
+    public MessageService(IMessageRepository _messageRepository, IUserRepository _userRepository) {
+        messageRepository = _messageRepository;
+        userRepository = _userRepository;
+    }
 
     // templates
     public static final String TIMELINE_HTML = "timeline.html";
@@ -43,39 +42,39 @@ public class MessageService {
     public static final String TITLE    = "title";
     public static final String CONTENT  = "content";
 
-    public static Object getMessages(DTO dto) {
+    public Object getMessages(DTO dto) {
         updateLatest(dto.latest);
 
         if (!isFromSimulator(dto.authorization)) {
             return Responses.notFromSimulatorResponse();
         }
 
-        var tweets = MessageRepository.publicTimeline().get();
+        var tweets = messageRepository.publicTimeline().get();
         return JSON.tweetsToJSONResponse(tweets);
     }
 
-    public static Object messagesPerUser(MessagesPerUserDTO dto) {
+    public Object messagesPerUser(MessagesPerUserDTO dto) {
         updateLatest(dto.latest);
 
         if (!isFromSimulator(dto.authorization)) {
             return Responses.notFromSimulatorResponse();
         }
 
-        var userIdResult = UserRepository.getUserId(dto.username);
+        var userIdResult = userRepository.getUserId(dto.username);
 
         if (!userIdResult.isSuccess()) {
             Responses.setStatus(HttpStatus.NOT_FOUND_404);
             Responses.setType(JSON.APPLICATION_JSON);
             return Responses.respond404();
         } else {
-            var tweets = MessageRepository.getTweetsByUsername(dto.username).get();
+            var tweets = messageRepository.getTweetsByUsername(dto.username).get();
             return JSON.tweetsToJSONResponse(tweets);
         }
     }
     /*
     Registers a new message for the user.
      */
-    public static void addMessage(AddMessageDTO dto) {
+    public void addMessage(AddMessageDTO dto) {
         updateLatest(dto.latest);
 
         if(dto.username == null){
@@ -84,7 +83,7 @@ public class MessageService {
             }
         }
         else {
-            var userIdRes = UserRepository.getUserId(dto.username);
+            var userIdRes = userRepository.getUserId(dto.username);
 
             if (!userIdRes.isSuccess()) {
                 Responses.setStatus(HttpStatus.NO_CONTENT_204);
@@ -94,7 +93,7 @@ public class MessageService {
             dto.userId = userIdRes.get();
         }
 
-        var rs = MessageRepository.addMessage(dto.content, dto.userId);
+        var rs = messageRepository.addMessage(dto.content, dto.userId);
         if (rs.isSuccess()){
             if (isFromSimulator(dto.authorization)) {
                 Responses.setStatus(HttpStatus.NO_CONTENT_204);
@@ -110,18 +109,5 @@ public class MessageService {
             }
         }
 
-    }
-
-    public static List<Tweet> tweetsFromListOfHashMap(List<HashMap> result){
-        List<Tweet> tweets = new ArrayList<>();
-        for (HashMap hm: result) {
-            String email        = (String) hm.get(EMAIL);
-            String username     = (String) hm.get(USERNAME);
-            String text         = (String) hm.get("text");
-            String pubDate      = Formatting.formatDatetime((long) hm.get("pubDate") + "").get();
-            String profilePic   = Hashing.getGravatarUrl(email);
-            tweets.add(new Tweet(email, username, text, pubDate, profilePic));
-        }
-        return tweets;
     }
 }

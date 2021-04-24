@@ -2,8 +2,8 @@ package services;
 
 import model.dto.*;
 import model.User;
-import repository.FollowerRepository;
-import repository.UserRepository;
+import repository.IFollowerRepository;
+import repository.IUserRepository;
 import errorhandling.Failure;
 import errorhandling.Result;
 import errorhandling.Success;
@@ -24,14 +24,20 @@ import static utilities.Requests.*;
 import static spark.Spark.halt;
 import static utilities.Responses.*;
 
-public class UserService {
+public class UserService implements IUserService {
 
 
     public static int latest = 147371;
 
-    private UserService() {}
+    private final IFollowerRepository followerRepository;
+    private final IUserRepository userRepository;
 
-    public static Result<String> validateUserCredentials(String username, String email, String password1, String password2) {
+    public UserService(IFollowerRepository _followerRepository, IUserRepository _userRepository) {
+        followerRepository = _followerRepository;
+        userRepository = _userRepository;
+    }
+
+    public Result<String> validateUserCredentials(String username, String email, String password1, String password2) {
         String error;
         if (username == null || username.equals("")) {
             error = "You have to enter a username";
@@ -41,7 +47,7 @@ public class UserService {
             error = "You have to enter a password";
         } else if (!password1.equals(password2)) {
             error = "The two passwords do not match";
-        } else if (UserRepository.getUserId(username).isSuccess()) {
+        } else if (userRepository.getUserId(username).isSuccess()) {
             error = "The username is already taken";
         } else {
             return new Success<>("OK");
@@ -50,7 +56,7 @@ public class UserService {
         return new Failure<>(error);
     }
 
-    public static Object login(LoginDTO dto) {
+    public Object login(LoginDTO dto) {
         updateLatest(dto.latest);
 
         if (isUserLoggedIn(dto.userId)) {
@@ -58,10 +64,10 @@ public class UserService {
             return "";
         }
 
-        var loginResult = UserRepository.queryLogin(dto.username, dto.password);
+        var loginResult = userRepository.queryLogin(dto.username, dto.password);
 
         if (loginResult.isSuccess()) {
-            Requests.putAttribute(USER_ID, UserRepository.getUserId(dto.username).get());
+            Requests.putAttribute(USER_ID, userRepository.getUserId(dto.username).get());
             Requests.putAttribute(FLASH, "You were logged in");
             Presentation.redirect("/");
             return "";
@@ -73,7 +79,7 @@ public class UserService {
         }
     }
 
-    public static void followOrUnfollow(FollowOrUnfollowDTO dto, BiFunction<Integer, String, Result<String>> query, String flashMessage){
+    public void followOrUnfollow(FollowOrUnfollowDTO dto, BiFunction<Integer, String, Result<String>> query, String flashMessage){
         updateLatest(dto.latest);
 
         if (!isUserLoggedIn(dto.userId)) {
@@ -90,8 +96,8 @@ public class UserService {
         Presentation.redirect("/" + dto.profileUsername);
     }
 
-    private static Object followOrUnfollow (String user, BiFunction<Integer, String, Result<String>> query, Result<Integer> userIdResult){
-        if (!UserRepository.getUserId(user).isSuccess()) {
+    private Object followOrUnfollow (String user, BiFunction<Integer, String, Result<String>> query, Result<Integer> userIdResult){
+        if (!userRepository.getUserId(user).isSuccess()) {
             return return404();
         }
         var result = query.apply(userIdResult.get(), user);
@@ -100,43 +106,43 @@ public class UserService {
         return "";
     }
 
-    public static Object getFollow(MessagesPerUserDTO dto) {
+    public Object getFollow(MessagesPerUserDTO dto) {
         updateLatest(dto.latest);
 
         if (!isFromSimulator(dto.authorization)) {
             return notFromSimulatorResponse();
         }
 
-        var userIdResult = UserRepository.getUserId(dto.username);
+        var userIdResult = userRepository.getUserId(dto.username);
 
         if (!userIdResult.isSuccess()) {
             Responses.setStatus(HttpStatus.NOT_FOUND_404);
             Responses.setType(JSON.APPLICATION_JSON);
             return Responses.respond404();
         }
-        List<User> following = FollowerRepository.getFollowing(userIdResult.get()).get();
+        List<User> following = followerRepository.getFollowing(userIdResult.get()).get();
 
         Responses.setStatus(HttpStatus.OK_200);
         Responses.setType(JSON.APPLICATION_JSON);
         return Responses.respondFollow(new JSONArray(following.stream().map(User::getUsername)));
     }
 
-    public static Object postFollow(PostFollowDTO dto) {
+    public Object postFollow(PostFollowDTO dto) {
         updateLatest(dto.latest);
 
         if (!isFromSimulator(dto.authorization)) {
             return notFromSimulatorResponse();
         }
 
-        var userIdResult = UserRepository.getUserId(dto.username);
+        var userIdResult = userRepository.getUserId(dto.username);
 
 
         if (!userIdResult.isSuccess()) return404();
 
         if (dto.follow.isSuccess()) {
-            return followOrUnfollow(dto.follow.get(), FollowerRepository::followUser, userIdResult);
+            return followOrUnfollow(dto.follow.get(), followerRepository::followUser, userIdResult);
         } else if (dto.unfollow.isSuccess()) {
-            return followOrUnfollow(dto.unfollow.get(), FollowerRepository::unfollowUser, userIdResult);
+            return followOrUnfollow(dto.unfollow.get(), followerRepository::unfollowUser, userIdResult);
         } else {
             Responses.setStatus(HttpStatus.BAD_REQUEST_400);
             return "";
@@ -144,7 +150,7 @@ public class UserService {
 
     }
 
-    public static Object register(RegisterDTO dto) {
+    public Object register(RegisterDTO dto) {
         updateLatest(dto.latest);
 
         boolean isFromSimulator = isFromSimulator(dto.authorization);
@@ -174,7 +180,7 @@ public class UserService {
             }
         }
 
-        UserRepository.addUser(dto.username, dto.email, dto.password1);
+        userRepository.addUser(dto.username, dto.email, dto.password1);
 
         if (isFromSimulator) {
             Responses.setStatus(HttpStatus.NO_CONTENT_204);
