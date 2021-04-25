@@ -14,21 +14,21 @@ public class LogService {
     public static void logError(Exception e, Class theClass) {
         String className = theClass.getSimpleName();
         Logger logger    = Logger.getLogger(theClass.getSimpleName());
-        String msg       = className + " : Exception ::" + e.getMessage();
-        logger.log(Level.WARNING, msg);
+        StringBuilder msg= new StringBuilder(className).append(" : Exception ::").append(e.getMessage());
+        log(logger, Level.WARNING, msg);
     }
 
     public static void logErrorWithMessage(Exception e, String message, Class theClass) {
         String className = theClass.getSimpleName();
         Logger logger    = Logger.getLogger(className);
-        String msg       = className + message + "  :  " + e.getMessage();
-        logger.log(Level.WARNING, msg);
+        StringBuilder msg= new StringBuilder(className).append(message).append("  :  ").append(e.getMessage());
+        log(logger, Level.WARNING, msg);
     }
     public static void log(Class theClass, String message) {
         String className = theClass.getSimpleName();
         Logger logger    = Logger.getLogger(className);
-        String msg       = className + "  :  " + message;
-        logger.log(Level.INFO, msg);
+        StringBuilder msg = new StringBuilder(className).append("  :  ").append(message);
+        log(logger, Level.INFO, msg);
     }
 
     public static void logRequest(Request request, Class theClass) {
@@ -47,6 +47,10 @@ public class LogService {
         var message = new StringBuilder(theClass.getSimpleName()).append(" : Message :: ").append(request.requestMethod()).append(" ").append(request.url());
         if (!body.equals("")) message.append(" body: ").append(body);
         if (!headers.equals("")) message.append(" headers: ").append(headers);
-        logger.log(Level.INFO, message.toString());
+        log(logger, Level.INFO, message);
+    }
+    private static void log(Logger logger, Level level, StringBuilder sb) {
+        String msg = new StringBuilder("_code_minitwit: ").append(sb.toString()).toString();
+        logger.log(level, msg);
     }
 }
