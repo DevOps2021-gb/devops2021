@@ -5,17 +5,22 @@ import errorhandling.Failure;
 import errorhandling.Result;
 import errorhandling.Success;
 import utilities.Hashing;
+import utilities.IHashing;
 
 public class UserRepository implements IUserRepository {
 
-    public UserRepository() {}
+    private final IHashing hashing;
+
+    public UserRepository(IHashing _hashing) {
+        hashing = _hashing;
+    }
 
     public Result<Boolean> queryLogin(String username, String password) {
         String error;
         var user = getUser(username);
         if (!user.isSuccess()) {
             error = "Invalid username";
-        } else if (!Hashing.checkPasswordHash(user.get().getPwHash(), password).get()) {
+        } else if (!hashing.checkPasswordHash(user.get().getPwHash(), password).get()) {
             error = "Invalid password";
         } else {
             return new Success<>(true);
@@ -27,7 +32,7 @@ public class UserRepository implements IUserRepository {
     public Result<String> addUser(String username, String email, String password1) {
         try {
             var db = DB.connectDb().get();
-            db.insert(new User(username, email, Hashing.hash(password1).get()));
+            db.insert(new User(username, email, hashing.hash(password1).get()));
             return new Success<>("OK");
         } catch (Exception e) {
             return new Failure<>(e);

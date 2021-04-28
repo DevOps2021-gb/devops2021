@@ -32,11 +32,13 @@ public class MaintenanceService implements IMaintenanceService{
     private final IUserRepository userRepository;
     private final IMessageRepository messageRepository;
     private final IFollowerRepository followerRepository;
+    private final ILogService logService;
 
-    public MaintenanceService(IUserRepository _userRepository, IMessageRepository _messageRepository, IFollowerRepository _followerRepository) {
+    public MaintenanceService(IUserRepository _userRepository, IMessageRepository _messageRepository, IFollowerRepository _followerRepository, ILogService _logService) {
         userRepository = _userRepository;
         messageRepository = _messageRepository;
         followerRepository = _followerRepository;
+        logService = _logService;
     }
 
     private static void setEndpoints(String[] endpoints, Boolean isGet, String helpPrefix) {
@@ -94,29 +96,29 @@ public class MaintenanceService implements IMaintenanceService{
         responseTimeEndPoints.get(endpoint).set(rt);
     }
 
-    public static double getUsers() {
+    public double getUsers() {
         return users.get();
     }
-    public static double getMessages() {
+    public double getMessages() {
         return messages.get();
     }
-    public static double getFollowers() {
+    public double getFollowers() {
         return followers.get();
     }
 
-    public static Object benchMarkEndpoint(ResReqSparkWrapper rrw, String endPointName, BiFunction<Request, Response, Object> endpoint) {
+    public Object benchMarkEndpoint(ResReqSparkWrapper rrw, String endPointName, BiFunction<Request, Response, Object> endpoint) {
         var startTime = System.currentTimeMillis();
         Object result = null;
         try {
             result = endpoint.apply(rrw.req, rrw.res);
         } catch (Exception e) {
-            LogService.logErrorWithMessage(e, "Endpoint error " + endPointName, Endpoints.class);
+            logService.logErrorWithMessage(e, "Endpoint error " + endPointName, Endpoints.class);
         }
         var endTime   = System.currentTimeMillis();
         try {
             MaintenanceService.logResponseTimeEndpoint(endPointToString(endPointName, rrw.isGet), endTime - startTime);
         } catch (Exception e) {
-            LogService.logErrorWithMessage(e, "Endpoint logging error " + endPointName, MaintenanceService.class);
+            logService.logErrorWithMessage(e, "Endpoint logging error " + endPointName, MaintenanceService.class);
         }
         return result;
     }

@@ -1,20 +1,19 @@
 package model.dto;
 
 import spark.Request;
+import utilities.IRequests;
 
 import static services.MessageService.USERNAME;
-import static utilities.Requests.getFromBody;
-import static utilities.Requests.getSessionUserId;
 
 public class FollowOrUnfollowDTO extends UserDTO{
     public String profileUsername;
 
-    public static FollowOrUnfollowDTO fromRequest(Request request) {
+    public static FollowOrUnfollowDTO fromRequest(Request request, IRequests requests) {
         var dto = new FollowOrUnfollowDTO();
         dto.latest = request.queryParams("latest");
-        dto.userId = getSessionUserId();
+        dto.userId = requests.getSessionUserId();
 
-        var params = getFromBody(request, USERNAME);
+        var params = requests.getFromBody(request, USERNAME).get();
         dto.profileUsername = params.get(USERNAME) != null ? params.get(USERNAME) : params.get(":username");
 
         return dto;

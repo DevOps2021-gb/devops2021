@@ -1,12 +1,12 @@
 package repository;
 
-import services.IMessageService;
 import model.Message;
 import model.Tweet;
 import errorhandling.Failure;
 import errorhandling.Result;
 import errorhandling.Success;
 import utilities.Formatting;
+import utilities.IFormatting;
 
 import java.util.Date;
 import java.util.HashMap;
@@ -15,9 +15,11 @@ import java.util.List;
 public class MessageRepository implements IMessageRepository {
 
     private final IUserRepository userRepository;
+    private final IFormatting formatting;
 
-    public MessageRepository(IUserRepository _userRepository) {
+    public MessageRepository(IUserRepository _userRepository, IFormatting _formatting) {
         userRepository = _userRepository;
+        formatting = _formatting;
     }
 
     static final int PER_PAGE = 30;
@@ -73,7 +75,7 @@ Displays the latest messages of all users.
                             ") joined " +
                             "order by joined.pubDate desc limit " + PER_PAGE;
             var result = db.sql( query, userId, userId).results(HashMap.class);
-            return new Success<>(Formatting.tweetsFromListOfHashMap(result));
+            return new Success<>(formatting.tweetsFromListOfHashMap(result));
         } catch (Exception e) {
             return new Failure<>(e);
         }
@@ -95,7 +97,7 @@ Displays the latest messages of all users.
                             condition + " " +
                             "order by m.pubDate desc limit " + PER_PAGE;
             var result = db.sql( query, args).results(HashMap.class);
-            return new Success<>(Formatting.tweetsFromListOfHashMap(result));
+            return new Success<>(formatting.tweetsFromListOfHashMap(result));
         } catch (Exception e) {
             return new Failure<>(e);
         }

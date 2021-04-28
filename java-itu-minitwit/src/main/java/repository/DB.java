@@ -7,6 +7,7 @@ import errorhandling.Failure;
 import errorhandling.Result;
 import errorhandling.Success;
 import com.dieselpoint.norm.Database;
+import services.ILogService;
 import services.LogService;
 
 public class DB {
@@ -18,7 +19,8 @@ public class DB {
     private static String pw               = "root";
     private static String connectionString = null;
 
-    private DB() {}
+    private DB() {
+    }
 
     public static Result<Database> connectDb() {
         if (instance == null) {
@@ -122,9 +124,7 @@ public class DB {
         try {
             db.sql("CREATE INDEX "+indexName+" ON "+table+" ("+attributes+");").execute();
         } catch (Exception e) {
-            if (!e.getMessage().equals("Duplicate key name '"+indexName+"'")) {
-                LogService.logError(e, DB.class);
-            }
+            //Dont care about duplicat index error
         }
     }
 

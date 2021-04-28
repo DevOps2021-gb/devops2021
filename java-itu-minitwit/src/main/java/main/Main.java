@@ -10,6 +10,8 @@ import repository.MessageRepository;
 import repository.UserRepository;
 import services.*;
 import repository.DB;
+import utilities.*;
+import view.PresentationController;
 
 import static spark.Spark.staticFiles;
 import static spark.Spark.threadPool;
@@ -36,7 +38,8 @@ public class Main {
 
             container.getComponent(MaintenanceService.class).startSchedules();
         } catch (Exception e) {
-            LogService.logError(e, Main.class);
+            var logger = container.getComponent(LogService.class);
+            logger.logError(e, Main.class);
         }
     }
 
@@ -45,7 +48,8 @@ public class Main {
             int maxThreads = 8;
             threadPool(maxThreads);
         } catch (IllegalStateException e) {
-            LogService.logError(e, Main.class);
+            var logger = container.getComponent(LogService.class);
+            logger.logError(e, Main.class);
         }
     }
 
@@ -58,11 +62,23 @@ public class Main {
         container.addComponent(MessageService.class);
         container.addComponent(TimelineService.class);
         container.addComponent(UserService.class);
+        container.addComponent(MetricsService.class);
 
         //Repositories
         container.addComponent(FollowerRepository.class);
         container.addComponent(MessageRepository.class);
         container.addComponent(UserRepository.class);
+
+        //Utilities
+        container.addComponent(Responses.class);
+        container.addComponent(Requests.class);
+        container.addComponent(JSONFormatter.class);
+        container.addComponent(LogService.class);
+        container.addComponent(Hashing.class);
+        container.addComponent(Formatting.class);
+
+        //View
+        container.addComponent(PresentationController.class);
 
         //Other
         container.addComponent(DBBenchmarkableFunctions.class);

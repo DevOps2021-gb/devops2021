@@ -4,18 +4,29 @@ import errorhandling.Success;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import repository.FollowerRepository;
+import repository.IFollowerRepository;
 import repository.IUserRepository;
 import repository.UserRepository;
+import utilities.IRequests;
+import utilities.IResponses;
+import utilities.Requests;
+import utilities.Responses;
+import view.IPresentationController;
+import view.PresentationController;
 
 import static org.mockito.Mockito.*;
-
 
 class UserServiceTests {
 
     IUserRepository userRepository = mock(UserRepository.class);
+    IFollowerRepository followerRepository = mock(FollowerRepository.class);
+    IPresentationController presentationController = mock(PresentationController.class);
+    IResponses responses = mock(Responses.class);
+    IRequests requests = mock(Requests.class);
+    IMetricsService metricsService = mock(MetricsService.class);
 
     private IUserService GetService() {
-        return new UserService(mock(FollowerRepository.class), userRepository);
+        return new UserService(followerRepository, userRepository, presentationController, responses, requests, metricsService);
     }
 
     @Test

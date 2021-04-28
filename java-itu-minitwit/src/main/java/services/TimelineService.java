@@ -7,40 +7,51 @@ import model.dto.MessagesPerUserDTO;
 import model.dto.PublicTimelineDTO;
 import model.dto.TimelineDTO;
 import repository.*;
-import view.Presentation;
+import utilities.IRequests;
+import view.IPresentationController;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
 import static services.MessageService.*;
-import static services.MetricsService.updateLatest;
-import static utilities.Requests.*;
 
 public class TimelineService implements ITimelineService{
 
     private final IFollowerRepository followerRepository;
     private final IMessageRepository messageRepository;
     private final IUserRepository userRepository;
+    private final IPresentationController presentationController;
+    private final IRequests requests;
+    private final IMetricsService metricsService;
 
-    public TimelineService(IFollowerRepository _followerRepository, IMessageRepository _messageRepository, UserRepository _userRepository) {
+    public TimelineService(
+            IFollowerRepository _followerRepository,
+            IMessageRepository _messageRepository,
+            IUserRepository _userRepository,
+            IPresentationController _presentationController,
+            IRequests _requests,
+            IMetricsService _metricsService) {
         followerRepository = _followerRepository;
         messageRepository = _messageRepository;
         userRepository = _userRepository;
+        presentationController = _presentationController;
+        requests = _requests;
+        metricsService = _metricsService;
     }
-
 
     /*
     Displays the latest messages of all users.
     */
     public Object publicTimeline(PublicTimelineDTO dto) {
-        updateLatest(dto.latest);
+        metricsService.updateLatest(dto.latest);
 
         HashMap<String, Object> context = new HashMap<>();
         var rsTweets = messageRepository.publicTimeline();
         addListOfTweetsToContext(context, MESSAGES, rsTweets);
         context.put(ENDPOINT, "publicTimeline");
         context.put(TITLE, "Public Timeline");
+
         if(dto.loggedInUser != null) {
             var user = userRepository.getUserById(dto.loggedInUser);
             context.put(USERNAME, user.get().getUsername());
@@ -49,7 +60,7 @@ public class TimelineService implements ITimelineService{
             context.put(FLASH, dto.flash);
         }
 
-        return Presentation.renderTemplate(TIMELINE_HTML, context);
+        return presentationController.renderTemplate(TIMELINE_HTML, context);
     }
 
     /*
@@ -58,10 +69,10 @@ public class TimelineService implements ITimelineService{
     messages as well as all the messages of followed users.
      */
     public Object timeline(TimelineDTO dto) {
-        updateLatest(dto.latest);
+        metricsService.updateLatest(dto.latest);
 
         if (dto.userId == null) {
-            Presentation.redirect("/public");
+            presentationController.redirect("/public");
             return "";
         }
         HashMap<String, Object> context = new HashMap<>();
@@ -75,14 +86,14 @@ public class TimelineService implements ITimelineService{
         addListOfTweetsToContext(context, MESSAGES, rsTweets);
         context.put(TITLE, "My Timeline");
         context.put(FLASH, dto.flash);
-        return Presentation.renderTemplate(TIMELINE_HTML, context);
+        return presentationController.renderTemplate(TIMELINE_HTML, context);
     }
 
     /*
 Display's a users tweets.
 */
     public Object userTimeline(MessagesPerUserDTO dto) {
-        updateLatest(dto.latest);
+        metricsService.updateLatest(dto.latest);
 
         if (dto.username.equals("favicon.ico")) return "";
 
@@ -94,7 +105,7 @@ Display's a users tweets.
 
         var rsTweets = messageRepository.getTweetsByUsername(dto.username);
         addListOfTweetsToContext(context, MESSAGES, rsTweets);
-        if (isUserLoggedIn(dto.userId)) {
+        if (requests.isUserLoggedIn(dto.userId)) {
             var loggedInUser = userRepository.getUserById(dto.userId);
             context.put(USERNAME, loggedInUser.get().getUsername());
             context.put(USER, loggedInUser.get().id);
@@ -107,8 +118,9 @@ Display's a users tweets.
         } else {
             context.put(USERNAME, dto.username);
         }
-        return Presentation.renderTemplate(TIMELINE_HTML, context);
+        return presentationController.renderTemplate(TIMELINE_HTML, context);
     }
+
     private void addUserToContext(HashMap<String, Object> context, Result<User> profileUser) {
         if(profileUser.isSuccess()){
             context.put(TITLE, profileUser.get().getUsername() + "'s Timeline");

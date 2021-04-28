@@ -2,9 +2,9 @@ package benchmarking;
 // Simple microbenchmark setups
 // sestoft@itu.dk * 2013-06-02, 2015-09-15
 
-import controllers.Endpoints;
 import main.Main;
 import repository.DB;
+import services.ILogService;
 import services.LogService;
 
 import java.util.function.IntToDoubleFunction;
@@ -19,14 +19,20 @@ class Benchmark {
 
   private final IDBBenchmarkableFunctions functions;
   private final ICreateAndFillTestDB testDB;
+  private final ILogService logService;
 
-  public Benchmark(IDBBenchmarkableFunctions _functions, ICreateAndFillTestDB _testDB) {
+  public Benchmark(IDBBenchmarkableFunctions _functions, ICreateAndFillTestDB _testDB, ILogService _logService) {
     functions = _functions;
     testDB = _testDB;
+    logService = _logService;
   }
 
   public static void main(String[] args) {
-    Benchmark benchmark = new Benchmark(Main.container.getComponent(DBBenchmarkableFunctions.class), Main.container.getComponent(CreateAndFillTestDB.class));
+    Benchmark benchmark = new Benchmark(
+            Main.container.getComponent(DBBenchmarkableFunctions.class),
+            Main.container.getComponent(CreateAndFillTestDB.class),
+            Main.container.getComponent(LogService.class)
+            );
     benchmark.init();
   }
 
@@ -37,22 +43,22 @@ class Benchmark {
     //populateDB(usernames);
     var db = DB.connectDb().get();
     DB.addIndexes(db);
-    LogService.log(Benchmark.class, "start measureing");
+    logService.log(Benchmark.class, "start measureing");
 
     runBenchmarks(usernames);
   }
 
   private void populateDB(String[] usernames) {
     DB.dropDatabase();
-    LogService.log(Benchmark.class, "start adding users");
+    logService.log(Benchmark.class, "start adding users");
     testDB.addUsers(usernames);
-    LogService.log(Benchmark.class, "end adding users");
-    LogService.log(Benchmark.class, "start adding followers");
+    logService.log(Benchmark.class, "end adding users");
+    logService.log(Benchmark.class, "start adding followers");
     testDB.addFollowers(FOLLOWERS_TO_ADD, usernames);
-    LogService.log(Benchmark.class, "end adding followers");
-    LogService.log(Benchmark.class, "start adding messages");
+    logService.log(Benchmark.class, "end adding followers");
+    logService.log(Benchmark.class, "start adding messages");
     testDB.addMessages(MESSAGES_TO_ADD, USERS_TO_ADD);
-    LogService.log(Benchmark.class, "end adding messages");
+    logService.log(Benchmark.class, "end adding messages");
   }
   public void runBenchmarks(String[] usernames){
     functions.runCountUsers();
@@ -71,20 +77,20 @@ class Benchmark {
   // ========== Infrastructure code ==========
 
   public void systemInfo() {
-    LogService.log(Benchmark.class, new StringBuilder("# OS:   ")
+    logService.log(Benchmark.class, new StringBuilder("# OS:   ")
             .append(System.getProperty("os.name")).append("; ")
             .append(System.getProperty("os.version")).append("; ")
             .append(System.getProperty("os.arch")).toString());
-    LogService.log(Benchmark.class, new StringBuilder("# JVM:  %s; %s%n")
+    logService.log(Benchmark.class, new StringBuilder("# JVM:  %s; %s%n")
             .append(System.getProperty("java.vendor")).append("; ")
             .append(System.getProperty("java.version")).toString());
     // The processor identifier works only on MS Windows:
-    LogService.log(Benchmark.class, new StringBuilder("# CPU:  ")
+    logService.log(Benchmark.class, new StringBuilder("# CPU:  ")
             .append(System.getenv("PROCESSOR_IDENTIFIER")).append("; cores:")
             .append(Runtime.getRuntime().availableProcessors()).toString());
   }
   public void printMark8Headers(){
-    LogService.log(Benchmark.class, "msg, mean, sdev, count");
+    logService.log(Benchmark.class, "msg, mean, sdev, count");
   }
 
   public double mark8(String msg, IntToDoubleFunction f) {
@@ -131,7 +137,7 @@ class Benchmark {
   private void computeResult(double st, double sst, String msg, int count) {
     double mean = st/n;
     double sdev = Math.sqrt((sst - mean*mean*n)/(n-1));
-    LogService.log(Benchmark.class, msg+" "+mean+"ns "+sdev+" "+count);
+    logService.log(Benchmark.class, msg+" "+mean+"ns "+sdev+" "+count);
   }
 
 }
