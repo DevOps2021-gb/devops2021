@@ -18,6 +18,7 @@ public class Main {
             if (args.length > 0) {
                 DB.setDatabaseParameters(args[0], args[1], args[2]);
             }
+            DB.dropDatabase();
 
             //Add indexes to make sure they exits
             DB.addIndexes(DB.initDatabase());
