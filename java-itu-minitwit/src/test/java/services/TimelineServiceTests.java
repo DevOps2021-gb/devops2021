@@ -30,7 +30,7 @@ public class TimelineServiceTests {
     }
 
     @Test
-    public void publicTimelineGivenDtoWithUserLoggedInCallsUserRepository() {
+    void publicTimelineGivenDtoWithUserLoggedInCallsUserRepository() {
 
         //Arrange
         var dto = new PublicTimelineDTO();
@@ -51,7 +51,7 @@ public class TimelineServiceTests {
     }
 
     @Test
-    public void publicTimelineGivenDtoWithoutUserLoggedInDoesNotCallUserRepository() {
+    void publicTimelineGivenDtoWithoutUserLoggedInDoesNotCallUserRepository() {
         //Arrange
         var dto = new PublicTimelineDTO();
         dto.latest = "1";
@@ -68,7 +68,7 @@ public class TimelineServiceTests {
     }
 
     @Test
-    public void timelineGivenDtoWithNoUseridReturnsEmptyString() {
+    void timelineGivenDtoWithNoUseridReturnsEmptyString() {
         //Arrange
         var dto = new TimelineDTO();
         dto.latest = "1";
@@ -82,7 +82,7 @@ public class TimelineServiceTests {
     }
 
     @Test
-    public void timelineGivenDtoWithLoggedInUserShowsTweets() {
+    void timelineGivenDtoWithLoggedInUserShowsTweets() {
         //Arrange
         var dto = new TimelineDTO();
         dto.latest = "1";

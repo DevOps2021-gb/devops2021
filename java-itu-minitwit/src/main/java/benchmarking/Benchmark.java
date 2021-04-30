@@ -11,8 +11,7 @@ import java.util.function.IntToDoubleFunction;
 
 class Benchmark {
 
-  private static int n          = 10;
-  private static double minTime = 1;
+  private static final int n          = 10;
   private static final int USERS_TO_ADD     = 20_000;
   private static final int FOLLOWERS_TO_ADD = 40_000;
   private static final int MESSAGES_TO_ADD  = 40_000;
@@ -21,14 +20,14 @@ class Benchmark {
   private final ICreateAndFillTestDB testDB;
   private final ILogService logService;
 
-  public Benchmark(IDBBenchmarkableFunctions _functions, ICreateAndFillTestDB _testDB, ILogService _logService) {
-    functions = _functions;
-    testDB = _testDB;
-    logService = _logService;
+  public Benchmark(IDBBenchmarkableFunctions functions, ICreateAndFillTestDB testDB, ILogService logService) {
+    this.functions = functions;
+    this.testDB = testDB;
+    this.logService = logService;
   }
 
   public static void main(String[] args) {
-    Benchmark benchmark = new Benchmark(
+    var benchmark = new Benchmark(
             Main.container.getComponent(DBBenchmarkableFunctions.class),
             Main.container.getComponent(CreateAndFillTestDB.class),
             Main.container.getComponent(LogService.class)
@@ -77,17 +76,17 @@ class Benchmark {
   // ========== Infrastructure code ==========
 
   public void systemInfo() {
-    logService.log(Benchmark.class, new StringBuilder("# OS:   ")
-            .append(System.getProperty("os.name")).append("; ")
-            .append(System.getProperty("os.version")).append("; ")
-            .append(System.getProperty("os.arch")).toString());
-    logService.log(Benchmark.class, new StringBuilder("# JVM:  %s; %s%n")
-            .append(System.getProperty("java.vendor")).append("; ")
-            .append(System.getProperty("java.version")).toString());
+    logService.log(Benchmark.class, "# OS:   " +
+            System.getProperty("os.name") + "; " +
+            System.getProperty("os.version") + "; " +
+            System.getProperty("os.arch"));
+    logService.log(Benchmark.class, "# JVM:  %s; %s%n" +
+            System.getProperty("java.vendor") + "; " +
+            System.getProperty("java.version"));
     // The processor identifier works only on MS Windows:
-    logService.log(Benchmark.class, new StringBuilder("# CPU:  ")
-            .append(System.getenv("PROCESSOR_IDENTIFIER")).append("; cores:")
-            .append(Runtime.getRuntime().availableProcessors()).toString());
+    logService.log(Benchmark.class, "# CPU:  " +
+            System.getenv("PROCESSOR_IDENTIFIER") + "; cores:" +
+            Runtime.getRuntime().availableProcessors());
   }
   public void printMark8Headers(){
     logService.log(Benchmark.class, "msg, mean, sdev, count");
@@ -101,15 +100,16 @@ class Benchmark {
     double st;
     double sst;
     double timeSpentPausingOnce = getTimeSpentPausingOnce();
+    double minTime = 1;
     do {
       count *= 2;
       double timeSpentPausingCount = timeSpentPausingOnce*count;
       st = 0.0;
       sst = 0.0;
-      Timer totalTime = new Timer();
+      var totalTime = new Timer();
       totalTime.play();
       for (int j=0; j<n; j++) {
-        Timer t = new Timer();
+        var t = new Timer();
         for (int i=0; i<count; i++) {
           t.play();
           dummy += f.applyAsDouble(i);
@@ -128,7 +128,7 @@ class Benchmark {
   }
 
   public double getTimeSpentPausingOnce(){
-    Timer tForTimePausePlay = new Timer();
+    var tForTimePausePlay = new Timer();
     long timesPaused = 10_000_000;
     for (int paused = 0; paused < timesPaused; paused++) { tForTimePausePlay.play(); tForTimePausePlay.pause(); }
     return 0.9*tForTimePausePlay.check() / timesPaused;    //0.9 to counter garbadge collection as that part rarely takes time normally

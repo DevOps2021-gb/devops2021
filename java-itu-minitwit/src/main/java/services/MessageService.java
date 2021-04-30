@@ -25,20 +25,20 @@ public class MessageService implements IMessageService {
     private final IMetricsService metricsService;
 
     public MessageService(
-            IMessageRepository _messageRepository,
-            IUserRepository _userRepository,
-            IPresentationController _presentationController,
-            IResponses _responses,
-            IJSONFormatter _jsonFormatter,
-            IRequests _requests,
-            IMetricsService _metricsService) {
-        messageRepository = _messageRepository;
-        userRepository = _userRepository;
-        presentationController = _presentationController;
-        responses = _responses;
-        jsonFormatter = _jsonFormatter;
-        requests = _requests;
-        metricsService = _metricsService;
+            IMessageRepository messageRepository,
+            IUserRepository userRepository,
+            IPresentationController presentationController,
+            IResponses responses,
+            IJSONFormatter jsonFormatter,
+            IRequests requests,
+            IMetricsService metricsService) {
+        this.messageRepository = messageRepository;
+        this.userRepository = userRepository;
+        this.presentationController = presentationController;
+        this.responses = responses;
+        this.jsonFormatter = jsonFormatter;
+        this.requests = requests;
+        this.metricsService = metricsService;
     }
 
     // templates

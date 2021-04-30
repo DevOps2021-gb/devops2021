@@ -11,8 +11,8 @@ public class MetricsService implements IMetricsService{
 
     private final ILogService logService;
 
-    public MetricsService(ILogService _logService) {
-        logService = _logService;
+    public MetricsService(ILogService logService) {
+        this.logService = logService;
     }
 
     public Object metrics() {

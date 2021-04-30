@@ -4,7 +4,6 @@ import errorhandling.Failure;
 import com.google.common.io.Resources;
 import com.hubspot.jinjava.Jinjava;
 import services.ILogService;
-import services.LogService;
 import utilities.Session;
 
 import java.io.IOException;
@@ -16,14 +15,13 @@ public class PresentationController implements IPresentationController {
 
     private final ILogService logService;
 
-    public PresentationController(ILogService _logService) {
-        logService = _logService;
+    public PresentationController(ILogService logService) {
+        this.logService = logService;
     }
 
     public Object renderTemplate(String template, Map<String, Object> context) {
         try {
-            Jinjava jinjava = new Jinjava();
-            return jinjava.render(Resources.toString(Resources.getResource(template), StandardCharsets.UTF_8), context);
+            return new Jinjava().render(Resources.toString(Resources.getResource(template), StandardCharsets.UTF_8), context);
         } catch (IOException e) {
             logService.logError(e, PresentationController.class);
             return new Failure<>(e);

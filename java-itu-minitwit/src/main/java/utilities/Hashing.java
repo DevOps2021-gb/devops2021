@@ -4,7 +4,6 @@ import errorhandling.Failure;
 import errorhandling.Result;
 import errorhandling.Success;
 import services.ILogService;
-import services.LogService;
 
 import java.security.*;
 import java.nio.charset.StandardCharsets;
@@ -14,8 +13,8 @@ public class Hashing implements IHashing {
 
     private final ILogService logService;
 
-    public Hashing(ILogService _logService) {
-        logService = _logService;
+    public Hashing(ILogService logService) {
+        this.logService = logService;
     }
 
     /*
