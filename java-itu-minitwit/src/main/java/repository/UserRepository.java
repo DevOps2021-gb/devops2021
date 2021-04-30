@@ -5,17 +5,22 @@ import errorhandling.Failure;
 import errorhandling.Result;
 import errorhandling.Success;
 import utilities.Hashing;
+import utilities.IHashing;
 
-public class UserRepository {
+public class UserRepository implements IUserRepository {
 
-    private UserRepository() {}
+    private final IHashing hashing;
 
-    public static Result<Boolean> queryLogin(String username, String password) {
+    public UserRepository(IHashing _hashing) {
+        hashing = _hashing;
+    }
+
+    public Result<Boolean> queryLogin(String username, String password) {
         String error;
         var user = getUser(username);
         if (!user.isSuccess()) {
             error = "Invalid username";
-        } else if (!Hashing.checkPasswordHash(user.get().getPwHash(), password).get()) {
+        } else if (!hashing.checkPasswordHash(user.get().getPwHash(), password).get()) {
             error = "Invalid password";
         } else {
             return new Success<>(true);
@@ -24,17 +29,17 @@ public class UserRepository {
         return new Failure<>(error);
     }
 
-    public static Result<String> addUser(String username, String email, String password1) {
+    public Result<String> addUser(String username, String email, String password1) {
         try {
             var db = DB.connectDb().get();
-            db.insert(new User(username, email, Hashing.hash(password1).get()));
+            db.insert(new User(username, email, hashing.hash(password1).get()));
             return new Success<>("OK");
         } catch (Exception e) {
             return new Failure<>(e);
         }
     }
 
-    public static Result<User> getUserById(int userId) {
+    public Result<User> getUserById(int userId) {
         var db = DB.connectDb().get();
         var result = db.where("id=?", userId).first(User.class);
 
@@ -46,7 +51,7 @@ public class UserRepository {
     /*
     Convenience method to look up the id for a username.
     */
-    public static Result<Integer> getUserId(String username) {
+    public Result<Integer> getUserId(String username) {
         var user = getUser(username);
 
         if (!user.isSuccess()) return new Failure<>(user.toString());
@@ -54,7 +59,7 @@ public class UserRepository {
         return new Success<>(user.get().id);
     }
 
-    public static Result<User> getUser(String username) {
+    public Result<User> getUser(String username) {
         var db = DB.connectDb().get();
         var result = db.table("user").where("username=?", username).first(User.class);
 
@@ -62,7 +67,7 @@ public class UserRepository {
 
         return new Success<>(result);
     }
-    public static Result<Long> countUsers() {
+    public Result<Long> countUsers() {
         var db = DB.connectDb().get();
         var result = db.sql("select count(*) from user").first(Long.class);
         return new Success<>(result);

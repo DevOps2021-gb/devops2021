@@ -1,2 +1,18 @@
-# devops2021
-Group B
+# devops2021  
+Group B  
+# Running locally  
+### Running only website  
+Simply run java project like any other project.  
+### Running website   
+Either run "./run_local.sh"  
+or the commands:  
+sudo chmod +x setup_elk.sh  
+source setup_elk.sh  
+docker-compose -f docker-compose-local.yml up --build  
+### Closing docker containers
+Run the commands:  
+docker-compose down -v --rmi 'all' --remove-orphans  
+docker_clean.sh  
+### Running simulator
+Either run "run_sim.sh"  
+or "python3 minitwit_simulator.py http://localhost:4567"  

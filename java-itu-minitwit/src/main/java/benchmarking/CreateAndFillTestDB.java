@@ -1,58 +1,62 @@
 package benchmarking;
 
-import repository.DB;
-import repository.FollowerRepository;
-import repository.MessageRepository;
-import repository.UserRepository;
+import repository.*;
+
 import java.util.Random;
 
 import static repository.DB.setDatabaseParameters;
 
-public class CreateAndFillTestDB {
+public class CreateAndFillTestDB implements ICreateAndFillTestDB{
 
-    private CreateAndFillTestDB(){
+    private final IUserRepository userRepository;
+    private final IFollowerRepository followerRepository;
+    private final IMessageRepository messageRepository;
 
+    public CreateAndFillTestDB(IUserRepository _userRepository, IFollowerRepository _followerRepository, IMessageRepository _messageRepository){
+        userRepository = _userRepository;
+        followerRepository = _followerRepository;
+        messageRepository = _messageRepository;
     }
     private static Random rand = new java.security.SecureRandom();
 
-    public static void instantiateDB(){
+    public void instantiateDB(){
         DB.removeInstance();
         DB.setDatabase("benchmarkMinitwit");
         if (System.getProperty("DB_TEST_CONNECTION_STRING") != null) {
             setDatabaseParameters(System.getProperty("DB_TEST_CONNECTION_STRING"), System.getProperty("DB_USER"), System.getProperty("DB_PASSWORD"));
         }
     }
-    public static void addUsers(String[] users) {
+    public void addUsers(String[] users) {
         for (String user : users) {
             var email       = generateRandomString(14);
             var password1   = generateRandomString(14);
-            var rs = UserRepository.addUser(user, email, password1);
+            var rs = userRepository.addUser(user, email, password1);
             while (!rs.isSuccess()) {
-                rs = UserRepository.addUser(user, email, password1);
+                rs = userRepository.addUser(user, email, password1);
             }
         }
     }
-    public static void addFollowers(int count, String[] userNames) {
+    public void addFollowers(int count, String[] userNames) {
         int countUsers = userNames.length;
         for(int i =0; i<count; i++) {
-            var rs = FollowerRepository.followUser(getRandomID(countUsers), userNames[getRandomIndex(countUsers)]);
+            var rs = followerRepository.followUser(getRandomID(countUsers), userNames[getRandomIndex(countUsers)]);
             while (!rs.isSuccess()) {
-                rs = FollowerRepository.followUser(getRandomID(countUsers), userNames[getRandomIndex(countUsers)]);
+                rs = followerRepository.followUser(getRandomID(countUsers), userNames[getRandomIndex(countUsers)]);
             }
         }
     }
 
-    public static void addMessages(int count, int countUsers) {
+    public void addMessages(int count, int countUsers) {
         for(int i =0; i<count; i++) {
             var text = generateRandomString(30);
-            var rs = MessageRepository.addMessage(text, getRandomIndex(countUsers));
+            var rs = messageRepository.addMessage(text, getRandomIndex(countUsers));
             while (!rs.isSuccess()) {
-                rs = MessageRepository.addMessage(text, getRandomIndex(countUsers));
+                rs = messageRepository.addMessage(text, getRandomIndex(countUsers));
             }
         }
     }
 
-    private static String generateRandomString(int length) {
+    private String generateRandomString(int length) {
         String seedChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890 ";
         StringBuilder sb = new StringBuilder();
         int i = 0;
@@ -62,19 +66,19 @@ public class CreateAndFillTestDB {
         }
         return sb.toString();
     }
-    public static String[] genUsernames(int count) {
+    public String[] genUsernames(int count) {
         String[] users = new String[count];
         for(int i=0; i<count; i++) {
             users[i] = "paul"+i;
         }
         return users;
     }
-    public static int getRandomID(int count){
+
+    private int getRandomID(int count){
         return rand.nextInt(count)+1;
     }
 
-    public static int getRandomIndex(int count){
+    private int getRandomIndex(int count) {
         return rand.nextInt(count);
     }
-
 }

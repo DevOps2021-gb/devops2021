@@ -1,48 +1,57 @@
 package benchmarking;
 
-import repository.FollowerRepository;
-import repository.MessageRepository;
-import repository.UserRepository;
+import repository.*;
+
 import java.util.Random;
 
-public class DBBenchmarkableFunctions {
-    private DBBenchmarkableFunctions() {
+public class DBBenchmarkableFunctions implements IDBBenchmarkableFunctions {
 
+    private final IUserRepository userRepository;
+    private final IMessageRepository messageRepository;
+    private final IFollowerRepository followerRepository;
+
+    public DBBenchmarkableFunctions(IUserRepository _userRepository, IMessageRepository _messageRepository, IFollowerRepository _followerRepository) {
+        userRepository = _userRepository;
+        messageRepository = _messageRepository;
+        followerRepository = _followerRepository;
     }
+
     private static Random rand = new java.security.SecureRandom();
-    private static int getRandomIndex(int count){
-        return CreateAndFillTestDB.getRandomIndex(count);
+
+    public int runGetUserId(int sizeUsers, String[] usernames) {
+        return userRepository.getUserId(usernames[getRandomIndex(sizeUsers)]).get();
     }
-    private static int getRandomID(int count){
-        return CreateAndFillTestDB.getRandomID(count);
+    public int runGetUser(int sizeUsers, String[] usernames) {
+        return userRepository.getUser(usernames[getRandomIndex(sizeUsers)]).get().id;
+    }
+    public int runGetUserById(int sizeUsers) {
+        return userRepository.getUserById(rand.nextInt(sizeUsers)+1).get().id;
+    }
+    public int runCountUsers() {
+        return Math.toIntExact(userRepository.countUsers().get());
+    }
+    public int runCountMessages() {
+        return Math.toIntExact(messageRepository.countMessages().get());
+    }
+    public int runCountFollowers() {
+        return Math.toIntExact(followerRepository.countFollowers().get());
     }
 
-    public static int runGetUserId(int sizeUsers, String[] usernames){
-        return UserRepository.getUserId(usernames[getRandomIndex(sizeUsers)]).get();
+    public int runPublicTimeline() {
+        return messageRepository.publicTimeline().get().size();
     }
-    public static int runGetUser(int sizeUsers, String[] usernames){
-        return UserRepository.getUser(usernames[getRandomIndex(sizeUsers)]).get().id;
+    public int runTweetsByUsername(int sizeUsers, String[] usernames) {
+        return messageRepository.getTweetsByUsername(usernames[getRandomIndex(sizeUsers)]).get().size();
     }
-    public static int runGetUserById(int sizeUsers){
-        return UserRepository.getUserById(rand.nextInt(sizeUsers)+1).get().id;
-    }
-    public static int runCountUsers(){
-        return Math.toIntExact(UserRepository.countUsers().get());
-    }
-    public static int runCountMessages(){
-        return Math.toIntExact(MessageRepository.countMessages().get());
-    }
-    public static int runCountFollowers(){
-        return Math.toIntExact(FollowerRepository.countFollowers().get());
+    public int runPersonalTweetsById(int sizeUsers){
+        return messageRepository.getPersonalTweetsById(getRandomID(sizeUsers)).get().size();
     }
 
-    public static int runPublicTimeline(){
-        return MessageRepository.publicTimeline().get().size();
+    private int getRandomID(int count){
+        return rand.nextInt(count)+1;
     }
-    public static int runTweetsByUsername(int sizeUsers, String[] usernames){
-        return MessageRepository.getTweetsByUsername(usernames[getRandomIndex(sizeUsers)]).get().size();
-    }
-    public static int runPersonalTweetsById(int sizeUsers){
-        return MessageRepository.getPersonalTweetsById(getRandomID(sizeUsers)).get().size();
+
+    private int getRandomIndex(int count) {
+        return rand.nextInt(count);
     }
 }

@@ -4,57 +4,57 @@ import org.eclipse.jetty.http.HttpStatus;
 import org.json.JSONArray;
 import services.UserService;
 
-import static utilities.JSON.APPLICATION_JSON;
+import static utilities.JSONFormatter.APPLICATION_JSON;
 import static utilities.Session.getSessionResponse;
 
-public class Responses {
+public class Responses implements IResponses {
 
-    private Responses() {}
+    public Responses() {}
 
     private static final String MESSAGE404_NOT_FOUND = "{\"message\":\"404 not found\"}";
     private static final String MESSAGE500_SERVER_ERROR = "{\"message\":\"500 server error\"}";
 
-    public static String notFromSimulatorResponse() {
-        Responses.setStatus(HttpStatus.FORBIDDEN_403);
-        Responses.setType(APPLICATION_JSON);
+    public String notFromSimulatorResponse() {
+        setStatus(HttpStatus.FORBIDDEN_403);
+        setType(APPLICATION_JSON);
         return respond403Message("You are not authorized to use this resource!");
     }
 
-    public static String respond404() {
+    public String respond404() {
         return MESSAGE404_NOT_FOUND;
     }
 
-    public static String respond500() {
+    public String respond500() {
         return MESSAGE500_SERVER_ERROR;
     }
 
-    public static String respond403Message(String error) {
+    public String respond403Message(String error) {
         return "{\"status\": 403, \"error_msg\": " + error + " }";
     }
 
-    public static String respond404Message(String error) {
+    public String respond404Message(String error) {
         return "{\"message\":\"203\", \"error_msg\": "+ error + "}";
     }
 
-    public static String respondLatest() {
+    public String respondLatest() {
         return "{\"latest\":" + UserService.latest + "}";
     }
 
-    public static String respondFollow(JSONArray json) {
+    public String respondFollow(JSONArray json) {
         return "{\"follows\": " + json + " }";
     }
 
-    public static String return404(){
-        Responses.setStatus(HttpStatus.NOT_FOUND_404);
-        Responses.setType(APPLICATION_JSON);
+    public String return404(){
+        setStatus(HttpStatus.NOT_FOUND_404);
+        setType(APPLICATION_JSON);
         return MESSAGE404_NOT_FOUND;
     }
 
-    public static void setStatus(int status) {
+    public void setStatus(int status) {
         getSessionResponse().status(status);
     }
 
-    public static void setType(String type) {
+    public void setType(String type) {
         getSessionResponse().type(type);
     }
 }

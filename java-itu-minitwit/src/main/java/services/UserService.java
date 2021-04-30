@@ -2,15 +2,16 @@ package services;
 
 import model.dto.*;
 import model.User;
-import repository.FollowerRepository;
-import repository.UserRepository;
+import repository.IFollowerRepository;
+import repository.IUserRepository;
 import errorhandling.Failure;
 import errorhandling.Result;
 import errorhandling.Success;
-import utilities.JSON;
+import utilities.IRequests;
+import utilities.IResponses;
+import utilities.JSONFormatter;
 import utilities.Requests;
-import utilities.Responses;
-import view.Presentation;
+import view.IPresentationController;
 import org.eclipse.jetty.http.HttpStatus;
 import org.json.JSONArray;
 
@@ -19,19 +20,36 @@ import java.util.List;
 import java.util.function.BiFunction;
 
 import static services.MessageService.*;
-import static services.MetricsService.updateLatest;
-import static utilities.Requests.*;
 import static spark.Spark.halt;
-import static utilities.Responses.*;
 
-public class UserService {
-
+public class UserService implements IUserService {
 
     public static int latest = 147371;
 
-    private UserService() {}
+    private final IFollowerRepository followerRepository;
+    private final IUserRepository userRepository;
+    private final IPresentationController presentationController;
+    private final IResponses responses;
+    private final IRequests requests;
+    private final IMetricsService metricsService;
 
-    public static Result<String> validateUserCredentials(String username, String email, String password1, String password2) {
+    public UserService(
+            IFollowerRepository _followerRepository,
+            IUserRepository _userRepository,
+            IPresentationController _presentationController,
+            IResponses _responses,
+            IRequests _requests,
+            IMetricsService _metricsService) {
+        followerRepository = _followerRepository;
+        userRepository = _userRepository;
+        presentationController = _presentationController;
+        responses = _responses;
+        requests = _requests;
+        metricsService = _metricsService;
+
+    }
+
+    public Result<String> validateUserCredentials(String username, String email, String password1, String password2) {
         String error;
         if (username == null || username.equals("")) {
             error = "You have to enter a username";
@@ -41,7 +59,7 @@ public class UserService {
             error = "You have to enter a password";
         } else if (!password1.equals(password2)) {
             error = "The two passwords do not match";
-        } else if (UserRepository.getUserId(username).isSuccess()) {
+        } else if (userRepository.getUserId(username).isSuccess()) {
             error = "The username is already taken";
         } else {
             return new Success<>("OK");
@@ -50,137 +68,137 @@ public class UserService {
         return new Failure<>(error);
     }
 
-    public static Object login(LoginDTO dto) {
-        updateLatest(dto.latest);
+    public Object login(LoginDTO dto) {
+        metricsService.updateLatest(dto.latest);
 
-        if (isUserLoggedIn(dto.userId)) {
-            Presentation.redirect("/");
+        if (requests.isUserLoggedIn(dto.userId)) {
+            presentationController.redirect("/");
             return "";
         }
 
-        var loginResult = UserRepository.queryLogin(dto.username, dto.password);
+        var loginResult = userRepository.queryLogin(dto.username, dto.password);
 
         if (loginResult.isSuccess()) {
-            Requests.putAttribute(USER_ID, UserRepository.getUserId(dto.username).get());
-            Requests.putAttribute(FLASH, "You were logged in");
-            Presentation.redirect("/");
+            requests.putAttribute(USER_ID, userRepository.getUserId(dto.username).get());
+            requests.putAttribute(FLASH, "You were logged in");
+            presentationController.redirect("/");
             return "";
         } else {
             Failure<Boolean> error = (Failure<Boolean>) loginResult;
             HashMap<String, Object> context = new HashMap<>();
             context.put(ERROR, error.getException().getMessage());
-            return Presentation.renderTemplate(LOGIN_HTML, context);
+            return presentationController.renderTemplate(LOGIN_HTML, context);
         }
     }
 
-    public static void followOrUnfollow(FollowOrUnfollowDTO dto, BiFunction<Integer, String, Result<String>> query, String flashMessage){
-        updateLatest(dto.latest);
+    public void followOrUnfollow(FollowOrUnfollowDTO dto, BiFunction<Integer, String, Result<String>> query, String flashMessage){
+        metricsService.updateLatest(dto.latest);
 
-        if (!isUserLoggedIn(dto.userId)) {
+        if (!requests.isUserLoggedIn(dto.userId)) {
             halt(401, "You need to sign in to unfollow a user");
         }
 
-        var rs = query.apply(getSessionUserId(), dto.profileUsername);
+        var rs = query.apply(requests.getSessionUserId(), dto.profileUsername);
         if (rs.isSuccess()) {
-            Requests.putAttribute(FLASH, flashMessage + dto.profileUsername);
+            requests.putAttribute(FLASH, flashMessage + dto.profileUsername);
         }
         else {
             halt(404, rs.toString());
         }
-        Presentation.redirect("/" + dto.profileUsername);
+        presentationController.redirect("/" + dto.profileUsername);
     }
 
-    private static Object followOrUnfollow (String user, BiFunction<Integer, String, Result<String>> query, Result<Integer> userIdResult){
-        if (!UserRepository.getUserId(user).isSuccess()) {
-            return return404();
+    private Object followOrUnfollow (String user, BiFunction<Integer, String, Result<String>> query, Result<Integer> userIdResult){
+        if (!userRepository.getUserId(user).isSuccess()) {
+            return responses.return404();
         }
         var result = query.apply(userIdResult.get(), user);
         var status = result.isSuccess()? HttpStatus.NO_CONTENT_204 : HttpStatus.CONFLICT_409;
-        Responses.setStatus(status);
+        responses.setStatus(status);
         return "";
     }
 
-    public static Object getFollow(MessagesPerUserDTO dto) {
-        updateLatest(dto.latest);
+    public Object getFollow(MessagesPerUserDTO dto) {
+        metricsService.updateLatest(dto.latest);
 
-        if (!isFromSimulator(dto.authorization)) {
-            return notFromSimulatorResponse();
+        if (!requests.isFromSimulator(dto.authorization)) {
+            return responses.notFromSimulatorResponse();
         }
 
-        var userIdResult = UserRepository.getUserId(dto.username);
+        var userIdResult = userRepository.getUserId(dto.username);
 
         if (!userIdResult.isSuccess()) {
-            Responses.setStatus(HttpStatus.NOT_FOUND_404);
-            Responses.setType(JSON.APPLICATION_JSON);
-            return Responses.respond404();
+            responses.setStatus(HttpStatus.NOT_FOUND_404);
+            responses.setType(JSONFormatter.APPLICATION_JSON);
+            return responses.respond404();
         }
-        List<User> following = FollowerRepository.getFollowing(userIdResult.get()).get();
+        List<User> following = followerRepository.getFollowing(userIdResult.get()).get();
 
-        Responses.setStatus(HttpStatus.OK_200);
-        Responses.setType(JSON.APPLICATION_JSON);
-        return Responses.respondFollow(new JSONArray(following.stream().map(User::getUsername)));
+        responses.setStatus(HttpStatus.OK_200);
+        responses.setType(JSONFormatter.APPLICATION_JSON);
+        return responses.respondFollow(new JSONArray(following.stream().map(User::getUsername)));
     }
 
-    public static Object postFollow(PostFollowDTO dto) {
-        updateLatest(dto.latest);
+    public Object postFollow(PostFollowDTO dto) {
+        metricsService.updateLatest(dto.latest);
 
-        if (!isFromSimulator(dto.authorization)) {
-            return notFromSimulatorResponse();
+        if (!requests.isFromSimulator(dto.authorization)) {
+            return responses.notFromSimulatorResponse();
         }
 
-        var userIdResult = UserRepository.getUserId(dto.username);
+        var userIdResult = userRepository.getUserId(dto.username);
 
 
-        if (!userIdResult.isSuccess()) return404();
+        if (!userIdResult.isSuccess()) responses.return404();
 
         if (dto.follow.isSuccess()) {
-            return followOrUnfollow(dto.follow.get(), FollowerRepository::followUser, userIdResult);
+            return followOrUnfollow(dto.follow.get(), followerRepository::followUser, userIdResult);
         } else if (dto.unfollow.isSuccess()) {
-            return followOrUnfollow(dto.unfollow.get(), FollowerRepository::unfollowUser, userIdResult);
+            return followOrUnfollow(dto.unfollow.get(), followerRepository::unfollowUser, userIdResult);
         } else {
-            Responses.setStatus(HttpStatus.BAD_REQUEST_400);
+            responses.setStatus(HttpStatus.BAD_REQUEST_400);
             return "";
         }
 
     }
 
-    public static Object register(RegisterDTO dto) {
-        updateLatest(dto.latest);
+    public Object register(RegisterDTO dto) {
+        metricsService.updateLatest(dto.latest);
 
-        boolean isFromSimulator = isFromSimulator(dto.authorization);
+        boolean isFromSimulator = requests.isFromSimulator(dto.authorization);
 
         if (isFromSimulator && dto.password1 == null && dto.password2 == null) {
             dto.password1 = dto.pwd;
             dto.password2 = dto.password1;
         }
 
-        if (isUserLoggedIn(dto.userId)) {
-            return Presentation.renderTemplate(TIMELINE_HTML);
+        if (requests.isUserLoggedIn(dto.userId)) {
+            return presentationController.renderTemplate(TIMELINE_HTML);
         }
 
         var isValid = validateUserCredentials(dto.username, dto.email, dto.password1, dto.password2);
 
         if (!isValid.isSuccess()) {
             if (isFromSimulator) {
-                setStatus(HttpStatus.BAD_REQUEST_400);
-                setType(JSON.APPLICATION_JSON);
-                return Responses.respond404Message(isValid.getFailureMessage());
+                responses.setStatus(HttpStatus.BAD_REQUEST_400);
+                responses.setType(JSONFormatter.APPLICATION_JSON);
+                return responses.respond404Message(isValid.getFailureMessage());
             } else {
                 HashMap<String, Object> context = new HashMap<>();
                 context.put(ERROR, isValid.getFailureMessage());
                 context.put(USERNAME, dto.username);
                 context.put(EMAIL, dto.email);
-                return Presentation.renderTemplate(REGISTER_HTML, context);
+                return presentationController.renderTemplate(REGISTER_HTML, context);
             }
         }
 
-        UserRepository.addUser(dto.username, dto.email, dto.password1);
+        userRepository.addUser(dto.username, dto.email, dto.password1);
 
         if (isFromSimulator) {
-            Responses.setStatus(HttpStatus.NO_CONTENT_204);
+            responses.setStatus(HttpStatus.NO_CONTENT_204);
         } else {
-            Requests.putAttribute(FLASH, "You were successfully registered and can login now");
-            Presentation.redirect("/login");
+            requests.putAttribute(FLASH, "You were successfully registered and can login now");
+            presentationController.redirect("/login");
         }
 
         return "";

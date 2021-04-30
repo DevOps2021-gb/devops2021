@@ -11,17 +11,21 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class JSON {
+public class JSONFormatter implements IJSONFormatter {
 
-    private JSON() {}
+    private final IResponses responses;
+
+    public JSONFormatter(IResponses _responses) {
+        responses = _responses;
+    }
 
     public static final String APPLICATION_JSON = "application/json";
 
-    public static boolean isJSON(String body) {
+    public boolean isJSON(String body) {
         return body.startsWith("{");
     }
 
-    public static Object tweetsToJSONResponse(List<Tweet> tweets) {
+    public Object tweetsToJSONResponse(List<Tweet> tweets) {
         List<JSONObject> messages = new ArrayList<>();
         for (Tweet t : tweets) {
             HashMap<String, String> msg = new HashMap<>();
@@ -32,16 +36,16 @@ public class JSON {
         }
         var json = new JSONArray(messages);
         if (json.length() == 0) {
-            Responses.setStatus(HttpStatus.NO_CONTENT_204);
+            responses.setStatus(HttpStatus.NO_CONTENT_204);
             return "";
         } else {
-            Responses.setStatus(HttpStatus.OK_200);
-            Responses.setType(JSON.APPLICATION_JSON);
+            responses.setStatus(HttpStatus.OK_200);
+            responses.setType(JSONFormatter.APPLICATION_JSON);
             return json;
         }
     }
 
-    public static String formatToJson(Map<String, String> hm) {
+    public String formatToJson(Map<String, String> hm) {
         var sb = new StringBuilder();
 
         int size = hm.keySet().size();

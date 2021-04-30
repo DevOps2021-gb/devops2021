@@ -1,6 +1,6 @@
 package utilities;
 
-import services.LogService;
+import services.ILogService;
 import services.MessageService;
 import errorhandling.Failure;
 import errorhandling.Result;
@@ -14,44 +14,52 @@ import java.util.Map;
 
 import static utilities.Session.getSessionRequest;
 
-public class Requests {
+public class Requests implements IRequests {
 
-    private Requests() {}
+    private final IJSONFormatter jsonFormatter;
 
-    public static void putAttribute(String attribute, Object value) {
+    public Requests(IJSONFormatter _jsonFormatter) {
+        jsonFormatter = _jsonFormatter;
+    }
+
+    public void putAttribute(String attribute, Object value) {
         getSessionRequest().session().attribute(attribute, value);
     }
 
-    public static Object getAttribute(String attribute) {
+    public Object getAttribute(String attribute) {
         return getSessionRequest().session().attribute(attribute);
     }
 
-    public static boolean isFromSimulator(String authorization) {
+    public boolean isFromSimulator(String authorization) {
         return authorization != null && authorization.equals("Basic c2ltdWxhdG9yOnN1cGVyX3NhZmUh");
     }
 
-    public static boolean isUserLoggedIn(Integer userid) {
+    public boolean isUserLoggedIn(Integer userid) {
         return userid != null;
     }
 
-    public static Integer getSessionUserId() {
+    public Integer getSessionUserId() {
         return (Integer) getAttribute(MessageService.USER_ID);
     }
 
-    public static Object getSessionFlash(Request request) {
+    public Object getSessionFlash(Request request) {
         var msg = request.session().attribute(MessageService.FLASH);
         request.session().removeAttribute(MessageService.FLASH);
         return msg;
     }
 
-    public static Map<String,String> getFromBody(Request request, String ... args){
-        Map<String, String> map = new HashMap<>(request.params());
-        addFromParams(map, request, args);
-        addFromBody(map, request);
-        return map;
+    public Result<Map<String,String>> getFromBody(Request request, String ... args){
+        try {
+            Map<String, String> map = new HashMap<>(request.params());
+            addFromParams(map, request, args);
+            addFromBody(map, request);
+            return new Success<>(map);
+        } catch (Exception e) {
+            return new Failure<>(e);
+        }
     }
 
-    public static Map<String, String> getFromHeaders(Request request, String ... args) {
+    public Map<String, String> getFromHeaders(Request request, String ... args) {
         Map<String, String> map = new HashMap<>();
         if (args.length == 0) {
             for (String p : request.queryParams()) {
@@ -65,8 +73,8 @@ public class Requests {
         return map;
     }
 
-    public static Result<String> getParam(String param, Request request) {
-        var params = getFromBody(request);
+    public Result<String> getParam(String param, Request request) {
+        var params = getFromBody(request).get();
 
         if (params.containsKey(param)) {
             return new Success<>(params.get(param));
@@ -75,7 +83,7 @@ public class Requests {
         }
     }
 
-    private static void addFromParams(Map<String, String> map, Request request, String[] args) {
+    private void addFromParams(Map<String, String> map, Request request, String[] args) {
         for (String arg : args) {
             if (request.queryParams(arg) != null) {
                 map.put(arg, request.queryParams(arg));
@@ -83,9 +91,9 @@ public class Requests {
         }
     }
 
-    private static void addFromBody(Map<String, String> map, Request request) {
+    private void addFromBody(Map<String, String> map, Request request) throws IOException {
         if (!request.body().isEmpty()) {
-            if(JSON.isJSON(request.body())) {
+            if(jsonFormatter.isJSON(request.body())) {
                 addJsonFromBody(map, request);
             }
             else {
@@ -97,13 +105,10 @@ public class Requests {
         }
     }
 
-    private static void addJsonFromBody(Map<String, String> map, Request request) {
+    private void addJsonFromBody(Map<String, String> map, Request request) throws IOException {
         ObjectMapper mapper = new ObjectMapper();
-        try {
-            Map<String, String> temp = mapper.readValue(request.body(), Map.class);
-            map.putAll(temp);
-        } catch (IOException e) {
-            LogService.logError(e, Request.class);
-        }
+
+        Map<String, String> temp = mapper.readValue(request.body(), Map.class);
+        map.putAll(temp);
     }
 }
