@@ -2,28 +2,44 @@ package services;
 
 import model.dto.AddMessageDTO;
 import model.dto.DTO;
-import model.Tweet;
 import model.dto.MessagesPerUserDTO;
-import repository.MessageRepository;
-import repository.UserRepository;
-import utilities.Formatting;
-import utilities.Hashing;
-import utilities.JSON;
+import repository.IMessageRepository;
+import repository.IUserRepository;
+import utilities.IJSONFormatter;
+import utilities.IRequests;
+import utilities.IResponses;
+import utilities.JSONFormatter;
 import org.eclipse.jetty.http.HttpStatus;
-import utilities.Responses;
-import view.Presentation;
+import view.IPresentationController;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-
-import static services.MetricsService.updateLatest;
-import static utilities.Requests.*;
 import static spark.Spark.halt;
 
-public class MessageService {
+public class MessageService implements IMessageService {
 
-    private MessageService() {}
+    private final IMessageRepository messageRepository;
+    private final IUserRepository userRepository;
+    private final IPresentationController presentationController;
+    private final IResponses responses;
+    private final IJSONFormatter jsonFormatter;
+    private final IRequests requests;
+    private final IMetricsService metricsService;
+
+    public MessageService(
+            IMessageRepository _messageRepository,
+            IUserRepository _userRepository,
+            IPresentationController _presentationController,
+            IResponses _responses,
+            IJSONFormatter _jsonFormatter,
+            IRequests _requests,
+            IMetricsService _metricsService) {
+        messageRepository = _messageRepository;
+        userRepository = _userRepository;
+        presentationController = _presentationController;
+        responses = _responses;
+        jsonFormatter = _jsonFormatter;
+        requests = _requests;
+        metricsService = _metricsService;
+    }
 
     // templates
     public static final String TIMELINE_HTML = "timeline.html";
@@ -43,85 +59,72 @@ public class MessageService {
     public static final String TITLE    = "title";
     public static final String CONTENT  = "content";
 
-    public static Object getMessages(DTO dto) {
-        updateLatest(dto.latest);
+    public Object getMessages(DTO dto) {
+        metricsService.updateLatest(dto.latest);
 
-        if (!isFromSimulator(dto.authorization)) {
-            return Responses.notFromSimulatorResponse();
+        if (!requests.isFromSimulator(dto.authorization)) {
+            return responses.notFromSimulatorResponse();
         }
 
-        var tweets = MessageRepository.publicTimeline().get();
-        return JSON.tweetsToJSONResponse(tweets);
+        var tweets = messageRepository.publicTimeline().get();
+        return jsonFormatter.tweetsToJSONResponse(tweets);
     }
 
-    public static Object messagesPerUser(MessagesPerUserDTO dto) {
-        updateLatest(dto.latest);
+    public Object messagesPerUser(MessagesPerUserDTO dto) {
+        metricsService.updateLatest(dto.latest);
 
-        if (!isFromSimulator(dto.authorization)) {
-            return Responses.notFromSimulatorResponse();
+        if (!requests.isFromSimulator(dto.authorization)) {
+            return responses.notFromSimulatorResponse();
         }
 
-        var userIdResult = UserRepository.getUserId(dto.username);
+        var userIdResult = userRepository.getUserId(dto.username);
 
         if (!userIdResult.isSuccess()) {
-            Responses.setStatus(HttpStatus.NOT_FOUND_404);
-            Responses.setType(JSON.APPLICATION_JSON);
-            return Responses.respond404();
+            responses.setStatus(HttpStatus.NOT_FOUND_404);
+            responses.setType(JSONFormatter.APPLICATION_JSON);
+            return responses.respond404();
         } else {
-            var tweets = MessageRepository.getTweetsByUsername(dto.username).get();
-            return JSON.tweetsToJSONResponse(tweets);
+            var tweets = messageRepository.getTweetsByUsername(dto.username).get();
+            return jsonFormatter.tweetsToJSONResponse(tweets);
         }
     }
     /*
     Registers a new message for the user.
      */
-    public static void addMessage(AddMessageDTO dto) {
-        updateLatest(dto.latest);
+    public void addMessage(AddMessageDTO dto) {
+        metricsService.updateLatest(dto.latest);
 
         if(dto.username == null){
-            if (!isUserLoggedIn(dto.userId)) {
+            if (!requests.isUserLoggedIn(dto.userId)) {
                 halt(401, "You need to sign in to post a message");
             }
         }
         else {
-            var userIdRes = UserRepository.getUserId(dto.username);
+            var userIdRes = userRepository.getUserId(dto.username);
 
             if (!userIdRes.isSuccess()) {
-                Responses.setStatus(HttpStatus.NO_CONTENT_204);
+                responses.setStatus(HttpStatus.NO_CONTENT_204);
                 return;
             }
 
             dto.userId = userIdRes.get();
         }
 
-        var rs = MessageRepository.addMessage(dto.content, dto.userId);
+        var rs = messageRepository.addMessage(dto.content, dto.userId);
         if (rs.isSuccess()){
-            if (isFromSimulator(dto.authorization)) {
-                Responses.setStatus(HttpStatus.NO_CONTENT_204);
+            if (requests.isFromSimulator(dto.authorization)) {
+                responses.setStatus(HttpStatus.NO_CONTENT_204);
             } else {
-                putAttribute(FLASH, "Your message was recorded");
-                Presentation.redirect("/");
+                requests.putAttribute(FLASH, "Your message was recorded");
+                presentationController.redirect("/");
             }
         } else {
-            if (isFromSimulator(dto.authorization)) {
-                Responses.setStatus(HttpStatus.FORBIDDEN_403);
+            if (requests.isFromSimulator(dto.authorization)) {
+                responses.setStatus(HttpStatus.FORBIDDEN_403);
             } else {
-                Presentation.redirect("/");
+                presentationController.redirect("/");
             }
         }
 
-    }
-
-    public static List<Tweet> tweetsFromListOfHashMap(List<HashMap> result){
-        List<Tweet> tweets = new ArrayList<>();
-        for (HashMap hm: result) {
-            String email        = (String) hm.get(EMAIL);
-            String username     = (String) hm.get(USERNAME);
-            String text         = (String) hm.get("text");
-            String pubDate      = Formatting.formatDatetime((long) hm.get("pubDate") + "").get();
-            String profilePic   = Hashing.getGravatarUrl(email);
-            tweets.add(new Tweet(email, username, text, pubDate, profilePic));
-        }
-        return tweets;
     }
 }

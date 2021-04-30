@@ -1,68 +1,103 @@
 package services;
 
+import errorhandling.Failure;
+import errorhandling.Success;
+import model.dto.DTO;
+import model.dto.MessagesPerUserDTO;
 import org.junit.jupiter.api.Assertions;
-import repository.MessageRepository;
 import org.junit.jupiter.api.Test;
-import testUtilities.DatabaseTestBase;
+import repository.IMessageRepository;
+import repository.IUserRepository;
+import repository.MessageRepository;
+import repository.UserRepository;
+import utilities.*;
+import view.IPresentationController;
+import view.PresentationController;
 
 import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
 
-class MessageServiceTests extends DatabaseTestBase {
-    @Test
-    void testLoginLogout() {
-        var result = this.registerAndLogin("user1", "default");
-        Assertions.assertTrue(result.isSuccess());
-        Assertions.assertTrue(result.get());
-        result = this.logout();
-        Assertions.assertTrue(result.isSuccess());
-        Assertions.assertTrue(result.get()); //TODO will always succeed as is now
-        result = this.login("user2", "wrongpassword");
-        Assertions.assertFalse(result.isSuccess());
-        Assertions.assertEquals("Invalid username", result.getFailureMessage());
-        result = this.login("user1", "wrongpassword");
-        Assertions.assertFalse(result.isSuccess());
-        Assertions.assertEquals("Invalid password", result.getFailureMessage());
+import static org.mockito.Mockito.*;
+
+class MessageServiceTests {
+    IMessageRepository messageRepository = mock(MessageRepository.class);
+    IUserRepository userRepository = mock(UserRepository.class);
+    IPresentationController presentationController = mock(PresentationController.class);
+    IResponses responses = mock(Responses.class);
+    IJSONFormatter jsonFormatter = mock(JSONFormatter.class);
+    IRequests requests = mock(Requests.class);
+    IMetricsService metricsService = mock(MetricsService.class);
+
+    private IMessageService GetService() {
+        return new MessageService(messageRepository, userRepository, presentationController, responses, jsonFormatter, requests, metricsService);
     }
 
     @Test
-    void testPublicTimeline() {
-        var id1 = this.registerLoginGetID("foo", "default", null);
-        String text1 = "test message 1", text2 = "<test message 2>";
-        this.addMessage(text1, id1.get());
-        this.addMessage(text2, id1.get());
-        var rs = MessageRepository.publicTimeline();
-        Assertions.assertTrue(rs.isSuccess());
-        var tweet1 = rs.get().get(1);
-        var tweet2 = rs.get().get(0);
-        Assertions.assertEquals( "foo@example.com", tweet1.getEmail());
-        Assertions.assertEquals( "foo", tweet1.getUsername());
-        Assertions.assertEquals( text1, tweet1.getText());
-        Assertions.assertEquals( "foo@example.com", tweet2.getEmail());
-        Assertions.assertEquals( "foo", tweet2.getUsername());
-        //todo store as: "&lt;test message 2&gt;"
-        Assertions.assertEquals(text2, tweet2.getText());
+    public void getMessagesGivenUnauthorizedDtoReturnsUnauthorized() {
+        var dto = new DTO();
+        dto.authorization = "unauthorized";
+
+        var expected = "You are not authorized to use this resource!";
+
+        when(responses.notFromSimulatorResponse()).thenReturn(expected);
+
+        String actual = (String) GetService().getMessages(dto);
+
+        Assertions.assertEquals(expected, actual);
     }
 
     @Test
-    void tweetsFromListOfHashMapGivenHashmapReturnsTweets() {
-        HashMap hm = new HashMap();
-        hm.put("email", "test@test.dk");
-        hm.put("username", "test");
-        hm.put("text", "body");
-        hm.put("pubDate", new Date().getTime());
-        var maps = new ArrayList<HashMap>();
-        maps.add(hm);
+    public void getMessagesGivenAuthorizedDtoReturnsTweets() {
+        var dto = new DTO();
+        dto.authorization = "authorized";
 
-        var actual = MessageService.tweetsFromListOfHashMap(maps);
+        when(messageRepository.publicTimeline()).thenReturn(new Success<>(new ArrayList<>()));
+        when(requests.isFromSimulator(dto.authorization)).thenReturn(true);
 
-        Assertions.assertEquals(1, actual.size());
-        var tweet = actual.get(0);
-        Assertions.assertEquals("test@test.dk", tweet.getEmail());
-        Assertions.assertEquals("test", tweet.getUsername());
-        Assertions.assertEquals("body", tweet.getText());
-        Assertions.assertNotNull(tweet.getPubDate());
-        Assertions.assertNotNull(tweet.getProfilePic());
+        GetService().getMessages(dto);
+
+        verify(jsonFormatter, times(1)).tweetsToJSONResponse(any());
+    }
+
+    @Test
+    public void messagesPerUserGivenRequestNotFromSimulatorReturnsUnauthorized() {
+        var dto = new MessagesPerUserDTO();
+        dto.authorization = "unauthorized";
+
+        var expected = "You are not authorized to use this resource!";
+
+        when(responses.notFromSimulatorResponse()).thenReturn(expected);
+
+        String actual = (String) GetService().messagesPerUser(dto);
+
+        Assertions.assertEquals(expected, actual);
+    }
+
+    @Test
+    public void messagesPerUserGivenExistingUserReturnsTweets() {
+        var dto = new MessagesPerUserDTO();
+        dto.authorization = "authorized";
+        dto.username = "abc";
+
+        when(requests.isFromSimulator(dto.authorization)).thenReturn(true);
+        when(userRepository.getUserId(dto.username)).thenReturn(new Success<>(1));
+        when(messageRepository.getTweetsByUsername(any(String.class))).thenReturn(new Success<>(new ArrayList<>()));
+
+        GetService().messagesPerUser(dto);
+
+        verify(jsonFormatter, times(1)).tweetsToJSONResponse(any());
+    }
+
+    @Test
+    public void messagesPerUserGivenNonExistingUserReturnsNotFound() {
+        var dto = new MessagesPerUserDTO();
+        dto.authorization = "authorized";
+        dto.username = "abc";
+
+        when(requests.isFromSimulator(dto.authorization)).thenReturn(true);
+        when(userRepository.getUserId(dto.username)).thenReturn(new Failure<>(new Exception()));
+
+        GetService().messagesPerUser(dto);
+
+        verify(responses, times(1)).respond404();
     }
 }

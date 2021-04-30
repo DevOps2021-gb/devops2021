@@ -7,26 +7,30 @@ import main.Main;
 import java.io.IOException;
 import java.io.StringWriter;
 
-public class MetricsService {
+public class MetricsService implements IMetricsService{
 
-    private MetricsService() {}
+    private final ILogService logService;
 
-    public static Object metrics() {
+    public MetricsService(ILogService _logService) {
+        logService = _logService;
+    }
+
+    public Object metrics() {
         final StringWriter writer = new StringWriter();
         try {
             TextFormat.write004(writer, CollectorRegistry.defaultRegistry.metricFamilySamples());
         } catch (IOException e) {
-            LogService.logError(e, Main.class);
+            logService.logError(e, Main.class);
         }
         return writer.toString();
     }
 
-    public static void updateLatest(String requestLatest) {
+    public void updateLatest(String requestLatest) {
         if (requestLatest != null) {
             try {
                 UserService.latest = Integer.parseInt(requestLatest);
             } catch (NumberFormatException e) {
-                LogService.logError(e, Main.class);
+                logService.logError(e, Main.class);
             }
         }
     }

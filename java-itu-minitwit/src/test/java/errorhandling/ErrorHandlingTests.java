@@ -3,7 +3,7 @@ package errorhandling;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-class ErrrorhandlingTests {
+class ErrorHandlingTests {
 
     @Test
     void test_Success() {

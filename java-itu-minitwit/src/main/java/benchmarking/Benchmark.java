@@ -2,7 +2,9 @@ package benchmarking;
 // Simple microbenchmark setups
 // sestoft@itu.dk * 2013-06-02, 2015-09-15
 
+import main.Main;
 import repository.DB;
+import services.ILogService;
 import services.LogService;
 
 import java.util.function.IntToDoubleFunction;
@@ -15,62 +17,83 @@ class Benchmark {
   private static final int FOLLOWERS_TO_ADD = 40_000;
   private static final int MESSAGES_TO_ADD  = 40_000;
 
+  private final IDBBenchmarkableFunctions functions;
+  private final ICreateAndFillTestDB testDB;
+  private final ILogService logService;
+
+  public Benchmark(IDBBenchmarkableFunctions _functions, ICreateAndFillTestDB _testDB, ILogService _logService) {
+    functions = _functions;
+    testDB = _testDB;
+    logService = _logService;
+  }
+
   public static void main(String[] args) {
+    Benchmark benchmark = new Benchmark(
+            Main.container.getComponent(DBBenchmarkableFunctions.class),
+            Main.container.getComponent(CreateAndFillTestDB.class),
+            Main.container.getComponent(LogService.class)
+            );
+    benchmark.init();
+  }
+
+  private void init() {
     //setup
-    final String[] usernames = CreateAndFillTestDB.genUsernames(USERS_TO_ADD);
-    CreateAndFillTestDB.instantiateDB();
+    final String[] usernames = testDB.genUsernames(USERS_TO_ADD);
+    testDB.instantiateDB();
     //populateDB(usernames);
     var db = DB.connectDb().get();
     DB.addIndexes(db);
-    LogService.log(Benchmark.class, "start measureing");
+    logService.log(Benchmark.class, "start measureing");
+
     runBenchmarks(usernames);
   }
-  private static void populateDB(String[] usernames) {
+
+  private void populateDB(String[] usernames) {
     DB.dropDatabase();
-    LogService.log(Benchmark.class, "start adding users");
-    CreateAndFillTestDB.addUsers(usernames);
-    LogService.log(Benchmark.class, "end adding users");
-    LogService.log(Benchmark.class, "start adding followers");
-    CreateAndFillTestDB.addFollowers(FOLLOWERS_TO_ADD, usernames);
-    LogService.log(Benchmark.class, "end adding followers");
-    LogService.log(Benchmark.class, "start adding messages");
-    CreateAndFillTestDB.addMessages(MESSAGES_TO_ADD, USERS_TO_ADD);
-    LogService.log(Benchmark.class, "end adding messages");
+    logService.log(Benchmark.class, "start adding users");
+    testDB.addUsers(usernames);
+    logService.log(Benchmark.class, "end adding users");
+    logService.log(Benchmark.class, "start adding followers");
+    testDB.addFollowers(FOLLOWERS_TO_ADD, usernames);
+    logService.log(Benchmark.class, "end adding followers");
+    logService.log(Benchmark.class, "start adding messages");
+    testDB.addMessages(MESSAGES_TO_ADD, USERS_TO_ADD);
+    logService.log(Benchmark.class, "end adding messages");
   }
-  public static void runBenchmarks(String[] usernames){
-    DBBenchmarkableFunctions.runCountUsers();
+  public void runBenchmarks(String[] usernames){
+    functions.runCountUsers();
     systemInfo();
     printMark8Headers();
-    mark8("GetUserId", i -> DBBenchmarkableFunctions.runGetUserId( USERS_TO_ADD, usernames));
-    mark8("GetUser", i -> DBBenchmarkableFunctions.runGetUser( USERS_TO_ADD, usernames));
-    mark8("GetUserById", i -> DBBenchmarkableFunctions.runGetUserById( USERS_TO_ADD));
-    mark8("CountUsers", i -> DBBenchmarkableFunctions.runCountUsers());
-    mark8("CountFollowers", i -> DBBenchmarkableFunctions.runCountFollowers());
-    mark8("CountMessages", i -> DBBenchmarkableFunctions.runCountMessages());
-    mark8("publicTimeline", i -> DBBenchmarkableFunctions.runPublicTimeline());
-    mark8("TweetsByUsername", i -> DBBenchmarkableFunctions.runTweetsByUsername( USERS_TO_ADD, usernames));
-    mark8("PersonalTweetsById", i -> DBBenchmarkableFunctions.runPersonalTweetsById( USERS_TO_ADD));
+    mark8("GetUserId", i -> functions.runGetUserId( USERS_TO_ADD, usernames));
+    mark8("GetUser", i -> functions.runGetUser( USERS_TO_ADD, usernames));
+    mark8("GetUserById", i -> functions.runGetUserById( USERS_TO_ADD));
+    mark8("CountUsers", i -> functions.runCountUsers());
+    mark8("CountFollowers", i -> functions.runCountFollowers());
+    mark8("CountMessages", i -> functions.runCountMessages());
+    mark8("publicTimeline", i -> functions.runPublicTimeline());
+    mark8("TweetsByUsername", i -> functions.runTweetsByUsername( USERS_TO_ADD, usernames));
+    mark8("PersonalTweetsById", i -> functions.runPersonalTweetsById( USERS_TO_ADD));
   }
   // ========== Infrastructure code ==========
 
-  public static void systemInfo() {
-    LogService.log(Benchmark.class, new StringBuilder("# OS:   ")
+  public void systemInfo() {
+    logService.log(Benchmark.class, new StringBuilder("# OS:   ")
             .append(System.getProperty("os.name")).append("; ")
             .append(System.getProperty("os.version")).append("; ")
             .append(System.getProperty("os.arch")).toString());
-    LogService.log(Benchmark.class, new StringBuilder("# JVM:  %s; %s%n")
+    logService.log(Benchmark.class, new StringBuilder("# JVM:  %s; %s%n")
             .append(System.getProperty("java.vendor")).append("; ")
             .append(System.getProperty("java.version")).toString());
     // The processor identifier works only on MS Windows:
-    LogService.log(Benchmark.class, new StringBuilder("# CPU:  ")
+    logService.log(Benchmark.class, new StringBuilder("# CPU:  ")
             .append(System.getenv("PROCESSOR_IDENTIFIER")).append("; cores:")
             .append(Runtime.getRuntime().availableProcessors()).toString());
   }
-  public static void printMark8Headers(){
-    LogService.log(Benchmark.class, "msg, mean, sdev, count");
+  public void printMark8Headers(){
+    logService.log(Benchmark.class, "msg, mean, sdev, count");
   }
 
-  public static double mark8(String msg, IntToDoubleFunction f) {
+  public double mark8(String msg, IntToDoubleFunction f) {
     int count = 1;
     int totalCount = 0;
     double dummy = 0.0;
@@ -103,16 +126,18 @@ class Benchmark {
     computeResult(st, sst, msg, count);
     return dummy*totalCount;
   }
-  public static double getTimeSpentPausingOnce(){
+
+  public double getTimeSpentPausingOnce(){
     Timer tForTimePausePlay = new Timer();
     long timesPaused = 10_000_000;
     for (int paused = 0; paused < timesPaused; paused++) { tForTimePausePlay.play(); tForTimePausePlay.pause(); }
     return 0.9*tForTimePausePlay.check() / timesPaused;    //0.9 to counter garbadge collection as that part rarely takes time normally
   }
-  private static void computeResult(double st, double sst, String msg, int count) {
+
+  private void computeResult(double st, double sst, String msg, int count) {
     double mean = st/n;
     double sdev = Math.sqrt((sst - mean*mean*n)/(n-1));
-    LogService.log(Benchmark.class, msg+" "+mean+"ns "+sdev+" "+count);
+    logService.log(Benchmark.class, msg+" "+mean+"ns "+sdev+" "+count);
   }
 
 }

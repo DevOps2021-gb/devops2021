@@ -10,15 +10,14 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.BiFunction;
 import controllers.Endpoints;
 import controllers.ResReqSparkWrapper;
-import repository.FollowerRepository;
-import repository.MessageRepository;
-import repository.UserRepository;
+import repository.*;
 import io.prometheus.client.Counter;
 import io.prometheus.client.Gauge;
 import spark.Request;
 import spark.Response;
 
-public class MaintenanceService {
+public class MaintenanceService implements IMaintenanceService{
+
     private static final long LOGGING_PERIOD_SECONDS = 15;
 
     private static final OperatingSystemMXBean operatingSystemMXBean = ManagementFactory.getOperatingSystemMXBean();
@@ -30,7 +29,16 @@ public class MaintenanceService {
 
     private static final Map<String, Gauge> responseTimeEndPoints = new HashMap<>();
 
-    private MaintenanceService() {
+    private final IUserRepository userRepository;
+    private final IMessageRepository messageRepository;
+    private final IFollowerRepository followerRepository;
+    private final ILogService logService;
+
+    public MaintenanceService(IUserRepository _userRepository, IMessageRepository _messageRepository, IFollowerRepository _followerRepository, ILogService _logService) {
+        userRepository = _userRepository;
+        messageRepository = _messageRepository;
+        followerRepository = _followerRepository;
+        logService = _logService;
     }
 
     private static void setEndpoints(String[] endpoints, Boolean isGet, String helpPrefix) {
@@ -53,34 +61,34 @@ public class MaintenanceService {
         setEndpoints(endpointsPost, false,   "response time for post call: ");
     }
 
-    public static void startSchedules() {
+    public void startSchedules() {
         ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
-        executorService.scheduleAtFixedRate(MaintenanceService::logUserInformation, 1, LOGGING_PERIOD_SECONDS , TimeUnit.SECONDS);
+        executorService.scheduleAtFixedRate(this::logUserInformation, 1, LOGGING_PERIOD_SECONDS, TimeUnit.SECONDS);
     }
-    private static void logUserInformation() {
+    private void logUserInformation() {
         processCpuLoad();
         processUsers();
         processFollowers();
         processMessages();
     }
 
-    public static void processRequest() {
+    public void processRequest() {
         requests.inc();
     }
-    public static void processCpuLoad() {
+    public void processCpuLoad() {
         var cpuLoadLastMinute   = operatingSystemMXBean.getSystemLoadAverage() / operatingSystemMXBean.getAvailableProcessors();
         cpuLoad.set(cpuLoadLastMinute);
     }
-    public static void processUsers() {
-        long numberOfUsers = UserRepository.countUsers().get();
+    public void processUsers() {
+        long numberOfUsers = userRepository.countUsers().get();
         users.set(numberOfUsers);
     }
-    public static void processFollowers() {
-        long numberOfFollowers = FollowerRepository.countFollowers().get();
+    public void processFollowers() {
+        long numberOfFollowers = followerRepository.countFollowers().get();
         followers.set(numberOfFollowers);
     }
-    public static void processMessages() {
-        long numberOfMessages = MessageRepository.countMessages().get();
+    public void processMessages() {
+        long numberOfMessages = messageRepository.countMessages().get();
         messages.set(numberOfMessages);
     }
 
@@ -88,29 +96,29 @@ public class MaintenanceService {
         responseTimeEndPoints.get(endpoint).set(rt);
     }
 
-    public static double getUsers() {
+    public double getUsers() {
         return users.get();
     }
-    public static double getMessages() {
+    public double getMessages() {
         return messages.get();
     }
-    public static double getFollowers() {
+    public double getFollowers() {
         return followers.get();
     }
 
-    public static Object benchMarkEndpoint(ResReqSparkWrapper rrw, String endPointName, BiFunction<Request, Response, Object> endpoint) {
+    public Object benchMarkEndpoint(ResReqSparkWrapper rrw, String endPointName, BiFunction<Request, Response, Object> endpoint) {
         var startTime = System.currentTimeMillis();
         Object result = null;
         try {
             result = endpoint.apply(rrw.req, rrw.res);
         } catch (Exception e) {
-            LogService.logErrorWithMessage(e, "Endpoint error " + endPointName, Endpoints.class);
+            logService.logErrorWithMessage(e, "Endpoint error " + endPointName, Endpoints.class);
         }
         var endTime   = System.currentTimeMillis();
         try {
             MaintenanceService.logResponseTimeEndpoint(endPointToString(endPointName, rrw.isGet), endTime - startTime);
         } catch (Exception e) {
-            LogService.logErrorWithMessage(e, "Endpoint logging error " + endPointName, MaintenanceService.class);
+            logService.logErrorWithMessage(e, "Endpoint logging error " + endPointName, MaintenanceService.class);
         }
         return result;
     }
