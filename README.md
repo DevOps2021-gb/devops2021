@@ -4,10 +4,11 @@ Group B
 ### Running only website  
 Simply run java project like any other project.  
 ### Running website   
+Go to ./local folder
 Either run "./run_local.sh"  
 or the commands:  
-sudo chmod +x setup_elk.sh  
-source setup_elk.sh  
+sudo chmod +x setup_elk_local.sh  
+source setup_elk_local.sh  
 docker-compose -f docker-compose-local.yml up --build  
 ### Closing docker containers
 Run the commands:  

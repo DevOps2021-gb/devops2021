@@ -9,5 +9,5 @@ echo "export ELK_USER=$ELK_USER" >> ~/.profile
 cd $ELK_DIR
 
 # Change permissions on filebat config
-sudo chown root filebeat.yml 
-sudo chmod go-w filebeat.yml
+sudo chown root ../filebeat.yml 
+sudo chmod go-w ../filebeat.yml
