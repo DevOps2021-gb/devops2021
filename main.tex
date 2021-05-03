@@ -1,0 +1,96 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage{graphicx}
+\usepackage{blindtext}
+\usepackage{subfiles} % Best loaded last in the preamble
+\usepackage[utf8]{inputenc}
+\usepackage{verbatim}
+\usepackage{fancyhdr}
+\usepackage{todonotes}
+\usepackage{listings} %For code in appendix
+\usepackage[graphicx]{realboxes}
+\usepackage{hyperref}
+\usepackage[font=small,skip=0pt]{caption}
+\setlength{\belowcaptionskip}{-15pt}
+\usepackage{comment}
+\usepackage{amsmath}
+\usepackage{float}
+\usepackage{todonotes}
+\usepackage{fancyhdr}
+\usepackage{lastpage}
+\usepackage{enumitem,amssymb}
+\newlist{todolist}{itemize}{2}
+\setlist[todolist]{label=$\square$}
+\usepackage{pifont}
+\newcommand{\cmark}{\ding{51}}%
+\newcommand{\xmark}{\ding{55}}%
+\newcommand{\done}{\rlap{$\square$}{\raisebox{2pt}{\large\hspace{1pt}\cmark}}%
+\hspace{-2.5pt}}
+\newcommand{\wontfix}{\rlap{$\square$}{\large\hspace{1pt}\xmark}}
+\pagestyle{fancy}
+\fancyhf{}
+\lhead{Course: DevOps, Software Evolution and Software Maintenance, MSc CS (Spring 2021)\\KSDSESM1KU}
+\cfoot{\thepage}
+\newcommand{\quickcharcount}[1]{%
+  \immediate\write18{texcount -1 -sum -merge -char #1.tex > #1-chars.sum}%
+  \openin\tmp=#1-chars.sum%
+  \read\tmp to \thechar%https://www.overleaf.com/project/5f6c539d2163c50001fdb5f3
+  \closein\tmp%
+}
+\newcommand{\quickwordcount}[1]{%
+  \immediate\write18{texcount -1 -sum -merge #1.tex > #1-words.sum}%
+  \openin\tmp=#1-words.sum%
+  \read\tmp to \theword%
+  \closein\tmp%
+}
+
+\usepackage[T1]{fontenc}
+\usepackage{inconsolata}
+
+\usepackage{color}
+
+\definecolor{pblue}{rgb}{0.13,0.13,1}
+\definecolor{pgreen}{rgb}{0,0.5,0}
+\definecolor{pred}{rgb}{0.9,0,0}
+\definecolor{pgrey}{rgb}{0.46,0.45,0.48}
+
+\usepackage{listings}
+
+\title{Exam: DevOps, Software Evolution and Software Maintenance, MSc CS (Spring 2021)\\
+Course code: KSDSESM1KU}
+\author{
+Frederik Henrik Martini, frem@itu.dk\\
+Jesper Falkenberg Henriksen, jefh@itu.dk\\
+Jonas Ishøj Nielsen, join@itu.dk \\
+Nikolaj Mertz, nime@itu.dk\\
+Sif Amalie Rybjerg Kristensen, sikr@itu.dk\\
+}
+\date{31/05/2021}
+
+\begin{document}
+\maketitle
+
+\newpage
+{
+  \hypersetup{linkcolor=black}
+  \tableofcontents
+  \clearpage
+}
+
+
+
+\input{Sections/1-systems-perspective}
+\input{Sections/2-process-perspective}
+\input{Sections/3-lessons-learned}
+
+
+
+\begin{comment}
+    %https://tex.stackexchange.com/questions/277560/counting-characters-in-a-section-of-a-document?noredirect=1&lq=1
+    \quickwordcount{main}
+    \quickcharcount{main}
+    \todo{There are \thechar characters and approximately \theword spaces.
+    That makes approximately \the\numexpr\theword+\thechar\relax\ characters total.}
+\end{comment}
+\end{document}
