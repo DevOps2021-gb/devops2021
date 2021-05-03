@@ -7,8 +7,6 @@ import errorhandling.Failure;
 import errorhandling.Result;
 import errorhandling.Success;
 import com.dieselpoint.norm.Database;
-import services.ILogService;
-import services.LogService;
 
 public class DB {
     private static Database instance;
@@ -19,8 +17,7 @@ public class DB {
     private static String pw               = "root";
     private static String connectionString = null;
 
-    private DB() {
-    }
+    private DB() {}
 
     public static Result<Database> connectDb() {
         if (instance == null) {

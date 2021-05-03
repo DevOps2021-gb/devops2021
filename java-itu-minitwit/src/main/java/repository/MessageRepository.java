@@ -5,7 +5,6 @@ import model.Tweet;
 import errorhandling.Failure;
 import errorhandling.Result;
 import errorhandling.Success;
-import utilities.Formatting;
 import utilities.IFormatting;
 
 import java.util.Date;
@@ -17,9 +16,9 @@ public class MessageRepository implements IMessageRepository {
     private final IUserRepository userRepository;
     private final IFormatting formatting;
 
-    public MessageRepository(IUserRepository _userRepository, IFormatting _formatting) {
-        userRepository = _userRepository;
-        formatting = _formatting;
+    public MessageRepository(IUserRepository userRepository, IFormatting formatting) {
+        this.userRepository = userRepository;
+        this.formatting = formatting;
     }
 
     static final int PER_PAGE = 30;

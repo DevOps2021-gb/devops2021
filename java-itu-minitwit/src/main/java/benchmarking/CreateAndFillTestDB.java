@@ -12,10 +12,10 @@ public class CreateAndFillTestDB implements ICreateAndFillTestDB{
     private final IFollowerRepository followerRepository;
     private final IMessageRepository messageRepository;
 
-    public CreateAndFillTestDB(IUserRepository _userRepository, IFollowerRepository _followerRepository, IMessageRepository _messageRepository){
-        userRepository = _userRepository;
-        followerRepository = _followerRepository;
-        messageRepository = _messageRepository;
+    public CreateAndFillTestDB(IUserRepository userRepository, IFollowerRepository followerRepository, IMessageRepository messageRepository){
+        this.userRepository = userRepository;
+        this.followerRepository = followerRepository;
+        this.messageRepository = messageRepository;
     }
     private static Random rand = new java.security.SecureRandom();
 

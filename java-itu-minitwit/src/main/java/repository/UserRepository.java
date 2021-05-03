@@ -4,15 +4,14 @@ import model.User;
 import errorhandling.Failure;
 import errorhandling.Result;
 import errorhandling.Success;
-import utilities.Hashing;
 import utilities.IHashing;
 
 public class UserRepository implements IUserRepository {
 
     private final IHashing hashing;
 
-    public UserRepository(IHashing _hashing) {
-        hashing = _hashing;
+    public UserRepository(IHashing hashing) {
+        this.hashing = hashing;
     }
 
     public Result<Boolean> queryLogin(String username, String password) {

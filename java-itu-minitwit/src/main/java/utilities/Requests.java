@@ -1,6 +1,5 @@
 package utilities;
 
-import services.ILogService;
 import services.MessageService;
 import errorhandling.Failure;
 import errorhandling.Result;
@@ -18,8 +17,8 @@ public class Requests implements IRequests {
 
     private final IJSONFormatter jsonFormatter;
 
-    public Requests(IJSONFormatter _jsonFormatter) {
-        jsonFormatter = _jsonFormatter;
+    public Requests(IJSONFormatter jsonFormatter) {
+        this.jsonFormatter = jsonFormatter;
     }
 
     public void putAttribute(String attribute, Object value) {
@@ -106,7 +105,7 @@ public class Requests implements IRequests {
     }
 
     private void addJsonFromBody(Map<String, String> map, Request request) throws IOException {
-        ObjectMapper mapper = new ObjectMapper();
+        var mapper = new ObjectMapper();
 
         Map<String, String> temp = mapper.readValue(request.body(), Map.class);
         map.putAll(temp);
