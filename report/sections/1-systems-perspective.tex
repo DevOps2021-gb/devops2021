@@ -1,7 +1,22 @@
 \section{System's perspective} \label{section:System perspective}
 \todo{argue for the choice of technologies and decisions for at least all cases for which we asked you to do so in the tasks at the end of each session.}
 \subsection{Design} %Jonas
+
 \subsection{Architecture} %Jonas
-\subsection{Dependencies}
+
+\subsection{Dependencies (+licencing?) } %Nikolaj %god ide med license her
+
 \subsection{Important interactions of subsystem}
+
 \subsection{Current state of system}
+The system is currently has a single known bug regarding the scaling of the system, see section \ref{subsection:scaling}. The tool used for static analysis, \texttt{sonarcloud}, reports the best rating, \textit{A}, on all measures, with 
+
+\begin{itemize}
+    \item 0 bugs
+    \item 0 code vulnerabilities and 0 security hotspots
+    \item 6 hours code debt due to 63 code smells
+    \item 0.0\% code duplication and 0 duplicated blocks
+\end{itemize}
+
+Out of the 63 code smells only 11 are major, critical or blockers and all 63 has been assessed as issues that can ignored.
+
