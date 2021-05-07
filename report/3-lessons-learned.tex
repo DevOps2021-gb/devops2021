@@ -1,0 +1,17 @@
+\section{Lessons learned perspective} \label{section:Lessons learned perspective}
+\todo{Link back to respective commit messages, issues, tickets, etc. to illustrate these.}
+\subsection{Issues: evolution and refactoring}
+Initially, the inherited code was translated to a basic Java application using the Java Spark framework\footnote{\url{https://github.com/DevOps2021-gb/devops2021/issues/152}}. At the time, this code was very bare-bones with all logic and endpoints located in a single file. As time went on, the team refactored the application to make use of a more well structured system architecture (controller-, service-, persistance-layer)\footnote{\url{https://github.com/DevOps2021-gb/devops2021/tree/ae6cd48a06fde2a5c403056b33895b7589cb039d}} eventually adding dependency injection and mock testing\footnote{\url{https://github.com/DevOps2021-gb/devops2021/commit/07914442a09e204f0be2687fe8e5b9bd07799ee4}} to the application. 
+During development one of the endpoints response code was changed which led to a massive increase in errors the simulator reported, this could have been avoided if a fraction of the provided minitwit\_simulator.py file had been a part of the test pipeline.
+
+\subsection{Issues: operation}
+The self-made heartbeat protocol had some issues related to Java Spark. An issue\footnote{\url{https://github.com/DevOps2021-gb/devops2021/issues/171}} was created trying to remedy this but was never finished, rendering the availability part of the system unstable as the backup would perceive the primary to be down then reassign the floating-ip to itself exposing a single point of failure.
+
+\todo{lost access to DB, did X about it and made backup system} %Nikolaj
+
+\url{https://github.com/DevOps2021-gb/devops2021/issues/94} %Nikolaj
+
+\subsection{Issues: maintenance}
+Lacked alerts
+
+The group never figured out how make SonarCloud read the test coverage\footnote{\url{https://github.com/DevOps2021-gb/devops2021/issues/140}}, eventually scrapping the idea after spending much time trying to make it work

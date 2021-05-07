@@ -1,0 +1,30 @@
+\section{Process's perspective} \label{section:Process perspective}
+\todo{Also reflect and describe what was the "DevOps" style of your work. For example, what did you do differently to previous development projects and how did it work?}
+
+\subsection{Interactions and organization of developer team} %jesper
+The developer team stay in contact through a Microsoft Teams team, where we have regular meetings every Monday and usually one or two additional "stand up" type meetings to check in on progress throughout the week. The Teams chat is also used for some links and logins, as well as communication regarding individual tasks. \\ \indent Major issues are typically done with everyone present if they require important decisions, otherwise, work is usually done individually or in groups or two or three people - depending on the complexity of the task ahead.
+ 
+
+\subsection{CI/CD chain} %jesper
+For CI, we initially attempted to use TravisCI, as everyone in the group had encountered it. We ended up abandoning TravisCI due to an overwhelming number of issues with files and folders not being added properly, in addition to not being able to make proper use of necessary secrets. \\ \indent We instead settled for using GitHub Actions, which had all the features we wanted (triggers, stages, customizable images and non-local storage of secrets).
+\todo{describe process}
+
+\subsection{Organization of repository}
+The code is organized using a mono repository setup, having all code and scripts necessary to run the application gathered in a single repository. The team deemed this sufficient as everything located in the repository (apart from local dockerfiles and simulator) is involved in the deployment process and the code-base is small and simple enough that having multiple repositories would only increase complexity. 
+
+%, \underline{\href{https://github.com/DevOps2021-gb/devops2021}{devops2021}.}
+
+\subsection{Applied branching strategy and development process} %frederik
+The group decided on using the master branch for the latest release meaning that the code found in production, could also be found on the master branch. The develop branch facilitated the main development of the project which should always contain a working build. From develop each group member could create feature branches (feature/logging for example) to then merge into develop once tested and approved. Develop could be subject to hotfixes, which would then be merged into master when issues arose. The full process can be seen in CONTRIBUTE.md. The group used GitHub issues to track development progress labeling them as needed with tags such as bug, documentation, feature, enhancement and so on.
+
+\subsection{Monitoring} %Jonas
+
+\subsection{Logging + experiment}
+Logging is set up as an EFK stack. Initially only exceptions were logged but during the logging exercise we found only one of the three introduced bugs could by detected by our logging system, telling us our logging was insufficient. Afterwards more detailed logging was introduced now also logging requests and their payloads with the exception of passwords which has been removed. This change made all three kinds of bug show up in the log. The description of the experiment can be found in the wiki entry \underline{\href{https://github.com/DevOps2021-gb/devops2021/wiki/Catch-a-Bug-By-Looking-at-the-Logs}{Catch a Bug By Looking at the Logs}}.
+\textcolor{red}{How do we aggregate logs?}
+
+\subsection{Security assessment self and from group a/L} %Jonas
+No response from other group, did it ourselves - found X and did Y about it
+
+\subsection{Scaling and load balancing}\label{subsection:scaling} %Nikolaj/Frederik
+The group had difficulties using linux' heartbeat command as it could not listen on a specific port. Two shell scripts were therefore written instead. The first script continuously running on the secondary droplet checking the availability of the primary droplet, reassigning the floating-ip to itself should the application on the primary droplet go down. The second script would run on the primary droplet to reassign the floating-ip to itself when it restarted 
