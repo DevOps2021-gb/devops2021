@@ -2,8 +2,8 @@ name: Build LaTeX document
 on:
   push:
     branches: [ develop ]
-  pull_request:
-    branches: [ develop ]
+    paths:
+      - report/**
 jobs:
   build_latex:
     runs-on: ubuntu-latest
@@ -19,4 +19,4 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: PDF
-          path: report/main.pdf
+          path: report/exam_report.pdf
