@@ -20,7 +20,7 @@ The group decided on using the master branch for the latest release meaning that
 \subsection{Monitoring} %Jonas
 
 \subsection{Logging + experiment}
-Logging is set up as an EFK stack. Initially only exceptions were logged but during the logging exercise we found only one of the three introduced bugs could by detected by our logging system, telling us our logging was insufficient. Afterwards more detailed logging was introduced now also logging requests and their payloads with the exception of passwords which has been removed. This change made all three kinds of bug show up in the log. The description of the experiment can be found in the wiki entry \underline{\href{https://github.com/DevOps2021-gb/devops2021/wiki/Catch-a-Bug-By-Looking-at-the-Logs}{Catch a Bug By Looking at the Logs}}.
+Logging is set up as an EFK stack. Initially only exceptions were logged but during the logging exercise we found only one of the three introduced bugs could by detected by our logging system, telling us our logging was insufficient. Afterwards more detailed logging was introduced now also logging requests and their payloads with the exception of passwords which was removed. This change made all three kinds of bug show up in the log. The description of the experiment can be found in the wiki entry \underline{\href{https://github.com/DevOps2021-gb/devops2021/wiki/Catch-a-Bug-By-Looking-at-the-Logs}{Catch a Bug By Looking at the Logs}}.
 \textcolor{red}{How do we aggregate logs?}
 
 \subsection{Security assessment self and from group a/L} %Jonas
