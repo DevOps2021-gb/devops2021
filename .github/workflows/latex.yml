@@ -19,7 +19,8 @@ jobs:
         run: |
           git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
-          git commit -m "Updated report pdf" main.pdf
+          ls -a
+          git commit -m "Updated report pdf" report/main.pdf
       - name: Push changes
         uses: ad-m/github-push-action@master
         with:
