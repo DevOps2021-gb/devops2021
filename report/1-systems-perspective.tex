@@ -17,22 +17,22 @@
     \item \textbf{prometheus}: Prometheus JVM Client for introducing instrumenting such as gauges, counters and other metrics.
     \item \textbf{org.json}: Toolkit for JSON.
 \end{itemize}
-\todo{Skal plugins nævnes?(maven, PMD, forbiddenAPIs)}
+\todo{Skal plugins nævnes?(maven, PMD, forbiddenAPIs) \textcolor{yellow}{Maven kunne måske være relevant i hvert fald}}
 
 
-We used \url{www.licensediscovery.io} to analyze our Maven dependency licenses. As seen in figure \ref{} the strictest license that the majority of dependencies is ruled by is the Apache Software Licence Version 2. This is the license that we therefore went with.\footnote{\url{https://github.com/DevOps2021-gb/devops2021/blob/main/LICENSE.md}} \todo{Er det begrundelse nok?}
+We used \url{www.licensediscovery.io} to analyze our Maven dependency licenses. As seen in figure \ref{fig:licenceDep} the strictest license that the majority of dependencies is ruled by is the Apache Software Licence Version 2. This is the license that we therefore went with.\footnote{\url{https://github.com/DevOps2021-gb/devops2021/blob/main/LICENSE.md}} \todo{Er det begrundelse nok?}
 \begin{figure}[!htb]
     \centering
-    \includegraphics[scale=0.2]{report/images/LicenceDependencies.png}
+    \includegraphics[scale=0.2]{LicenceDependencies.png}
     \caption{Overview of dependency licenses. Sub-dependencies included.}
-    \label{fig:my_label}
+    \label{fig:licenceDep}
 \end{figure}
 
 
 \subsection{Important interactions of subsystem}
 
 \subsection{Current state of system}
-The system is currently has a single known bug regarding the scaling of the system, see section \ref{subsection:scaling}. The tool used for static analysis, \texttt{sonarcloud}, reports the best rating, \textit{A}, on all measures, with 
+The system is currently has a single known bug regarding the scaling of the system, see section \ref{issues-operation}. The tool used for static analysis, \texttt{sonarcloud}, reports the best rating, \textit{A}, on all measures, with 
 
 \begin{itemize}
     \item 0 bugs
