@@ -1,8 +1,109 @@
 \section{System's perspective} \label{section:System perspective}
 \todo{argue for the choice of technologies and decisions for at least all cases for which we asked you to do so in the tasks at the end of each session.}
 \subsection{Design} %Jonas
+\hyperref[fig:componentDiagram]{Figure \ref{fig:componentDiagram}} shows the different components of the ITU-minitwit system.
+
+\todo{TODO: MISSING TEXT ON EACH CONNECTOR.}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1.0\textwidth]{images/Diagrams-Development_view_component_diagram.jpg}
+    \caption{Component diagram, development view}
+    \label{fig:componentDiagram}
+\end{figure}
+
+
+\begin{itemize}
+    \item \textbf{Main}: is the entrance point onto the program, and contains arguments to modify which database is used. Main also starts the maintenance and set max number of threads for the program.\\
+    The class diagram can be seen in \hyperref[fig:classDiagramMain]{figure \ref{fig:classDiagramMain}}.
+    \item \textbf{Utilities}: contains helper methods like hashing, formatting dates and JSON and Request, response and session wrapper objects. \\
+    The class diagram can be seen in \hyperref[fig:classDiagramUtilities]{figure \ref{fig:classDiagramUtilities}}.
+    \item \textbf{Error handling}: Contains objects to hold result of computations which could result in exceptions, allowing for better error handling and reducing amounts of try-catch statements. \\
+    The class diagram can be seen in \hyperref[fig:classDiagramErrorhandling]{figure \ref{fig:classDiagramErrorhandling}}.
+    \item \textbf{Controllers}: Handles the different endpoints which our website should provide, by mapping paths for post and get request to which code should handle the requests and responses.\\
+    The class diagram can be seen in \hyperref[fig:classDiagramControllers]{figure \ref{fig:classDiagramControllers}}.
+    \item \textbf{View}: Contains code for changing what is presented in the website, by redirecting to new paths or by setting new HTML file/template to be used along with variables for it to know.\\
+    The class diagram can be seen in \hyperref[fig:classDiagramView]{figure \ref{fig:classDiagramView}}.
+    \item \textbf{Services}: Includes the code for maintenance, which uses Prometheus library to store the values Prometheus should collect, and the log service, which prints in a manner easy to filer for in Kibana. Services also includes functions executing the requests and responses.\\
+    The class diagram can be seen in \hyperref[fig:classDiagramServices]{figure \ref{fig:classDiagramServices}}.
+    \item \textbf{Repository}: Includes code for starting the database and for executing queries needed by the services. The ORM tool used is NORM.  \todo{argue for why}\\
+    The class diagram can be seen in \hyperref[fig:classDiagramRepository]{figure \ref{fig:classDiagramRepository}}.
+    \item \textbf{Model}: Model contains the database relations with one object per entity. The objects in the folder matches the entities in the database as they are the template NORM uses to create it.\\
+    The class diagram can be seen in \hyperref[fig:classDiagramModel]{figure \ref{fig:classDiagramModel}}.
+    \item \textbf{Benchmark}: This is not in deployment and contains code to be run locally only. The packet component relates to measuring speed of different operations in the repository and was used to argue for speedups related to any extension to a database of same size as the one in deployment, as when indexes was added.\\
+    The class diagram can be seen in \hyperref[fig:classDiagramModel]{figure \ref{fig:classDiagramModel}}.
+\end{itemize}
+
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1.0\textwidth]{images/class_diagram_main.jpg}
+    \caption{Class diagram main, logical view}
+    \label{fig:classDiagramMain}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1.0\textwidth]{images/class_diagram_utilities.jpg}
+    \caption{Class diagram utilities, logical view}
+    \label{fig:classDiagramUtilities}
+\end{figure}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1.0\textwidth]{images/class_diagram_errorhandling.jpg}
+    \caption{Class diagram errorhandling, logical view}
+    \label{fig:classDiagramErrorhandling}
+\end{figure}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1.0\textwidth]{images/class_diagram_controllers.jpg}
+    \caption{Class diagram controllers, logical view}
+    \label{fig:classDiagramControllers}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1.0\textwidth]{images/class_diagram_view.jpg}
+    \caption{Class diagram view, logical view}
+    \label{fig:classDiagramView}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1.0\textwidth]{images/class_diagram_services.jpg}
+    \caption{Class diagram services, logical view}
+    \label{fig:classDiagramServices}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1.0\textwidth]{images/class_diagram_repository.jpg}
+    \caption{Class diagram repository, logical view}
+    \label{fig:classDiagramRepository}
+\end{figure}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1.0\textwidth]{images/class_diagram_model.jpg}
+    \caption{Class diagram model, logical view}
+    \label{fig:classDiagramModel}
+\end{figure}
 
 \subsection{Architecture} %Jonas
+\hyperref[fig:componentDiagram]{Figure \ref{fig:componentDiagram}} shows the architecture of the entire ITU-minitwit system. Code is stored in github, which developers pull and push to during development. As mentioned main contains code for which database to use, and when running just the code locally it should use a local database called minitwit running on port 3306 localhost with password and username "root". When running locally with docker compose the mysql services should be stopped so a container for the database can be created. 
+
+
+\todo{Describe report pulling and creation}
+
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1.0\textwidth]{images/Diagrams-Process_view_communication_diagram.jpg}
+    \caption{communication diagram, process view}
+    \label{fig:componentDiagram}
+\end{figure}
+
+
+
+
 
 \subsection{Dependencies } %Nikolaj %god ide med license her
 \begin{itemize}
@@ -23,7 +124,7 @@
 We used \url{www.licensediscovery.io} to analyze our Maven dependency licenses. As seen in figure \ref{fig:licenceDep} the strictest license that the majority of dependencies is ruled by is the Apache Software Licence Version 2. This is the license that we therefore went with.\footnote{\url{https://github.com/DevOps2021-gb/devops2021/blob/main/LICENSE.md}} \todo{Er det begrundelse nok?}
 \begin{figure}[!htb]
     \centering
-    \includegraphics[scale=0.2]{LicenceDependencies.png}
+    \includegraphics[scale=0.2]{images/LicenceDependencies.png}
     \caption{Overview of dependency licenses. Sub-dependencies included.}
     \label{fig:licenceDep}
 \end{figure}
