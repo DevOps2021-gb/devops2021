@@ -15,16 +15,32 @@ The code is organized using a mono repository setup, having all code and scripts
 %, \underline{\href{https://github.com/DevOps2021-gb/devops2021}{devops2021}.}
 
 \subsection{Applied branching strategy and development process} %frederik
-The group decided on using the master branch for the latest release meaning that the code found in production, could also be found on the master branch. The develop branch facilitated the main development of the project which should always contain a working build. From develop each group member could create feature branches (feature/logging for example) to then merge into develop once tested and approved. Develop could be subject to hotfixes, which would then be merged into master when issues arose. The full process can be seen in CONTRIBUTE.md. The group used GitHub issues to track development progress labeling them as needed with tags such as bug, documentation, feature, enhancement and so on.
+The group decided on using the master branch for the latest release meaning that the code found in production, could also be found on the master branch. The develop branch facilitated the main development of the project which should always contain a working build. From develop each group member could create feature branches (\texttt{feature/logging} for example) and then merge back into develop once tested and approved. Develop could be subject to hotfixes, which would then be merged into master when issues arose. The full process can be seen in \underline{\href{https://github.com/DevOps2021-gb/devops2021/blob/main/CONTRIBUTE.md}{CONTRIBUTE.md}}. The group used GitHub issues to track development progress labeling them as needed with tags such as bug, documentation, feature, enhancement and so on. The status of each issue and the issues to focus on each week was tracked using GitHub's kanban board, having columns 'Todo', 'This sprint', 'In progress' and 'Done'.
 
 \subsection{Monitoring} %Jonas
 
-\subsection{Logging + experiment}
-Logging is set up as an EFK stack. Initially only exceptions were logged but during the logging exercise we found only one of the three introduced bugs could by detected by our logging system, telling us our logging was insufficient. Afterwards more detailed logging was introduced now also logging requests and their payloads with the exception of passwords which was removed. This change made all three kinds of bug show up in the log. The description of the experiment can be found in the wiki entry \underline{\href{https://github.com/DevOps2021-gb/devops2021/wiki/Catch-a-Bug-By-Looking-at-the-Logs}{Catch a Bug By Looking at the Logs}}.
-\textcolor{red}{How do we aggregate logs?}
+\subsection{Logging}
+Logging is set up as an EFK stack. Initially only exceptions were logged but during the logging exercise we found only one of the three introduced bugs could by detected by our logging system, telling us our logging was insufficient. Afterwards more detailed logging was introduced now also logging requests and their payloads with the exception of passwords which was removed. This change made all three kinds of bug show up in the log. The description of the experiment can be found in the wiki entry \underline{\href{https://github.com/DevOps2021-gb/devops2021/wiki/Catch-a-Bug-By-Looking-at-the-Logs}{Catch a Bug By Looking at the Logs}} 
+\todo{How do we aggregate logs?}
 
-\subsection{Security assessment self and from group a/L} %Jonas
-No response from other group, did it ourselves - found X and did Y about it
+%self and from group a/L
+\subsection{Security assessment} %Jonas
+In order to assess the security of the system two tasks were undertaken. A risk assessment was conducted and a penetration testing was performed.
+
+For the rick assessment three assets to protect was identified: the web application, the database and the logging. For the application and the database the following threats were identified:
+
+\begin{itemize}
+    \item Web application: SQL injection, cross site scripting
+    \item Database: SQL injection through web application/API
+\end{itemize}
+
+A risk analysis table was constructed and 11 scenarios were identified. \todo{Gjorde vi noget ved nogle af tingene? Hvis nej, hvorfor så ikke?}
+
+The full details of the risks assesment can be found under \underline{\href{https://github.com/DevOps2021-gb/devops2021/wiki/Risk-assesment}{Risk Assessment}}.
+
+For the penetration testing three tools were used: \textit{nmap}, \textit{metasploit} and \textit{SQL map}.In each case no vulnerabilities were found. In addition to using \textit{SQL map} cross-site scripting was also tested manually in multiple browsers by trying to use script-tags in the message input field on the website. In all tested browsers the script tag was not rendered. Lastly, it was checked that traces of the tools run showed up in the logging. The full details of the penetration test can be seen in \underline{\href{https://github.com/DevOps2021-gb/devops2021/wiki/Penetration-testing}{Penetration testing}}. 
+
+Another group was supposed to perform a white hat attack on the system. Nothing was heard from the group and it must be assumed that they found nothing to report.
 
 \subsection{Scaling and load balancing}\label{subsection:scaling} %Nikolaj/Frederik
-The group had difficulties using linux' heartbeat command as it could not listen on a specific port. Two shell scripts were therefore written instead. The first script continuously running on the secondary droplet checking the availability of the primary droplet, reassigning the floating-ip to itself should the application on the primary droplet go down. The second script would run on the primary droplet to reassign the floating-ip to itself when it restarted 
+The group had difficulties using linux' heartbeat command as it could not listen on a specific port. Two shell scripts were therefore written instead. The first script continuously running on the secondary droplet checking the availability of the primary droplet, reassigning the floating-ip to itself should the application on the primary droplet go down. The second script would run on the primary droplet to reassign the floating-ip to itself when it restarted \todo{Linke til scripts?}
