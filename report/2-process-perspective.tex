@@ -20,11 +20,11 @@ The group decided on using the master branch for the latest release meaning that
 \subsection{Monitoring} %Jonas
 
 \subsection{Logging}
-Logging is set up as an EFK stack. Initially only exceptions were logged but during the logging exercise we found only one of the three introduced bugs could by detected by our logging system, telling us our logging was insufficient. Afterwards more detailed logging was introduced now also logging requests and their payloads with the exception of passwords which was removed. This change made all three kinds of bug show up in the log. The description of the experiment can be found in the wiki entry \underline{\href{https://github.com/DevOps2021-gb/devops2021/wiki/Catch-a-Bug-By-Looking-at-the-Logs}{Catch a Bug By Looking at the Logs}} 
+Logging is set up as an EFK stack. Initially only exceptions were logged but during the logging exercise we found only one of the three introduced bugs could by detected by our logging system, telling us our logging was insufficient. Afterwards more detailed logging was introduced now also logging requests and their payloads with the exception of passwords which was removed. This change made all three kinds of bug show up in the log. The description of the experiment can be found in the wiki entry \underline{\href{https://github.com/DevOps2021-gb/devops2021/wiki/Catch-a-Bug-By-Looking-at-the-Logs}{Catch a Bug By Looking at the Logs}}. 
 \todo{How do we aggregate logs?}
 
-%self and from group a/L
-\subsection{Security assessment} %Jonas
+
+\subsection{Security assessment} %Jonas %self and from group a/L
 In order to assess the security of the system two tasks were undertaken. A risk assessment was conducted and a penetration testing was performed.
 
 For the rick assessment three assets to protect was identified: the web application, the database and the logging. For the application and the database the following threats were identified:
@@ -34,7 +34,7 @@ For the rick assessment three assets to protect was identified: the web applicat
     \item Database: SQL injection through web application/API
 \end{itemize}
 
-A risk analysis table was constructed and 11 scenarios were identified. \todo{Gjorde vi noget ved nogle af tingene? Hvis nej, hvorfor så ikke?}
+A risk analysis table was constructed and 11 scenarios were identified. \todo{Gjorde vi noget ved nogle af tingene? Hvis nej, hvorfor så ikke? \textcolor{yellow}{Vi gjorde ikke noget}}
 
 The full details of the risks assesment can be found under \underline{\href{https://github.com/DevOps2021-gb/devops2021/wiki/Risk-assesment}{Risk Assessment}}.
 
@@ -43,4 +43,4 @@ For the penetration testing three tools were used: \textit{nmap}, \textit{metasp
 Another group was supposed to perform a white hat attack on the system. Nothing was heard from the group and it must be assumed that they found nothing to report.
 
 \subsection{Scaling and load balancing}\label{subsection:scaling} %Nikolaj/Frederik
-The group had difficulties using linux' heartbeat command as it could not listen on a specific port. Two shell scripts were therefore written instead. The first script continuously running on the secondary droplet checking the availability of the primary droplet, reassigning the floating-ip to itself should the application on the primary droplet go down. The second script would run on the primary droplet to reassign the floating-ip to itself when it restarted \todo{Linke til scripts?}
+The group had difficulties using linux' heartbeat command as it could not listen on a specific port. Two shell scripts were therefore written instead. The first script continuously running on the secondary droplet checking the availability of the primary droplet, reassigning the floating-ip to itself should the application on the primary droplet go down. The second script would run on the primary droplet to reassign the floating-ip to itself when it restarted \footnote{\url{https://github.com/DevOps2021-gb/devops2021/tree/main/heartbeat}}
