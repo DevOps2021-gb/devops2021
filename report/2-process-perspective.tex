@@ -13,7 +13,7 @@ For CI, we initially attempted to use TravisCI, as everyone in the group had enc
     \item \textbf{Staging deployment}: This is invoked on all pushes to the main branch. This workflow logs into DockerHub, builds and pushes the minitwit docker image with database secrets. Afterwards it SSH's to the primary minitwit server and fetches the minitwit config files, including the docker-compose file. Immediately after all containers are torn down and rebuild using the newly pushed minitwit image from DockerHub. Finally, a release is created with new commits linked and the backup server is redeployed similarly. In the downtime of the primary server the backup server obtains the floating IP and vice versa. 
     \item \textbf{Backup DB}: Once a day SSH's into the primary server and creates a database dump with time and date in the name. Created to minimize potential data loss. 
     \item \textbf{Build LaTeX document}: Compiles the LaTeX files and builds the pdf document when changes are pushed to the report directory in the repository. The LaTeX files are manually fetched from a remote overleaf repository, as Overleaf facilitates the groups collaborative writing. 
-    \item \textbf{SonarCloud}: Official SonarCloud github action that builds and analyzes the java project using $mvn verify$. 
+    \item \textbf{SonarCloud}: Official SonarCloud github action that builds and analyzes the java project using \textit{mvn\_verify}. 
 \end{itemize}
 \todo{describe secret handling}
 
