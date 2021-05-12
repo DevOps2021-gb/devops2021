@@ -18,7 +18,7 @@ import static spark.Spark.threadPool;
 
 public class Main {
 
-    public static MutablePicoContainer container = new DefaultPicoContainer();
+    public static final MutablePicoContainer container = new DefaultPicoContainer();
 
     public static void main(String[] args) {
         try {

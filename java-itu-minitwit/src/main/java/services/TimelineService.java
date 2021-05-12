@@ -26,18 +26,18 @@ public class TimelineService implements ITimelineService{
     private final IMetricsService metricsService;
 
     public TimelineService(
-            IFollowerRepository _followerRepository,
-            IMessageRepository _messageRepository,
-            IUserRepository _userRepository,
-            IPresentationController _presentationController,
-            IRequests _requests,
-            IMetricsService _metricsService) {
-        followerRepository = _followerRepository;
-        messageRepository = _messageRepository;
-        userRepository = _userRepository;
-        presentationController = _presentationController;
-        requests = _requests;
-        metricsService = _metricsService;
+            IFollowerRepository followerRepository,
+            IMessageRepository messageRepository,
+            IUserRepository userRepository,
+            IPresentationController presentationController,
+            IRequests requests,
+            IMetricsService metricsService) {
+        this.followerRepository = followerRepository;
+        this.messageRepository = messageRepository;
+        this.userRepository = userRepository;
+        this.presentationController = presentationController;
+        this.requests = requests;
+        this.metricsService = metricsService;
     }
 
     /*

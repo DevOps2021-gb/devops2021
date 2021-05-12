@@ -15,8 +15,8 @@ public class JSONFormatter implements IJSONFormatter {
 
     private final IResponses responses;
 
-    public JSONFormatter(IResponses _responses) {
-        responses = _responses;
+    public JSONFormatter(IResponses responses) {
+        this.responses = responses;
     }
 
     public static final String APPLICATION_JSON = "application/json";

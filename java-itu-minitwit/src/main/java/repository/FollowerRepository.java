@@ -12,8 +12,8 @@ public class FollowerRepository implements IFollowerRepository {
 
     private final IUserRepository userRepository;
 
-    public FollowerRepository(IUserRepository _userRepository) {
-        userRepository = _userRepository;
+    public FollowerRepository(IUserRepository userRepository) {
+        this.userRepository = userRepository;
     }
 
     public Result<Long> countFollowers() {

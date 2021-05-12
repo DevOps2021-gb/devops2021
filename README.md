@@ -1,3 +1,5 @@
+[![Java CI with Maven](https://github.com/DevOps2021-gb/devops2021/actions/workflows/maven.yml/badge.svg)](https://github.com/DevOps2021-gb/devops2021/actions/workflows/maven.yml)
+[![SonarCloud](https://github.com/DevOps2021-gb/devops2021/actions/workflows/sonarcloud.yml/badge.svg)](https://github.com/DevOps2021-gb/devops2021/actions/workflows/sonarcloud.yml)
 # devops2021  
 Group B  
 # Running locally  

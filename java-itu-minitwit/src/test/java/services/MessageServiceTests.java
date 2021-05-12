@@ -32,7 +32,7 @@ class MessageServiceTests {
     }
 
     @Test
-    public void getMessagesGivenUnauthorizedDtoReturnsUnauthorized() {
+    void getMessagesGivenUnauthorizedDtoReturnsUnauthorized() {
         var dto = new DTO();
         dto.authorization = "unauthorized";
 
@@ -46,7 +46,7 @@ class MessageServiceTests {
     }
 
     @Test
-    public void getMessagesGivenAuthorizedDtoReturnsTweets() {
+    void getMessagesGivenAuthorizedDtoReturnsTweets() {
         var dto = new DTO();
         dto.authorization = "authorized";
 
@@ -59,7 +59,7 @@ class MessageServiceTests {
     }
 
     @Test
-    public void messagesPerUserGivenRequestNotFromSimulatorReturnsUnauthorized() {
+    void messagesPerUserGivenRequestNotFromSimulatorReturnsUnauthorized() {
         var dto = new MessagesPerUserDTO();
         dto.authorization = "unauthorized";
 
@@ -73,7 +73,7 @@ class MessageServiceTests {
     }
 
     @Test
-    public void messagesPerUserGivenExistingUserReturnsTweets() {
+    void messagesPerUserGivenExistingUserReturnsTweets() {
         var dto = new MessagesPerUserDTO();
         dto.authorization = "authorized";
         dto.username = "abc";
@@ -88,7 +88,7 @@ class MessageServiceTests {
     }
 
     @Test
-    public void messagesPerUserGivenNonExistingUserReturnsNotFound() {
+    void messagesPerUserGivenNonExistingUserReturnsNotFound() {
         var dto = new MessagesPerUserDTO();
         dto.authorization = "authorized";
         dto.username = "abc";

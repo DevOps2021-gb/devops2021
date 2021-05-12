@@ -12,8 +12,8 @@ public class Formatting implements IFormatting {
 
     private final IHashing hashing;
 
-    public Formatting(IHashing _hashing) {
-        hashing = _hashing;
+    public Formatting(IHashing hashing) {
+        this.hashing = hashing;
     }
 
     private static final String USERNAME = "username";
@@ -23,7 +23,7 @@ public class Formatting implements IFormatting {
 
     public Result<String> formatDatetime(String timestamp) {
         try {
-            Date resultDate = new Date(Long.parseLong(timestamp));
+            var resultDate = new Date(Long.parseLong(timestamp));
             SimpleDateFormat sdf = new SimpleDateFormat(TIMESTAMP_PATTERN, Locale.ENGLISH);
             String formattedDate = sdf.format(resultDate);
 
