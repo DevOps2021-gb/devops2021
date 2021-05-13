@@ -34,18 +34,18 @@ public class MaintenanceService implements IMaintenanceService{
     private final IFollowerRepository followerRepository;
     private final ILogService logService;
 
-    public MaintenanceService(IUserRepository _userRepository, IMessageRepository _messageRepository, IFollowerRepository _followerRepository, ILogService _logService) {
-        userRepository = _userRepository;
-        messageRepository = _messageRepository;
-        followerRepository = _followerRepository;
-        logService = _logService;
+    public MaintenanceService(IUserRepository userRepository, IMessageRepository messageRepository, IFollowerRepository followerRepository, ILogService logService) {
+        this.userRepository = userRepository;
+        this.messageRepository = messageRepository;
+        this.followerRepository = followerRepository;
+        this.logService = logService;
     }
 
     private static void setEndpoints(String[] endpoints, Boolean isGet, String helpPrefix) {
         for (String endpointOriginal: endpoints){
             String endPoint     = endPointToString(endpointOriginal, isGet);
             String helpString   = helpPrefix + endpointOriginal;
-            Gauge gauge = Gauge.build()
+            var gauge = Gauge.build()
                 .name(endPoint).help(helpString).register();
             responseTimeEndPoints.put(endPoint, gauge);
         }

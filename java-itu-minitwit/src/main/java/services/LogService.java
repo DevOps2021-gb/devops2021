@@ -12,27 +12,27 @@ public class LogService implements ILogService {
     private final IJSONFormatter jsonFormatter;
     private final IRequests requests;
 
-    public LogService(IJSONFormatter _jsonFormatter, IRequests _requests) {
-        jsonFormatter = _jsonFormatter;
-        requests = _requests;
+    public LogService(IJSONFormatter jsonFormatter, IRequests requests) {
+        this.jsonFormatter = jsonFormatter;
+        this.requests = requests;
     }
 
     public void logError(Exception e, Class theClass) {
         String className = theClass.getSimpleName();
-        Logger logger    = Logger.getLogger(theClass.getSimpleName());
+        var logger    = Logger.getLogger(theClass.getSimpleName());
         StringBuilder msg= new StringBuilder(className).append(" : Exception ::").append(e.getMessage());
         log(logger, Level.WARNING, msg);
     }
 
     public void logErrorWithMessage(Exception e, String message, Class theClass) {
         String className = theClass.getSimpleName();
-        Logger logger    = Logger.getLogger(className);
+        var logger    = Logger.getLogger(className);
         StringBuilder msg= new StringBuilder(className).append(message).append("  :  ").append(e.getMessage());
         log(logger, Level.WARNING, msg);
     }
     public void log(Class theClass, String message) {
         String className = theClass.getSimpleName();
-        Logger logger    = Logger.getLogger(className);
+        var logger    = Logger.getLogger(className);
         StringBuilder msg = new StringBuilder(className).append("  :  ").append(message);
         log(logger, Level.INFO, msg);
     }
@@ -40,7 +40,7 @@ public class LogService implements ILogService {
     public void logRequest(Request request, Class theClass) {
         if (request.url().contains("favicon.ico")) return;
 
-        Logger logger = Logger.getLogger(theClass.getSimpleName());
+        var logger = Logger.getLogger(theClass.getSimpleName());
         var params = requests.getFromBody(request).get();
         var queryParams = requests.getFromHeaders(request);
 
@@ -55,8 +55,9 @@ public class LogService implements ILogService {
         if (!headers.equals("")) message.append(" headers: ").append(headers);
         log(logger, Level.INFO, message);
     }
+
     private static void log(Logger logger, Level level, StringBuilder sb) {
-        String msg = new StringBuilder("_code_minitwit: ").append(sb.toString()).toString();
+        String msg = "_code_minitwit: " + sb.toString();
         logger.log(level, msg);
     }
 }

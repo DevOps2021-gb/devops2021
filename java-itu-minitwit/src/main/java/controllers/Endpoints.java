@@ -31,28 +31,28 @@ public class Endpoints {
     private final IMetricsService metricsService;
 
     public Endpoints(
-            IMessageService _messageService,
-            IUserService _userService,
-            ITimelineService _timelineService,
-            IFollowerRepository _followerRepository,
-            IMaintenanceService _maintenanceService,
-            IUserRepository _userRepository,
-            IPresentationController _presentationController,
-            IResponses _responses,
-            ILogService _logService,
-            IRequests _requests,
-            IMetricsService _metricsService) {
-        messageService = _messageService;
-        userService = _userService;
-        timelineService = _timelineService;
-        followerRepository = _followerRepository;
-        maintenanceService = _maintenanceService;
-        userRepository = _userRepository;
-        presentationController = _presentationController;
-        responses = _responses;
-        logService = _logService;
-        requests = _requests;
-        metricsService = _metricsService;
+            IMessageService messageService,
+            IUserService userService,
+            ITimelineService timelineService,
+            IFollowerRepository followerRepository,
+            IMaintenanceService maintenanceService,
+            IUserRepository userRepository,
+            IPresentationController presentationController,
+            IResponses responses,
+            ILogService logService,
+            IRequests requests,
+            IMetricsService metricsService) {
+        this.messageService = messageService;
+        this.userService = userService;
+        this.timelineService = timelineService;
+        this.followerRepository = followerRepository;
+        this.maintenanceService = maintenanceService;
+        this.userRepository = userRepository;
+        this.presentationController = presentationController;
+        this.responses = responses;
+        this.logService = logService;
+        this.requests = requests;
+        this.metricsService = metricsService;
     }
 
     private static final String USR_NAME = ":username";

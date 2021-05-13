@@ -1,0 +1,34 @@
+name: Build LaTeX document
+on:
+  push:
+    branches: [ develop ]
+    paths:
+      - report/**
+jobs:
+  build_latex:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up Git repository
+        uses: actions/checkout@v2
+      - name: Compile LaTeX document
+        uses: xu-cheng/latex-action@v2
+        with:
+          root_file: main.tex
+          working_directory: report/
+      - name: Commit files
+        run: |
+          git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          cd report/
+          git add main.pdf
+          git commit -m "Updated report pdf"
+      - name: Push changes
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ github.ref }}
+      - name: Upload
+        uses: actions/upload-artifact@v2
+        with:
+          name: PDF
+          path: report/main.pdf

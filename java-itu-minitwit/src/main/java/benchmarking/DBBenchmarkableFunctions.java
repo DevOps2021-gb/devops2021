@@ -10,10 +10,10 @@ public class DBBenchmarkableFunctions implements IDBBenchmarkableFunctions {
     private final IMessageRepository messageRepository;
     private final IFollowerRepository followerRepository;
 
-    public DBBenchmarkableFunctions(IUserRepository _userRepository, IMessageRepository _messageRepository, IFollowerRepository _followerRepository) {
-        userRepository = _userRepository;
-        messageRepository = _messageRepository;
-        followerRepository = _followerRepository;
+    public DBBenchmarkableFunctions(IUserRepository userRepository, IMessageRepository messageRepository, IFollowerRepository followerRepository) {
+        this.userRepository = userRepository;
+        this.messageRepository = messageRepository;
+        this.followerRepository = followerRepository;
     }
 
     private static Random rand = new java.security.SecureRandom();

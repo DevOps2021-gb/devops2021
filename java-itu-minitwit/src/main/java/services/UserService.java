@@ -10,7 +10,6 @@ import errorhandling.Success;
 import utilities.IRequests;
 import utilities.IResponses;
 import utilities.JSONFormatter;
-import utilities.Requests;
 import view.IPresentationController;
 import org.eclipse.jetty.http.HttpStatus;
 import org.json.JSONArray;
@@ -34,19 +33,18 @@ public class UserService implements IUserService {
     private final IMetricsService metricsService;
 
     public UserService(
-            IFollowerRepository _followerRepository,
-            IUserRepository _userRepository,
-            IPresentationController _presentationController,
-            IResponses _responses,
-            IRequests _requests,
-            IMetricsService _metricsService) {
-        followerRepository = _followerRepository;
-        userRepository = _userRepository;
-        presentationController = _presentationController;
-        responses = _responses;
-        requests = _requests;
-        metricsService = _metricsService;
-
+            IFollowerRepository followerRepository,
+            IUserRepository userRepository,
+            IPresentationController presentationController,
+            IResponses responses,
+            IRequests requests,
+            IMetricsService metricsService) {
+        this.followerRepository = followerRepository;
+        this.userRepository = userRepository;
+        this.presentationController = presentationController;
+        this.responses = responses;
+        this.requests = requests;
+        this.metricsService = metricsService;
     }
 
     public Result<String> validateUserCredentials(String username, String email, String password1, String password2) {
