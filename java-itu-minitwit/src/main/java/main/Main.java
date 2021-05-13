@@ -30,6 +30,12 @@ public class Main {
             container.getComponent(Endpoints.class).register();
 
             if (args.length > 0) {
+                if(args.length == 4) {
+                    var isNewDB = Boolean.parseBoolean(args[3]);
+                    if(isNewDB) {
+                        DB.dropDatabase();
+                    }
+                }
                 DB.setDatabaseParameters(args[0], args[1], args[2]);
             }
 
@@ -45,7 +51,7 @@ public class Main {
 
     private static void setMaxThreads () {
         try {
-            int maxThreads = 8;
+            var maxThreads = 8;
             threadPool(maxThreads);
         } catch (IllegalStateException e) {
             var logger = container.getComponent(LogService.class);
