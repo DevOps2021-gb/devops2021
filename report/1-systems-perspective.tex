@@ -1,21 +1,20 @@
 \section{System's perspective} \label{section:System perspective}
-\todo{argue for the choice of technologies and decisions for at least all cases for which we asked you to do so in the tasks at the end of each session.}
-\subsection{Design} %Jonas
+\todo{gå igennem alle ugers "afleveringer" og tjek vi har argumenteret for alt}
+\subsection{Design}
 The Minitwit application is a simple application allowing users to post messages, see messages posted by others and follow other users in order to specifically see what they post.
 
-The application is implemented using Java with Spark and a MySQL database. Java was chosen since it is platform independent and a popular language meaning that extensive documentation is available and it would be easy for a future team to inherit the code. Spark was chosen as it is similar to flask which was used for the inherited Minitwit system and since it has a reasonable learning curve and is straight forward to use for an application of the size of Minitwit. The frontend consist of html templates connected with the backend using the template engine Jinjava, chosen to mimic the python Minitwit with minimal effort. 
+The application is implemented using Java with Spark and a MySQL database. Java was chosen since it is platform independent and a popular language, meaning that extensive documentation is available and it would be easy for a future team to inherit the code. Spark was chosen as it is similar to Flask which was used for the inherited Minitwit system and since it has a reasonable learning curve and is straight forward to use for an application of the size of Minitwit. The frontend consist of html templates connected with the backend using the template engine Jinjava, chosen to mimic the python Minitwit with minimal effort. 
 
-MySQL was chosen for database since the relational model fits the system data well. \textcolor{red}{Why is it better than eg SQLite?}. \todo{Indexes?}\todo{Skal vi have design af db tables? eventuelt som et billede/screenshot?}
+MySQL was chosen for database since the relational model fits the system data well. \textcolor{red}{Why is it better than eg SQLite?}. \todo{Indexes?}\todo{Skal vi have design af db tables? eventuelt som et billede/screenshot? Ja det ville være godt med en kort beskrivelse af tables og model}
 
-The ORM tool used is NORM, which is a lightweight ORM that does not require the complex markdown files that tools like Hibernate or JPA. introduce. It is suitable for smaller projects with simple models and therefore for the Minitwit application.
+The ORM tool used is NORM, which is a lightweight ORM that does not require the complex markdown files that tools like Hibernate or JPA introduce. It is suitable for smaller projects with simple models and therefore for Minitwit.
 
-Hibernate was implemented as a test to see if it would be a better fit than NORM since it is more complex but it turned out that the tool did not deliver on its promises, meaning that it only introduced more unnecessary complexity without adding any benefits. It furthermore complicated database joins that are needed in the Minitwit application. It was therefore decided to stick with NORM.
+Hibernate was implemented as a test to see if it would be a better fit since it is more complex but it turned out that the tool did not deliver on its promises, meaning that it only introduced more unnecessary complexity without adding any benefits. It furthermore complicated database joins that are needed for Minitwit. We decided to stick with NORM.
 
-The application is hosted on DigitalOcean and measures taken in terms of scaling and ensuring availability is described in section \ref{subsection:scaling}. Monitoring and logging is described in section \ref{subsection:monitoring} and \ref{subsection:logging}, respectively. 
+The application is hosted on DigitalOcean. Measures taken to ensure availability and for maintenance purposes, monitoring with Prometheus and Grafana and logging using an ELK-stack, are described in further sections.
 
 
-
-\subsection{Architecture} %Jonas
+\subsection{Architecture}
 
 \hyperref[fig:componentDiagram]{Figure \ref{fig:componentDiagram}} shows the different components of the application.
 
@@ -29,8 +28,7 @@ The application is hosted on DigitalOcean and measures taken in terms of scaling
 \end{figure}
 
 \subsubsection{Main}
-Main is the entrance point into the program and contains arguments to modify which database is used. Main also starts the maintenance\todo{hvad er maintenance for læseren?} and defines the max number of threads for the program.\\
-The class diagram can be seen in \hyperref[fig:classDiagramMain]{figure \ref{fig:classDiagramMain}}.
+Main is the system's entrance point and allows specification of which database to use. Main starts monitoring and logging services and defines the number of threads to use. \hyperref[fig:classDiagramMain]{Figure \ref{fig:classDiagramMain}} presents a class diagram. \todo{stemmer det her diagram overens med connectorne i figur 1 egentlig?}
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.7\textwidth]{images/class_diagram_main.jpg}
@@ -39,19 +37,17 @@ The class diagram can be seen in \hyperref[fig:classDiagramMain]{figure \ref{fig
 \end{figure}
 
 \subsubsection{Utilities}
-Utilities contains helper methods like hashing, formatting dates and JSON, as well as housing Request, Response and Session wrapper objects. \\
-The class diagram can be seen in \hyperref[fig:classDiagramUtilities]{figure \ref{fig:classDiagramUtilities}}.
+Utilities, shown in \hyperref[fig:classDiagramUtilities]{figure \ref{fig:classDiagramUtilities}}, contains helper methods like hashing, formatting dates and JSON, and houses Request, Response and Session wrapper objects to use with Spark.
 \begin{figure}[H]
     \centering
     \includegraphics[width=1.0\textwidth]{images/class_diagram_utilities.jpg}
     \caption{Class diagram utilities, logical view}
     \label{fig:classDiagramUtilities}
 \end{figure}
-\todo{Eventuewlt flyt de tre sidste klasser ned på en ny linje, så billedet kan gøres bredere = teksten nemmere at læse}
+\todo{Eventuelt flyt de tre sidste klasser ned på en ny linje, så billedet kan gøres bredere = teksten nemmere at læse}
 
 \subsubsection{Error handling}
-Error handling contains objects to hold results of computations which could result in exceptions, allowing for better error handling and reducing amounts of try-catch statements. \\
-The class diagram can be seen in \hyperref[fig:classDiagramErrorhandling]{figure \ref{fig:classDiagramErrorhandling}}.
+Error handling contains objects used to wrap results of computations that can result in exceptions, allowing for better error handling and reduction of try-catch-statements. A class diagram is presented in  \hyperref[fig:classDiagramErrorhandling]{figure \ref{fig:classDiagramErrorhandling}}.
 \begin{figure}[H]
     \centering
     \includegraphics[width=1.0\textwidth]{images/class_diagram_errorhandling.jpg}
@@ -60,8 +56,7 @@ The class diagram can be seen in \hyperref[fig:classDiagramErrorhandling]{figure
 \end{figure}
 
 \subsubsection{Controllers}
-Controllers Handles the different endpoints the application provides by mapping paths for post and get request to methods handling the requests and responses.\\
-The class diagram can be seen in \hyperref[fig:classDiagramControllers]{figure \ref{fig:classDiagramControllers}}.
+Controllers handles the endpoints the application provides by mapping post and get request to appropriate methods. The class diagram can be seen in \hyperref[fig:classDiagramControllers]{figure \ref{fig:classDiagramControllers}}.
 \begin{figure}[H]
     \centering
     \includegraphics[width=1.0\textwidth]{images/class_diagram_controllers.jpg}
@@ -70,8 +65,7 @@ The class diagram can be seen in \hyperref[fig:classDiagramControllers]{figure \
 \end{figure}
 
 \subsubsection{View}
-View contains code for rendering the website by redirecting to new paths or specifying HTML templates to be used along with what content to show.\\
-The class diagram can be seen in \hyperref[fig:classDiagramView]{figure \ref{fig:classDiagramView}}.
+View contains code for rendering and redirecting between pages of Minitwit. Pages are rendered html-templates. The class diagram can be seen in \hyperref[fig:classDiagramView]{figure \ref{fig:classDiagramView}}.\todo{Er det her ikke de forkerte metoder i diagrammet? Skal det ikke være renderTemplate og redirect?}
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.8\textwidth]{images/class_diagram_view.jpg}
@@ -80,8 +74,9 @@ The class diagram can be seen in \hyperref[fig:classDiagramView]{figure \ref{fig
 \end{figure}
 
 \subsubsection{Services}
-Services includes the code for maintenance, which uses Prometheus library to store the values Prometheus should collect, and the log service, which prints in a manner easy to filter for in Kibana. Services also includes functions executing the requests and responses.\\
-The class diagram can be seen in \hyperref[fig:classDiagramServices]{figure \ref{fig:classDiagramServices}}.
+Services includes functions executing requests and responses along with code for gathering and printing information to be used by the monitoring and logging services.
+%Services includes code for maintenance, which uses Prometheus library to store the values Prometheus should collect, and the log service, which prints in a manner easy to filter for in Kibana. Services also includes functions executing the requests and responses.\\
+Class diagram presented in \hyperref[fig:classDiagramServices]{figure \ref{fig:classDiagramServices}}.
  \begin{figure}[H]
     \centering
     \hspace*{-1.5in}
@@ -91,19 +86,17 @@ The class diagram can be seen in \hyperref[fig:classDiagramServices]{figure \ref
 \end{figure}
 
 \subsubsection{Repository}
-Repository includes code for starting the database and for executing queries needed by the services.
-The class diagram can be seen in \hyperref[fig:classDiagramRepository]{figure \ref{fig:classDiagramRepository}}.
+Repository includes code for starting the database and executing queries needed by the services. Class diagram can be seen in \hyperref[fig:classDiagramRepository]{figure \ref{fig:classDiagramRepository}}.
 \begin{figure}[H]
     \centering
     \hspace*{-1.3in}
     \includegraphics[width=1.55\textwidth]{images/class_diagram_repository.jpg}
-    \caption{Class diagram services, logical view}
+    \caption{Class diagram repositories, logical view}
     \label{fig:classDiagramRepository}
 \end{figure}
 
 \subsubsection{Model}
-Model contains the database relations with one object per entity. The objects in the folder matches the entities in the database as they are the template NORM uses to create them.\\
-The class diagram can be seen in \hyperref[fig:classDiagramModel]{figure \ref{fig:classDiagramModel}}.
+Model contains classes used by NORM as templates for creating database entities. Class diagram can be seen in \hyperref[fig:classDiagramModel]{figure \ref{fig:classDiagramModel}}.\todo{forkert diagram}
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.7\textwidth]{images/class_diagram_model.jpg}
@@ -112,17 +105,16 @@ The class diagram can be seen in \hyperref[fig:classDiagramModel]{figure \ref{fi
 \end{figure}
 
 \subsubsection{Benchmark}
-This is not in deployment and contains code to be run locally only. The packet component relates to measuring speed of different operations in the repository and was used to argue for speedups related to any extension to a database of same size as the one in deployment, as when indexes was added.
+Benchmark is not in deployment and contains code to be run locally only. It is used for measuring the speed of different repository operations and was used to argue for speedups related to extensions to the database, e.g. when indexes was added.
 
 
-\subsection{Dependencies } %Nikolaj %god ide med license her
+\subsection{Dependencies }
 \begin{itemize}
-    \item \textbf{Spark Java}: A micro framework for creating web applications with minimal effort. Suitable for the project size and gave us the freedom to structure the application how we wanted it.
+    \item \textbf{Spark Java}: A micro framework for creating web applications with minimal effort. %Suitable for the project size and gave us the freedom to structure the application how we wanted it.
     \item \textbf{jinjava}: Template engine based on django template syntax, used to render jinja templates.
     \item \textbf{PicoContainer}: General purpose IoC container.
-    \item \textbf{NORM}: Lightweight ORM that doesn't require the complex markdown files that Hibernate, JPA etc. introduce. Suitable for smaller projects with simple models. 
-    \todo{Argumentere for ORM her eller i design? - Gør det i design, her skal vi bare vise vores deps}
-    \item \textbf{MySQL}: Relational database. Chosen based on familiarity to team members and it's renowned reliability for how long it's been around.  
+    \item \textbf{NORM}: Lightweight ORM tool. %that doesn't require the complex markdown files that Hibernate, JPA etc. introduce. Suitable for smaller projects with simple models.
+    \item \textbf{MySQL}: Relational database.% Chosen based on familiarity to team members and it's renowned reliability for how long it's been around.  
     \item \textbf{JUnit 5}: Most popular unit-testing framework.
     \item \textbf{Mockito}: Mocking framework with a simple API.
     \item \textbf{SLF4J}: Logging Facade for ELK stack. 
@@ -131,30 +123,32 @@ This is not in deployment and contains code to be run locally only. The packet c
 \end{itemize}
 \subsubsection{Plugins}
 \begin{itemize}
-    \item \textbf{Maven}: Build automation tool used to manage our Java project and its dependencies.
-    \item \textbf{PMD}: code analyzer, used to find common programming flaws like unused variables, unnecessary object creation etc. 
+    \item \textbf{Maven}: Build automation tool used to manage Java project and its dependencies.
+    \item \textbf{PMD}: Code analyzer, used to find common programming flaws like unused variables, unnecessary object creation etc. 
     \item \textbf{Forbidden API Checker}: Static code analysis that parses java byte code to find invocations of dangerous and deprecated method/class/fields signatures. 
-    \item \textbf{SonarCloud}: Bug, Vulnerability and Code Smell detection with issue contextualization and remediation guidance. Used in our CI for Continuous code inspection.
+    \item \textbf{SonarCloud}: Bug, Vulnerability and Code Smell detection tool with issue contextualization and remediation guidance. Used in our CI for Continuous code inspection.\footnote{\url{https://github.com/DevOps2021-gb/devops2021/wiki/Static-Analysis-Tools}}
 \end{itemize}
-\footnote{\url{https://github.com/DevOps2021-gb/devops2021/wiki/Static-Analysis-Tools}}
 
-
-We used \url{www.licensediscovery.io} to analyze our Maven dependency licenses. As seen in figure \ref{fig:licenceDep} the strictest license that the majority of dependencies is ruled by is the Apache Software License Version 2. This is the license that we therefore went with.\footnote{\url{https://github.com/DevOps2021-gb/devops2021/blob/main/LICENSE.md}} \todo{Er det begrundelse nok? \textcolor{yellow}{kan ikke komme på mere at sige om det i hvert fald}}
+\url{www.licensediscovery.io} was used to analyze Maven dependency licenses. As seen in figure \ref{fig:licenceDep} the strictest license that the majority of dependencies is ruled by is the Apache Software License Version 2. This is the license that we therefore went with.\footnote{\url{https://github.com/DevOps2021-gb/devops2021/blob/main/LICENSE.md}} 
+\todo{Er det begrundelse nok? \textcolor{yellow}{kan ikke komme på mere at sige om det i hvert fald}}
 \begin{figure}[!htb]
     \centering
     \includegraphics[scale=0.2]{images/LicenceDependencies.png}
     \caption{Overview of dependency licenses. Sub-dependencies included.}
     \label{fig:licenceDep}
 \end{figure}
-
+\todo{ryk billede i bilag eller til repository, det er umuligt at se hvad der står}
 
 \subsection{Important interactions of subsystem}
-\hyperref[fig:componentDiagram]{Figure \ref{fig:communicationDiagram}} shows the communication between different parts of the system and between users and system.\\
-Code is stored in Github, which developers pull and push to during development. As mentioned main contains code for which database to use, and when running just the code locally it should use a local database called \texttt{minitwit} running on port 3306 localhost with password and username "root". When running locally with docker compose the MySQL services should be stopped so a container for the database can be created.\\
-Github actions test the files pushed using SonarCloud. Github actions also deploy to a docker image and pull down official Prometheus, Grafana, Filebeat, ElasticSearch, Kibana and Nginx images.\\
-The images are deployed on a Digital Ocean server containing one database and two digital ocean droplets. Each droplet contain a minitwit application and an official image. One image's floating point IP is in production and the other use heartbeat to test whether primary is still up or whether it should become the new primary.
-\todo{Heartbeat}\\
-The Prometheus and Grafana images are for viewing maintenance and the remaining four are for logging purposes.
+\hyperref[fig:componentDiagram]{Figure \ref{fig:communicationDiagram}} shows the interaction between different parts of the system and between users and system.
+
+Code is stored on GitHub, which developers pull and push to during development. When running the code locally, a local database should be used, called \texttt{minitwit}, which runs on port 3306 localhost with password and username "root". The repository contains a docker compose file for running the Minitwit stack locally which includes an empty MySQL database container.
+
+GitHub actions analyzes the files pushed using SonarCloud. GitHub Actions deploys to a docker image and pulls down official Prometheus, Grafana, Filebeat, ElasticSearch, Kibana and Nginx images.
+
+The images are all deployed on two DigitalOcean droplets, where the Minitwit containers utilize a remote DigitalOcean database. One droplet is the primary server and uses a floating IP. The other droplet is regarded as a backup and regularly checks through http whether the Minitwit service is responding successfully. If not, the backup droplet obtains the floating IP until the primary is responding as expected.\todo{skal vi have deployment diagram????}
+
+The Kibana and Grafana images are for viewing maintenance and logging and the remaining four are for the ELK logging stack.
 
 \begin{figure}[H]
     \centering
@@ -165,14 +159,13 @@ The Prometheus and Grafana images are for viewing maintenance and the remaining 
 \end{figure}
 
 \subsection{Current state of system}
-The system is currently has a single known bug regarding the scaling of the system, see section \ref{issues-operation}. The tool used for static analysis, Sonarcloud, reports the best rating, \textit{A}, on all measures, with 
+The system currently has a single known bug regarding the scaling of the system, see section \ref{issues-operation}. The main tool used for static analysis, Sonarcloud, reports the best rating, \textit{A}, on all measures, with 
 
 \begin{itemize}
     \item 0 bugs
     \item 0 code vulnerabilities and 0 security hotspots
-    \item 6 hours code debt due to 63 code smells
+    \item 6 hours technical debt due to 63 code smells
     \item 0.0\% code duplication and 0 duplicated blocks
 \end{itemize}
 
 Out of the 63 code smells only 11 are major, critical or blockers and all 63 has been assessed as issues that can ignored.
-
