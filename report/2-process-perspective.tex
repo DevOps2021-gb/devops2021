@@ -9,11 +9,11 @@ The initial CI/CD was set up using TravisCI, as everyone in the team had encount
 
 The following workflows are set up:
 \begin{itemize}
-    \item \textbf{Java CI with Maven}: Invoked on all pushes to the repository. It builds the Maven project using $mvn\_package$ and runs all tests, including integration tests on a remote test database. The workflow utilizes caching to ensure that Maven dependencies are not fetched on consecutive runs. 
+    \item \textbf{Java CI with Maven}: Invoked on all pushes to the repository. It builds the Maven project using \textit{mvn package} and runs all tests, including integration tests on a remote test database. The workflow utilizes caching to ensure that Maven dependencies are not fetched on consecutive runs. 
     \item \textbf{Staging deployment}: Invoked on all pushes to the main branch. This workflow logs into DockerHub, builds and pushes the Minitwit docker image with database secrets. Afterwards it SSHs into the primary Minitwit server and fetches the Minitwit config files, including the docker-compose file. Immediately after, all containers are torn down and rebuild using the newly pushed Minitwit image from DockerHub. Finally, a release is created with new commits linked and the backup server is redeployed similarly. In the downtime of the primary server, the backup server obtains the floating IP and vice versa. 
     \item \textbf{Backup DB}: Once a day a GitHub action SSH into the primary server and creates a database dump with time and date in the name. Created to minimize potential data loss.
     \item \textbf{Build LaTeX document}: When a push to develop occurs, the LaTeX files are fetched from the report folder and a pdf document is built. The LaTeX files are manually fetched from a remote Overleaf repository, as Overleaf facilitates the teams collaborative writing. 
-    \item \textbf{SonarCloud}: Official SonarCloud GitHub action that builds and analyzes the Java project using \textit{mvn\_verify}. 
+    \item \textbf{SonarCloud}: Official SonarCloud GitHub action that builds and analyzes the Java project using \textit{mvn verify}. 
 \end{itemize}
 For secret handling we used GitHub's Encrypted secrets. This ensured that no potentially harmful information was exposed in the GitHub Action workflows. Among secrets were DB connection strings, DigitalOcean access tokens, DockerHub credentials and SSH keys together with host information\footnote{\url{https://github.com/DevOps2021-gb/devops2021/wiki/CI-CD-Description:--Github-Actions}}.
 
