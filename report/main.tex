@@ -1,4 +1,5 @@
 \documentclass{article}
+\usepackage[a4paper, total={6in, 10in}]{geometry}
 \usepackage[utf8]{inputenc}
 \usepackage[english]{babel}
 \usepackage{graphicx}
@@ -69,6 +70,7 @@ Sif Amalie Rybjerg Kristensen, sikr@itu.dk\\
 \date{19/05/2021}
 
 \begin{document}
+
 \maketitle
 
 \newpage
@@ -81,18 +83,7 @@ Sif Amalie Rybjerg Kristensen, sikr@itu.dk\\
 
 
 \input{1-systems-perspective}
-\newpage
 \input{2-process-perspective}
-\newpage
 \input{3-lessons-learned}
 
-
-
-\begin{comment}
-    %https://tex.stackexchange.com/questions/277560/counting-characters-in-a-section-of-a-document?noredirect=1&lq=1
-    \quickwordcount{main}
-    \quickcharcount{main}
-    \todo{There are \thechar characters and approximately \theword spaces.
-    That makes approximately \the\numexpr\theword+\thechar\relax\ characters total.}
-\end{comment}
 \end{document}
