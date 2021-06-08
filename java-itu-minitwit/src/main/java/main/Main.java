@@ -30,6 +30,12 @@ public class Main {
             container.getComponent(Endpoints.class).register();
 
             if (args.length > 0) {
+                if(args.length == 4) {
+                    var isNewDB = Boolean.parseBoolean(args[3]);
+                    if(isNewDB) {
+                        DB.dropDatabase();
+                    }
+                }
                 DB.setDatabaseParameters(args[0], args[1], args[2]);
             }
 
